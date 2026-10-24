@@ -47,6 +47,6 @@ get("/days/{date}") {
 3. Исключение плохой даты привязано к `Module.kt`, к тем же `StatusPages`, что и остальные ошибки HTTP.
 4. Тест описан конкретно: `connect()`, один `idleTurns`, беклог с `onDate = null`, явная проверка summary.
 
-Скилл `add-kotlin-endpoint` и правило `.cursor/rules/http.mdc` обновлены вместе с `CLAUDE.md`, иначе они спорили бы с v2. Промпт не менялся.
+Скилл `add-kotlin-endpoint` и правило `.cursor/rules/http.mdc` обновлены вместе с текстом v2, иначе они спорили бы с ним. Промпт не менялся.
 
-Канонический текст v2 — `CLAUDE.md`. Он же записан в `.cursorrules` и `.github/copilot-instructions.md`. v1 сохранён в `challenge/rules-v1.md`.
+Текст v2, которым пользовались генерации, сохранён в `challenge/rules-v2.md`. Сейчас он лежит в `.cursorrules` и `.cursor/rules/project.mdc`. v1 сохранён в `challenge/rules-v1.md`.

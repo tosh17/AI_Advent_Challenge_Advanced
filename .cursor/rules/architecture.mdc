@@ -9,6 +9,6 @@ Kotlin 2.4 Multiplatform (`jvm`, `js`). Ktor 3.5, MCP SDK 0.15, Exposed 1.0, Oll
 
 `shared` — агент и домен. `server` — HTTP, Ollama, MCP, база. Смысл фразы решает только модель. Код исполняет вызовы MCP и не ищет слова в тексте.
 
-Роут делегирует `Turns` или `ActivityStore`. Вид активности задаёт инструмент: `Log`, `Schedule`, `Backlog`. Даты — `YYYY-MM-DD`.
+Роут делегирует узкий интерфейс и не вызывает `ActivityStore`. Вид активности задаёт инструмент: `Log`, `Schedule`, `Backlog`. Даты — `YYYY-MM-DD`.
 
-Полные примеры и запреты — в `CLAUDE.md`.
+Примеры, запреты и шаблон файла — в `project.mdc` и в `.cursorrules`.
