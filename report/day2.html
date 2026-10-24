@@ -24,7 +24,7 @@
   a { color: var(--accent); }
   .layout {
     display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 280px minmax(0, 1fr);
     min-height: 100vh;
   }
   nav {
@@ -52,11 +52,11 @@
     padding: 4px 0;
   }
   nav a:hover { color: #f0c7a2; }
-  main { padding: 48px 56px 80px; max-width: 980px; }
+  main { padding: 48px 56px 80px; max-width: 1080px; }
   h1 { font-size: 42px; line-height: 1.1; font-weight: 600; margin: 0 0 12px; }
   h2 { font-size: 28px; margin: 56px 0 16px; scroll-margin-top: 24px; }
   h3 { font: 600 18px/1.3 ui-sans-serif, system-ui, sans-serif; margin: 28px 0 8px; }
-  .lead { font-size: 20px; max-width: 42rem; }
+  .lead { font-size: 20px; max-width: 44rem; }
   .meta { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
   table {
     width: 100%;
@@ -66,51 +66,44 @@
   }
   th, td { border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; padding: 10px 12px; }
   th { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); }
-  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
   p code, li code, td code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     font-size: 0.9em;
     background: #efe8dc;
     padding: 0 0.25em;
   }
-  pre {
+  .sheet {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: auto;
+    font: 13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    margin: 8px 0 18px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 3.2rem minmax(0, 1fr);
+  }
+  .row span {
+    color: #a3988b;
+    text-align: right;
+    padding: 0 10px 0 8px;
+    user-select: none;
+    border-right: 1px solid var(--line);
+  }
+  .row code { white-space: pre-wrap; padding: 0 16px 0 12px; }
+  pre.plain {
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: 12px;
     padding: 16px 18px;
     overflow: auto;
-    font-size: 13px;
-    line-height: 1.45;
+    font: 14px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     white-space: pre-wrap;
   }
-  .stack { list-style: none; margin: 12px 0 0; padding: 0; }
-  .stack li {
-    position: relative;
-    margin: 0;
-    padding: 12px 14px 12px 58px;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-bottom: 0;
-  }
-  .stack li:first-child { border-radius: 12px 12px 0 0; }
-  .stack li:last-child { border-bottom: 1px solid var(--line); border-radius: 0 0 12px 12px; }
-  .stack li::before {
-    content: counter(step);
-    counter-increment: step;
-    position: absolute;
-    left: 14px;
-    top: 12px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--nav);
-    color: #f6f1e8;
-    font: 600 13px/28px ui-sans-serif, system-ui, sans-serif;
-    text-align: center;
-  }
-  .stack { counter-reset: step; }
-  .stack b { display: block; font: 600 14px/1.3 ui-sans-serif, system-ui, sans-serif; }
-  .stack span { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
   .prose { max-width: 46rem; }
+  ol { padding-left: 1.2rem; }
+  li { margin: 6px 0; }
   @media (max-width: 860px) {
     .layout { grid-template-columns: 1fr; }
     nav { position: relative; height: auto; }
@@ -123,191 +116,215 @@
 <div class="layout">
 <nav>
   <strong>День 2</strong>
-  <a href="#itog">Итог</a>
-  <a href="#profili">Три профиля</a>
-  <a href="#obsij">Общий стек</a>
-  <strong>Запуски</strong>
+  <a href="#zadanie">Задание</a>
+  <a href="#profili">Как выглядели профили</a>
   <a href="#research">Research</a>
   <a href="#bugfix">Bug Fix</a>
   <a href="#endpoint">Endpoint</a>
-  <a href="#dorabotka">Доработка</a>
+  <a href="#testy">Лог тестов</a>
+  <a href="#itog">Итог</a>
 </nav>
 <main>
-  <p class="meta">Ветка day2 · коммит 4f5168f</p>
-  <h1>День 2. Профили</h1>
-  <p class="lead">Три агентных профиля. У каждого своя системная инструкция. Каждый получил одну задачу и прошёл её с первого запуска.</p>
+<h1>День 2. Профили</h1>
+<p class="meta">Ветка <code>day2</code>. Код профилей и их правок — коммит <code>4f5168f</code>. Эта страница — то, что снимается.</p>
+<p class="lead">Три профиля агента, каждый с одной живой задачей и одним запуском. Ниже сами файлы профилей, задача, журнал действий и ответ, который профиль вернул.</p>
 
-  <h2 id="itog">Итог</h2>
-  <div class="prose">
-    <p>Bug Fix починил приём ссылки <code>HTTPS://example.com/doc</code> и добавил тест. Research только прочитал код и перечислил ручки без тестов. Endpoint добавил <code>GET /api/sprint</code>. Текст профилей после запусков не менялся.</p>
-  </div>
+<h2 id="zadanie">Задание</h2>
+<div class="prose">
+<p>Два обязательных профиля и один под частую задачу репозитория. У каждого четыре части: кто он, что делать, чего не делать, в каком виде отвечать. Если первый запуск не даёт рабочего результата, профиль дорабатывается и задача запускается снова. Здесь доработки не было.</p>
+<table>
+<tr><th>Профиль</th><th>Файл</th><th>Задача первого запуска</th><th>Код</th></tr>
+<tr><td>Research</td><td><code>.cursor/agents/research.md</code></td><td>Какие HTTP-эндпоинты есть и какие без тестов</td><td>не менял</td></tr>
+<tr><td>Bug Fix</td><td><code>.cursor/agents/bug-fix.md</code></td><td><code>HTTPS://example.com/doc</code> не принимается журналом</td><td>починил <code>link()</code>, добавил тест</td></tr>
+<tr><td>Endpoint</td><td><code>.cursor/agents/endpoint-author.md</code></td><td><code>GET /api/sprint</code></td><td>добавил ручку и тест</td></tr>
+</table>
+<p>Research и Bug Fix стартовали вместе в 15:45–15:46. Endpoint — в 15:50, когда первые два уже не писали одни и те же файлы. Имя файла в задаче не называлось.</p>
+</div>
 
-  <h2 id="profili">Три профиля</h2>
-  <table>
-    <thead>
-      <tr><th>Профиль</th><th>Файл</th><th>Задача запуска</th><th>Формат ответа</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Research</td>
-        <td><code>.cursor/agents/research.md</code></td>
-        <td>Какие HTTP-ручки есть и какие без тестов</td>
-        <td>файлы, связи, выводы</td>
-      </tr>
-      <tr>
-        <td>Bug Fix</td>
-        <td><code>.cursor/agents/bug-fix.md</code></td>
-        <td>Журнал не принимает ссылку с <code>HTTPS</code> большими буквами</td>
-        <td>нашёл, починил, проверил</td>
-      </tr>
-      <tr>
-        <td>Endpoint</td>
-        <td><code>.cursor/agents/endpoint-author.md</code></td>
-        <td><code>GET /api/sprint</code></td>
-        <td>путь, файлы, команда</td>
-      </tr>
-    </tbody>
-  </table>
-  <div class="prose">
-    <p>Системный профиль — это файл целиком. Шапка <code>name</code> и <code>description</code> говорит Cursor, когда брать этот профиль. Текст под шапкой — инструкция, с которой агент стартует.</p>
-  </div>
+<h2 id="profili">Как выглядели профили</h2>
+<p class="prose">Текст ниже — файлы, которые лежали в <code>.cursor/agents</code> до запусков и остались теми же после них.</p>
 
-  <h2 id="obsij">Общий стек</h2>
-  <ol class="stack">
-    <li><b>Правила дня 1 уже в репозитории</b><span><code>.cursorrules</code> и <code>.cursor/rules</code>. Профиль обязан прочитать их до правок.</span></li>
-    <li><b>Профиль записан до задачи</b><span>Файл в <code>.cursor/agents</code>. После запуска его не переписывали.</span></li>
-    <li><b>Один запуск, одна задача</b><span>Имя файла с причиной в задаче не называлось. Подсказок по ходу не было.</span></li>
-    <li><b>Профиль читает правила и идёт по коду</b><span>Research только читает. Bug Fix и Endpoint ещё правят код и гоняют тесты.</span></li>
-    <li><b>Ответ в формате профиля</b><span>Если результат рабочий, инструкция остаётся как была.</span></li>
-  </ol>
+<h3 id="profile-research">research.md</h3>
+<div class="sheet"><div class="row"><span>1</span><code>---</code></div><div class="row"><span>2</span><code>name: research</code></div><div class="row"><span>3</span><code>description: Исследует кодовую базу рабочего помощника и отвечает структурой, без правок. Use when the user asks how something works, which endpoints exist, or what is not covered by tests.</code></div><div class="row"><span>4</span><code>---</code></div><div class="row"><span>5</span><code> </code></div><div class="row"><span>6</span><code>Ты отвечаешь на вопрос по этому репозиторию. Код не меняешь.</code></div><div class="row"><span>7</span><code> </code></div><div class="row"><span>8</span><code>Должен:</code></div><div class="row"><span>9</span><code> </code></div><div class="row"><span>10</span><code>1. Прочитай `.cursor/rules` и `.cursorrules`, затем файлы, на которые опирается вопрос.</code></div><div class="row"><span>11</span><code>2. Иди по вызовам: роут, интерфейс, реализация, тест. Не останавливайся на имени файла.</code></div><div class="row"><span>12</span><code>3. Отделяй то, что увидел в коде, от догадки.</code></div><div class="row"><span>13</span><code>4. В ответе три блока: файлы, связи, выводы.</code></div><div class="row"><span>14</span><code> </code></div><div class="row"><span>15</span><code>Не должен:</code></div><div class="row"><span>16</span><code> </code></div><div class="row"><span>17</span><code>1. Не меняй файлы, не добавляй тесты, не коммить.</code></div><div class="row"><span>18</span><code>2. Не предлагай патч вместо ответа.</code></div><div class="row"><span>19</span><code>3. Не разбирай вопрос регулярными выражениями и не подменяй чтение кода поиском одного слова.</code></div><div class="row"><span>20</span><code>4. Не выдумывай эндпоинты, инструменты и таблицы, которых нет в дереве.</code></div></div>
 
-  <h2 id="research">Research</h2>
-  <div class="prose">
-    <p>Вопрос по коду. Файлы не меняет. Частая проверка: как устроен кусок проекта и чего не хватает в тестах.</p>
-  </div>
-  <h3>Системный профиль</h3>
-  <pre>---
-name: research
-description: Исследует кодовую базу рабочего помощника и отвечает структурой, без правок. Use when the user asks how something works, which endpoints exist, or what is not covered by tests.
----
+<h3 id="profile-bug">bug-fix.md</h3>
+<div class="sheet"><div class="row"><span>1</span><code>---</code></div><div class="row"><span>2</span><code>name: bug-fix</code></div><div class="row"><span>3</span><code>description: Чинит баг рабочего помощника. Сам находит причину, правит код, проверяет что остальное живо. Use when the user reports a bug, a failing test, or broken behavior.</code></div><div class="row"><span>4</span><code>---</code></div><div class="row"><span>5</span><code> </code></div><div class="row"><span>6</span><code>Ты чинишь баг в этом репозитории. Причину ищешь сам.</code></div><div class="row"><span>7</span><code> </code></div><div class="row"><span>8</span><code>Должен:</code></div><div class="row"><span>9</span><code> </code></div><div class="row"><span>10</span><code>1. Прочитай `.cursor/rules` и `.cursorrules`.</code></div><div class="row"><span>11</span><code>2. Найди место в коде по симптому. Открой связанные файлы, а не один первый попавшийся.</code></div><div class="row"><span>12</span><code>3. Запусти тесты, которые покрывают это место, и посмотри их вывод.</code></div><div class="row"><span>13</span><code>4. Почини причину. Не замазывай симптом.</code></div><div class="row"><span>14</span><code>5. Проверь, что старые тесты на соседнее поведение проходят. Если проверки на этот баг не было, добавь её.</code></div><div class="row"><span>15</span><code>6. В ответе три блока: что нашёл, что починил, что проверил.</code></div><div class="row"><span>16</span><code> </code></div><div class="row"><span>17</span><code>Не должен:</code></div><div class="row"><span>18</span><code> </code></div><div class="row"><span>19</span><code>1. Не игнорируй падающий тест и не выключай его.</code></div><div class="row"><span>20</span><code>2. Не разбирай свободный текст пользователя через `contains` и регулярные выражения.</code></div><div class="row"><span>21</span><code>3. Не вызывай `ActivityStore` из роута и не пиши SQL строкой.</code></div><div class="row"><span>22</span><code>4. Не возвращай запросы в Jira и Confluence.</code></div><div class="row"><span>23</span><code>5. Не меняй правила, скиллы и другие профили.</code></div><div class="row"><span>24</span><code>6. Не коммить и не пушь.</code></div></div>
 
-Ты отвечаешь на вопрос по этому репозиторию. Код не меняешь.
+<h3 id="profile-endpoint">endpoint-author.md</h3>
+<div class="sheet"><div class="row"><span>1</span><code>---</code></div><div class="row"><span>2</span><code>name: endpoint-author</code></div><div class="row"><span>3</span><code>description: Пишет HTTP endpoint рабочего помощника по правилам проекта. Use proactively when adding a Ktor route, endpoint, or HTTP handler in this repository.</code></div><div class="row"><span>4</span><code>---</code></div><div class="row"><span>5</span><code> </code></div><div class="row"><span>6</span><code>Ты добавляешь endpoint в этот репозиторий. С первого прохода он должен собираться и проходить свой тест.</code></div><div class="row"><span>7</span><code> </code></div><div class="row"><span>8</span><code>Должен:</code></div><div class="row"><span>9</span><code> </code></div><div class="row"><span>10</span><code>1. Прочитай `.cursor/rules` и `.cursorrules`.</code></div><div class="row"><span>11</span><code>2. Повтори форму `Route.api`: роут принимает параметр или тело и вызывает один метод узкого интерфейса.</code></div><div class="row"><span>12</span><code>3. Роут не вызывает `ActivityStore` и не разбирает дату. Разбор и чтение базы живут в реализации интерфейса, как `Days.load`.</code></div><div class="row"><span>13</span><code>4. DTO пометь `@Serializable` и положи в `Routes.kt`. Плохая дата и `StatusPages` остаются в `Module.kt`.</code></div><div class="row"><span>14</span><code>5. Тест открывает базу через `connect()`. JDBC URL в тест не копируй вторым способом. `idleTurns` не объявляй заново.</code></div><div class="row"><span>15</span><code>6. Запусти новый тест и соседний тест роутов. Оба должны пройти.</code></div><div class="row"><span>16</span><code>7. В ответе: какой путь добавил, какие файлы изменил, какой командой проверил.</code></div><div class="row"><span>17</span><code> </code></div><div class="row"><span>18</span><code>Не должен:</code></div><div class="row"><span>19</span><code> </code></div><div class="row"><span>20</span><code>1. Не разбирай свободный текст. Не ищи слова в сообщении пользователя.</code></div><div class="row"><span>21</span><code>2. Не добавляй SQL-строки, `println`, `Any` в домен и роут.</code></div><div class="row"><span>22</span><code>3. Не возвращай клиентов Jira и Confluence.</code></div><div class="row"><span>23</span><code>4. Не клади беклог и спринт в ответ дня, если об этом не просили отдельно.</code></div><div class="row"><span>24</span><code>5. Не меняй правила, скиллы и профили.</code></div><div class="row"><span>25</span><code>6. Не коммить и не пушь.</code></div></div>
 
-Должен:
+<h2 id="research">Research</h2>
+<div class="prose">
+<p>Задача, которую получил профиль. Это единственный вход, без уточнений по ходу.</p>
+</div>
+<pre class="plain">Вопрос: какие HTTP-эндпоинты есть и какие из них не покрыты тестами?
 
-1. Прочитай `.cursor/rules` и `.cursorrules`, затем файлы, на которые опирается вопрос.
-2. Иди по вызовам: роут, интерфейс, реализация, тест. Не останавливайся на имени файла.
-3. Отделяй то, что увидел в коде, от догадки.
-4. В ответе три блока: файлы, связи, выводы.
+В конце ответа перечисли эндпоинты, для каждого укажи файл теста или напиши, что теста нет. Файлы не меняй.</pre>
+<h3>Журнал запуска</h3>
+<pre class="plain">15:45  запуск профиля research, файлы не меняет
+Glob   .cursor/rules, *Routes*, *Test*.kt
+Read   правила, .cursorrules
+Read   Routes.kt, Application.kt, Module.kt
+Read   Days.kt, SessionBook.kt, ActivityStore.kt
+Read   RoutesTest.kt, DayRoutesTest.kt, McpToolsTest.kt, ActivityStoreTest.kt
+Read   WorkMcp.kt, McpToolCatalog.kt
+Read   web/index.html, web/chat.js
+Read   challenge/gen1/Routes.kt, challenge/gen2/Routes.kt
+Write  нет
+Итог   ответ блоками «файлы / связи / выводы», дерево не изменено</pre>
+<h3>Ответ профиля</h3>
+<pre class="plain">В работающем сервере шесть HTTP-точек. У каждой есть тест. Отдельно не проверены статические `/chat.js` и `/chat.css` и три ветки ошибок у сообщений сессии.
 
-Не должен:
+## Файлы
 
-1. Не меняй файлы, не добавляй тесты, не коммить.
-2. Не предлагай патч вместо ответа.
-3. Не разбирай вопрос регулярными выражениями и не подменяй чтение кода поиском одного слова.
-4. Не выдумывай эндпоинты, инструменты и таблицы, которых нет в дереве.</pre>
+Маршруты собраны в `server/src/main/kotlin/app/work/server/Routes.kt` и `Module.kt`. `Application.kt` поднимает два Netty: API через `module(sessions, days)` и отдельный сервер с `workMcp(store)`.
 
-  <h3>Стек выполнения</h3>
-  <ol class="stack">
-    <li><b>Задача</b><span>Какие HTTP-эндпоинты есть и какие из них не покрыты тестами. В конце — список, у каждой ручки файл теста или пометка, что теста нет.</span></li>
-    <li><b>Правила</b><span><code>.cursor/rules</code> и <code>.cursorrules</code>.</span></li>
-    <li><b>Роуты</b><span><code>Routes.kt</code>, <code>Module.kt</code>, <code>Application.kt</code>. Отдельно MCP в <code>WorkMcp.kt</code> и статика <code>web/</code>.</span></li>
-    <li><b>Цепочка вызова</b><span>День: роут → <code>Days.load</code> → <code>StoredDays</code> → <code>ActivityStore.find</code> → <code>DayRoutesTest</code>. Сессия: роут → <code>Turns</code> → <code>SessionBook</code>. В тесте роута вместо книги стоит заглушка.</span></li>
-    <li><b>Сверка с тестами</b><span><code>RoutesTest</code>, <code>DayRoutesTest</code>, <code>McpToolsTest</code>. Запросов к <code>/chat.js</code> и <code>/chat.css</code> нет. Веток 400, 404 и 502 у сообщения нет.</span></li>
-    <li><b>Ответ</b><span>Файлы, связи, выводы. Дерево после запуска чистое.</span></li>
-  </ol>
-  <div class="prose">
-    <p>Покрыты <code>GET /api/health</code>, <code>GET /api/days/{date}</code>, <code>POST /api/sessions</code>, успешный <code>POST /api/sessions/{id}/messages</code>, <code>GET /</code> и <code>/mcp</code>. Без теста остались <code>GET /chat.js</code>, <code>GET /chat.css</code> и ошибки сообщения 400, 404, 502.</p>
-  </div>
+Чтение дня: интерфейс `Days` и `StoredDays` в `activity/Days.kt`, запрос к базе — `ExposedActivityStore.find` в `activity/ActivityStore.kt`. Сессии: интерфейс `Turns` и `SessionBook` в `session/SessionBook.kt`. MCP: `mcp/WorkMcp.kt` регистрирует путь, `mcp/McpToolCatalog.kt` подключается к нему.
 
-  <h2 id="bugfix">Bug Fix</h2>
-  <div class="prose">
-    <p>Баг. Сам находит причину, чинит её и проверяет соседние тесты. <code>HTTPS://example.com/doc</code> здесь обычная ссылка-пример: схема написана большими буквами, из-за этого журнал её отвергал.</p>
-  </div>
-  <h3>Системный профиль</h3>
-  <pre>---
-name: bug-fix
-description: Чинит баг рабочего помощника. Сам находит причину, правит код, проверяет что остальное живо. Use when the user reports a bug, a failing test, or broken behavior.
----
+Статика: `server/src/main/resources/web/index.html`, `chat.js`, `chat.css`.
 
-Ты чинишь баг в этом репозитории. Причину ищешь сам.
+Тесты HTTP: `server/src/test/kotlin/app/work/server/RoutesTest.kt`, `DayRoutesTest.kt`, `McpToolsTest.kt`. `ActivityStoreTest.kt` бьёт в хранилище напрямую, без HTTP.
 
-Должен:
+`challenge/gen1/Routes.kt` и `challenge/gen2/Routes.kt` повторяют те же четыре пути `/api`. В `Application.module` они не подключены.
 
-1. Прочитай `.cursor/rules` и `.cursorrules`.
-2. Найди место в коде по симптому. Открой связанные файлы, а не один первый попавшийся.
-3. Запусти тесты, которые покрывают это место, и посмотри их вывод.
-4. Почини причину. Не замазывай симптом.
-5. Проверь, что старые тесты на соседнее поведение проходят. Если проверки на этот баг не было, добавь её.
-6. В ответе три блока: что нашёл, что починил, что проверил.
+`JiraClient`, `ConfluenceClient` и `OllamaModel` ходят наружу. Своих маршрутов у них нет.
 
-Не должен:
+## Связи
 
-1. Не игнорируй падающий тест и не выключай его.
-2. Не разбирай свободный текст пользователя через `contains` и регулярные выражения.
-3. Не вызывай `ActivityStore` из роута и не пиши SQL строкой.
-4. Не возвращай запросы в Jira и Confluence.
-5. Не меняй правила, скиллы и другие профили.
-6. Не коммить и не пушь.</pre>
+`GET /api/health` отвечает `Health(&quot;ok&quot;)` прямо из роута. Интерфейса нет. `RoutesTest.health` проверяет статус 200.
 
-  <h3>Стек выполнения</h3>
-  <ol class="stack">
-    <li><b>Задача</b><span>Инструмент журнала не принимает <code>HTTPS://example.com/doc</code>. Нижний регистр <code>http://</code> и <code>https://</code> уже работает. Пробелы по краям не должны ломать ссылку. Адрес без схемы по-прежнему отклоняется. Файл не назван.</span></li>
-    <li><b>Правила</b><span><code>.cursor/rules</code> и <code>.cursorrules</code>.</span></li>
-    <li><b>Поиск по симптому</b><span><code>ToolArgs.link()</code>, регистрация инструмента в <code>WorkMcp.kt</code>, соседние тесты. Схема сравнивалась только как <code>https://</code> и <code>http://</code> строчными, края строки не обрезались.</span></li>
-    <li><b>Тест на баг</b><span>Проверки не было. Добавлен <code>ToolArgsTest</code>. До правки он падал с <code>ToolInputError</code>.</span></li>
-    <li><b>Починка</b><span>Ссылка обрезается, схема принимается в любом регистре, в журнал пишется уже обрезанное значение. Адрес без схемы получает «Ссылка должна начинаться с http:// или https://».</span></li>
-    <li><b>Соседние тесты</b><span><code>ToolArgsTest</code>, <code>McpToolsTest</code>, <code>DayRoutesTest</code>, <code>ActivityStoreTest</code>, <code>RoutesTest</code>, <code>SourceRulesTest</code>.</span></li>
-    <li><b>Ответ</b><span>Что нашёл, что починил, что проверил. Профиль не менялся.</span></li>
-  </ol>
+`GET /api/days/{date}` берёт параметр и вызывает `days.load`. `StoredDays.load` парсит дату и дважды вызывает `ActivityStore.find`: для `Log` и для `Schedule`. Беклог в ответ не входит. Плохая дата бросает `BadDate`, `Module.kt` отвечает 400 и `ErrorBody`. `DayRoutesTest.returnsLogAndScheduleForTheDay` идёт через `StoredDays` и H2: день с журналом и планом, пустой день, отсутствие беклога. `DayRoutesTest.rejectsBadDate` проверяет `2026-13-01` и текст «Неверная дата». До `find` этот запрос не доходит: дата отсекается в `parseDay`.
 
-  <h2 id="endpoint">Endpoint</h2>
-  <div class="prose">
-    <p>Третий профиль, под частую задачу репозитория: новая HTTP-ручка. Роут тонкий, чтение базы живёт в отдельном типе, рядом свой тест.</p>
-  </div>
-  <h3>Системный профиль</h3>
-  <pre>---
-name: endpoint-author
-description: Пишет HTTP endpoint рабочего помощника по правилам проекта. Use proactively when adding a Ktor route, endpoint, or HTTP handler in this repository.
----
+`POST /api/sessions` вызывает `sessions.open()`. `SessionBook.open` создаёт UUID и пустую историю. `RoutesTest.passesTextThrough` вызывает роут, но подставляет заглушку `Turns`, которая возвращает `&quot;session-1&quot;`. `SessionBook` этим тестом не исполняется.
 
-Ты добавляешь endpoint в этот репозиторий. С первого прохода он должен собираться и проходить свой тест.
+`POST /api/sessions/{id}/messages` читает `IncomingMessage` и вызывает `sessions.message`. `SessionBook.message` при пустом тексте бросает `BlankMessage`, при чужом id — `SessionNotFound`, иначе `agent.handle`. `StatusPages` отвечает 400 «Пустое сообщение», 404 «Сессия не найдена», 502 при `ModelFailure`. `RoutesTest.passesTextThrough` проверяет только удачный ответ заглушки и что в неё ушли id и текст.
 
-Должен:
+`staticResources(&quot;/&quot;, &quot;web&quot;, index = &quot;index.html&quot;)` отдаёт каталог `web`. `RoutesTest.chatPage` запрашивает `GET /` и ищет в теле «Рабочий помощник». `index.html` ссылается на `/chat.css` и `/chat.js`. Запросов к этим путям в тестах нет. `chat.js` сам вызывает `POST /api/sessions` и `POST /api/sessions/{id}/messages`.
 
-1. Прочитай `.cursor/rules` и `.cursorrules`.
-2. Повтори форму `Route.api`: роут принимает параметр или тело и вызывает один метод узкого интерфейса.
-3. Роут не вызывает `ActivityStore` и не разбирает дату. Разбор и чтение базы живут в реализации интерфейса, как `Days.load`.
-4. DTO пометь `@Serializable` и положи в `Routes.kt`. Плохая дата и `StatusPages` остаются в `Module.kt`.
-5. Тест открывает базу через `connect()`. JDBC URL в тест не копируй вторым способом. `idleTurns` не объявляй заново.
-6. Запусти новый тест и соседний тест роутов. Оба должны пройти.
-7. В ответе: какой путь добавил, какие файлы изменил, какой командой проверил.
+`Application.workMcp` вызывает `mcpStatelessStreamableHttp(path = &quot;/mcp&quot;)` на отдельном порту. Список HTTP-методов этого обработчика в репозитории не записан: его задаёт SDK. `McpToolsTest.journalGoesThroughMcp` поднимает этот сервер и ходит на `http://127.0.0.1:$port/mcp` через `StreamableHttpClientTransport`.
 
-Не должен:
+## Выводы
 
-1. Не разбирай свободный текст. Не ищи слова в сообщении пользователя.
-2. Не добавляй SQL-строки, `println`, `Any` в домен и роут.
-3. Не возвращай клиентов Jira и Confluence.
-4. Не клади беклог и спринт в ответ дня, если об этом не просили отдельно.
-5. Не меняй правила, скиллы и профили.
-6. Не коммить и не пушь.</pre>
+Четыре маршрута `/api`, страница `GET /` и обработчик `/mcp` тестами затронуты. Дыры — не отсутствующие маршруты, а непроверенные ответы и файлы.
 
-  <h3>Стек выполнения</h3>
-  <ol class="stack">
-    <li><b>Задача</b><span><code>GET /api/sprint</code>. В ответе только уже записанные активности вида Sprint. Журнал, план и беклог в список не входят.</span></li>
-    <li><b>Образец</b><span>Правила, скилл <code>add-kotlin-endpoint</code>, текущие <code>Routes.kt</code>, <code>Days.kt</code>, <code>DayRoutesTest</code>.</span></li>
-    <li><b>Интерфейс</b><span><code>Sprint.load()</code> и <code>StoredSprint</code>. Список берётся через <code>ActivityStore.list(ActivityKind.Sprint)</code> внутри реализации, не из роута.</span></li>
-    <li><b>Роут</b><span><code>get("/sprint")</code> вызывает <code>sprint.load()</code>. DTO <code>SprintResponse</code> в <code>Routes.kt</code>. Проводка в <code>Module.kt</code> и <code>Application.kt</code>.</span></li>
-    <li><b>Тест</b><span><code>SprintRoutesTest</code> открывает базу через <code>connect()</code>. В фикстуре спринт и журнал. В ответе только спринт.</span></li>
-    <li><b>Прогон</b><span><code>SprintRoutesTest</code>, <code>RoutesTest</code>, <code>DayRoutesTest</code>, затем полный <code>./gradlew :server:test</code>.</span></li>
-    <li><b>Ответ</b><span>Путь <code>GET /api/sprint</code>, список файлов, команды проверки. Профиль не менялся.</span></li>
-  </ol>
+Ветки `StatusPages` для пустого сообщения, чужой сессии и сбоя модели в тестах не вызываются. Роут сессий проверен на заглушке `Turns`, не на `SessionBook`. Методы `/mcp` из дерева не видны, поэтому отдельно по методу их не делю.
 
-  <h2 id="dorabotka">Доработка профилей</h2>
-  <div class="prose">
-    <p>После первой попытки профили не менялись. Все три запуска дали рабочий результат.</p>
-    <p>У Bug Fix новый тест был красным до правки <code>link()</code>. Это проверка бага. Инструкцию профиля из-за этого не переписывали.</p>
-  </div>
+## Эндпоинты
+
+- `GET /api/health` — `server/src/test/kotlin/app/work/server/RoutesTest.kt`
+- `GET /api/days/{date}` — `server/src/test/kotlin/app/work/server/DayRoutesTest.kt`
+- `POST /api/sessions` — `server/src/test/kotlin/app/work/server/RoutesTest.kt`
+- `POST /api/sessions/{id}/messages` — `server/src/test/kotlin/app/work/server/RoutesTest.kt` (успешный ответ; веток 400, 404 и 502 нет)
+- `GET /` — `server/src/test/kotlin/app/work/server/RoutesTest.kt`
+- `GET /chat.js` — теста нет
+- `GET /chat.css` — теста нет
+- `/mcp` — `server/src/test/kotlin/app/work/server/McpToolsTest.kt`</pre>
+
+<h2 id="bugfix">Bug Fix</h2>
+<div class="prose">
+<p>Симптом передали словами. Файл <code>ToolArgs.kt</code> в задаче не назывался.</p>
+</div>
+<pre class="plain">Баг: инструмент записи журнала не принимает ссылку HTTPS://example.com/doc, хотя это та же https-ссылка. Ожидание: ссылка сохраняется. Ссылки http:// и https:// в нижнем регистре уже должны работать. Пробел в начале и конце ссылки тоже не должен её ломать. Адрес без схемы по-прежнему отклоняется.</pre>
+<h3>Журнал запуска</h3>
+<pre class="plain">15:46  запуск профиля bug-fix
+Read   правила, .cursorrules, ToolArgs.kt, WorkMcp.kt
+Read   McpToolsTest.kt, SourceRulesTest.kt, ActivityStoreTest.kt
+Shell  ./gradlew :server:test --tests app.work.server.McpToolsTest --tests app.work.server.DayRoutesTest --tests app.work.server.activity.ActivityStoreTest --offline
+Write  server/src/test/kotlin/app/work/server/tool/ToolArgsTest.kt
+Shell  ./gradlew :server:test --tests app.work.server.tool.ToolArgsTest --offline
+       до правки linkKeepsUppercaseHttpsAndTrimmedEdges упал с ToolInputError
+Edit   ToolArgs.kt: trim() и ignoreCase = true
+Shell  ./gradlew :server:test --tests app.work.server.tool.ToolArgsTest --tests app.work.server.McpToolsTest --tests app.work.server.DayRoutesTest --tests app.work.server.activity.ActivityStoreTest --tests app.work.server.SourceRulesTest --tests app.work.server.RoutesTest --offline
+Read   TEST-app.work.server.tool.ToolArgsTest.xml
+Итог   три блока: нашёл / починил / проверил. Профиль не переписывался.</pre>
+<h3>Что осталось в коде</h3>
+<div class="sheet"><div class="row"><span>1</span><code>fun JsonObject.link(): String? {</code></div><div class="row"><span>2</span><code>    val value = optionalText(&quot;link&quot;)?.trim() ?: return null</code></div><div class="row"><span>3</span><code>    if (value.length &gt; 2_000) throw ToolInputError(&quot;Слишком длинная ссылка&quot;)</code></div><div class="row"><span>4</span><code>    if (!value.startsWith(&quot;https://&quot;, ignoreCase = true) &amp;&amp; !value.startsWith(&quot;http://&quot;, ignoreCase = true)) {</code></div><div class="row"><span>5</span><code>        throw ToolInputError(&quot;Ссылка должна начинаться с http:// или https://&quot;)</code></div><div class="row"><span>6</span><code>    }</code></div><div class="row"><span>7</span><code>    return value</code></div><div class="row"><span>8</span><code>}</code></div></div>
+<h3>Ответ профиля</h3>
+<pre class="plain">**Что нашёл.** Журнал пишет ссылку через `JsonObject.link()`. Схема проверялась как `https://` и `http://` в нижнем регистре, пробелы по краям не снимались. Из-за этого `HTTPS://example.com/doc` отклонялась с ошибкой «Ссылка должна начинаться с http:// или https://». Старые тесты этого не ловили: они передают только `https://` без пробелов и проходили.
+
+**Что починил.** В `link()` ссылка сначала обрезается по краям, затем схема `http`/`https` принимается в любом регистре. В журнал сохраняется уже обрезанная ссылка, например `HTTPS://example.com/doc`. Адрес без схемы по-прежнему отклоняется с той же ошибкой.
+
+**Что проверил.** До правки `ToolArgsTest.linkKeepsUppercaseHttpsAndTrimmedEdges` падал с `ToolInputError`. После правки прошли `ToolArgsTest` (верхний регистр, пробелы по краям, `http://` и `https://`, отказ адреса без схемы), а также соседние `McpToolsTest`, `DayRoutesTest`, `ActivityStoreTest`, `RoutesTest` и `SourceRulesTest`.</pre>
+
+<h2 id="endpoint">Endpoint</h2>
+<div class="prose">
+<p>Частая задача репозитория: новая HTTP-ручка. Профиль тот, что уже был в проекте; на день 2 его текст переписан под локальные активности, до запуска.</p>
+</div>
+<pre class="plain">Добавь HTTP endpoint GET /api/sprint.
+
+Ответ: список активностей вида Sprint, которые уже записаны локально. Журнал, план на день и беклог в этот ответ не входят.
+
+Роут только принимает запрос и вызывает один метод узкого интерфейса. ActivityStore из роута не вызывай. DTO — @Serializable data class в Routes.kt.
+
+Нужен тест. База через connect(). idleTurns не копируй. В фикстуре пусть будет запись спринта и запись журнала: в ответе только спринт.</pre>
+<h3>Журнал запуска</h3>
+<pre class="plain">15:50  запуск профиля endpoint-author, после двух предыдущих
+Read   скилл add-kotlin-endpoint, правила http.mdc
+Read   Routes.kt, Module.kt, Application.kt, Days.kt, ActivityStore.kt
+Read   DayRoutesTest.kt, RoutesTest.kt, McpToolsTest.kt, SourceRulesTest.kt
+Shell  git branch --show-current &amp;&amp; git status --short
+Write  activity/Sprint.kt
+Edit   Routes.kt, Module.kt, Application.kt
+Edit   RoutesTest.kt, DayRoutesTest.kt
+Write  SprintRoutesTest.kt
+Shell  ./gradlew :server:test --tests app.work.server.SprintRoutesTest --tests app.work.server.RoutesTest --tests app.work.server.DayRoutesTest
+Shell  ./gradlew :server:test
+Итог   оба прогона прошли. Профиль не переписывался.</pre>
+<h3>Что осталось в роуте</h3>
+<div class="sheet"><div class="row"><span>1</span><code>get(&quot;/sprint&quot;) {</code></div><div class="row"><span>2</span><code>    call.respond(sprint.load())</code></div><div class="row"><span>3</span><code>}</code></div></div>
+<h3>Ответ профиля</h3>
+<pre class="plain">Добавлен `GET /api/sprint`. Ответ — `SprintResponse`: список уже записанных активностей вида Sprint. Журнал в этот список не попадает.
+
+Роут только вызывает `Sprint.load()`. Чтение из базы делает `StoredSprint` через `ActivityStore.list`.
+
+Изменённые файлы:
+
+- `server/src/main/kotlin/app/work/server/activity/Sprint.kt`
+- `server/src/main/kotlin/app/work/server/Routes.kt`
+- `server/src/main/kotlin/app/work/server/Module.kt`
+- `server/src/main/kotlin/app/work/server/Application.kt`
+- `server/src/test/kotlin/app/work/server/SprintRoutesTest.kt`
+- `server/src/test/kotlin/app/work/server/RoutesTest.kt`
+- `server/src/test/kotlin/app/work/server/DayRoutesTest.kt`
+
+Проверено командами `./gradlew :server:test --tests app.work.server.SprintRoutesTest --tests app.work.server.RoutesTest --tests app.work.server.DayRoutesTest` и `./gradlew :server:test`. Оба прогона прошли.</pre>
+
+<h2 id="testy">Лог тестов</h2>
+<div class="prose">
+<p>Красный прогон <code>ToolArgsTest</code> до правки в консоли не сохранился. Профиль записал: тест упал с <code>ToolInputError</code>, после правки тот же класс и соседние тесты прошли. Ниже результат повторного прогона этих классов на ветке <code>day2</code>, уже с починкой и со спринтом.</p>
+<p>Команда: <code>./gradlew :server:test --tests app.work.server.tool.ToolArgsTest --tests app.work.server.SprintRoutesTest --tests app.work.server.RoutesTest --tests app.work.server.DayRoutesTest --tests app.work.server.McpToolsTest --tests app.work.server.activity.ActivityStoreTest --tests app.work.server.SourceRulesTest</code></p>
+</div>
+<pre class="plain">app.work.server.tool.ToolArgsTest
+  ok linkKeepsUppercaseHttpsAndTrimmedEdges
+  ok linkIsOptional
+  ok linkRejectsAddressWithoutScheme
+app.work.server.SprintRoutesTest
+  ok returnsOnlySprintActivities
+app.work.server.RoutesTest
+  ok health
+  ok passesTextThrough
+  ok chatPage
+app.work.server.DayRoutesTest
+  ok returnsLogAndScheduleForTheDay
+  ok rejectsBadDate
+app.work.server.McpToolsTest
+  ok journalGoesThroughMcp
+app.work.server.activity.ActivityStoreTest
+  ok keepsLogPlanAndBacklogApart
+app.work.server.SourceRulesTest
+  ok mainSourcesKeepTheHardRules
+BUILD SUCCESSFUL</pre>
+
+<h2 id="itog">Итог</h2>
+<div class="prose">
+<p>Три первых запуска рабочие. Текст профилей после них не менялся.</p>
+<ul>
+<li>Research ничего не записал. Назвал дыры: <code>GET /chat.js</code>, <code>GET /chat.css</code>, ветки 400, 404 и 502 у сообщения. На дне 2 их не чинили.</li>
+<li>Bug Fix сам дошёл до <code>link()</code>, добавил тест и починил регистр схемы и пробелы по краям.</li>
+<li>Endpoint добавил <code>GET /api/sprint</code>. Роут вызывает <code>sprint.load()</code>, журнал в ответ не входит.</li>
+</ul>
+<p>Коммит <code>4f5168f</code>: 12 файлов, +212/−17. Профили, <code>ToolArgs.kt</code>, <code>Sprint.kt</code>, тесты.</p>
+</div>
 </main>
 </div>
 </body>
