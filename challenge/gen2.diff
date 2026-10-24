@@ -1,0 +1,171 @@
+diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Application.kt server/src/main/kotlin/app/work/server/Application.kt
+--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Application.kt	2026-10-24 13:35:43
++++ server/src/main/kotlin/app/work/server/Application.kt	2026-10-24 13:48:16
+@@ -2,6 +2,7 @@
+ 
+ import app.work.agent.Agent
+ import app.work.server.activity.ExposedActivityStore
++import app.work.server.activity.StoredDays
+ import app.work.server.activity.openDatabase
+ import app.work.server.agent.OllamaModel
+ import app.work.server.confluence.ConfluenceClient
+@@ -26,6 +27,7 @@
+     val config = AppConfig.fromEnv(System.getenv())
+     val database = openDatabase(config)
+     val store = ExposedActivityStore(database)
++    val days = StoredDays(store)
+     val jira = config.jira?.let { JiraClient(it) }
+     val confluence = config.confluence?.let { ConfluenceClient(it) }
+     val mcp = embeddedServer(Netty, host = "127.0.0.1", port = config.mcpPort) {
+@@ -58,6 +60,6 @@
+     })
+ 
+     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {
+-        module(sessions)
++        module(sessions, days)
+     }.start(wait = true)
+ }
+diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Module.kt server/src/main/kotlin/app/work/server/Module.kt
+--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Module.kt	2026-10-24 13:19:06
++++ server/src/main/kotlin/app/work/server/Module.kt	2026-10-24 13:48:16
+@@ -1,5 +1,6 @@
+ package app.work.server
+ 
++import app.work.server.activity.Days
+ import app.work.server.session.BlankMessage
+ import app.work.server.session.SessionNotFound
+ import app.work.server.session.Turns
+@@ -13,7 +14,7 @@
+ import io.ktor.server.routing.routing
+ import kotlinx.serialization.Serializable
+ 
+-fun Application.module(sessions: Turns) {
++fun Application.module(sessions: Turns, days: Days) {
+     install(ContentNegotiation) {
+         json()
+     }
+@@ -21,6 +22,9 @@
+         exception<BlankMessage> { call, _ ->
+             call.respond(HttpStatusCode.BadRequest, ErrorBody("Пустое сообщение"))
+         }
++        exception<BadDate> { call, _ ->
++            call.respond(HttpStatusCode.BadRequest, ErrorBody("Неверная дата"))
++        }
+         exception<SessionNotFound> { call, _ ->
+             call.respond(HttpStatusCode.NotFound, ErrorBody("Сессия не найдена"))
+         }
+@@ -29,9 +33,11 @@
+         }
+     }
+     routing {
+-        api(sessions)
++        api(sessions, days)
+     }
+ }
++
++class BadDate : RuntimeException()
+ 
+ class ModelFailure(message: String) : RuntimeException(message)
+ 
+diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Routes.kt server/src/main/kotlin/app/work/server/Routes.kt
+--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Routes.kt	2026-10-24 13:19:08
++++ server/src/main/kotlin/app/work/server/Routes.kt	2026-10-24 13:48:16
+@@ -1,5 +1,6 @@
+ package app.work.server
+ 
++import app.work.server.activity.Days
+ import app.work.server.session.Turns
+ import io.ktor.server.request.receive
+ import io.ktor.server.response.respond
+@@ -9,11 +10,15 @@
+ import io.ktor.server.routing.route
+ import kotlinx.serialization.Serializable
+ 
+-fun Route.api(sessions: Turns) {
++fun Route.api(sessions: Turns, days: Days) {
+     route("/api") {
+         get("/health") {
+             call.respond(Health("ok"))
+         }
++        get("/days/{date}") {
++            val raw = call.parameters["date"].orEmpty()
++            call.respond(days.load(raw))
++        }
+         post("/sessions") {
+             call.respond(SessionCreated(sessions.open()))
+         }
+@@ -44,4 +49,19 @@
+ data class CallResponse(
+     val tool: String,
+     val result: String,
++)
++
++@Serializable
++data class DayResponse(
++    val date: String,
++    val log: List<DayEntry>,
++    val schedule: List<DayEntry>,
++)
++
++@Serializable
++data class DayEntry(
++    val id: String,
++    val summary: String,
++    val jiraKey: String?,
++    val createdAt: String,
+ )
+Only in server/src/main/kotlin/app/work/server/activity: Days.kt
+Only in server/src/test/kotlin/app/work/server: DayRoutesTest.kt
+diff -ru /tmp/wa-src-v1/server/src/test/kotlin/app/work/server/RoutesTest.kt server/src/test/kotlin/app/work/server/RoutesTest.kt
+--- /tmp/wa-src-v1/server/src/test/kotlin/app/work/server/RoutesTest.kt	2026-10-24 13:20:36
++++ server/src/test/kotlin/app/work/server/RoutesTest.kt	2026-10-24 13:48:16
+@@ -1,5 +1,6 @@
+ package app.work.server
+ 
++import app.work.server.activity.Days
+ import app.work.server.session.Turns
+ import io.ktor.client.call.body
+ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+@@ -19,13 +20,16 @@
+     fun passesTextThrough() = testApplication {
+         val seen = mutableListOf<String>()
+         application {
+-            module(object : Turns {
+-                override suspend fun open() = "session-1"
+-                override suspend fun message(sessionId: String, text: String): TurnResponse {
+-                    seen += "$sessionId:$text"
+-                    return TurnResponse("уточни проект", emptyList())
+-                }
+-            })
++            module(
++                object : Turns {
++                    override suspend fun open() = "session-1"
++                    override suspend fun message(sessionId: String, text: String): TurnResponse {
++                        seen += "$sessionId:$text"
++                        return TurnResponse("уточни проект", emptyList())
++                    }
++                },
++                idleDays(),
++            )
+         }
+         val client = createClient {
+             install(ContentNegotiation) { json() }
+@@ -46,12 +50,16 @@
+ 
+     @Test
+     fun health() = testApplication {
+-        application { module(idleTurns()) }
++        application { module(idleTurns(), idleDays()) }
+         assertEquals(HttpStatusCode.OK, client.get("/api/health").status)
+     }
+ }
+ 
+-private fun idleTurns() = object : Turns {
++internal fun idleTurns() = object : Turns {
+     override suspend fun open() = "x"
+     override suspend fun message(sessionId: String, text: String) = TurnResponse("", emptyList())
++}
++
++private fun idleDays() = object : Days {
++    override suspend fun load(rawDate: String): DayResponse = error("не используется")
+ }

@@ -1,0 +1,122 @@
+# Рабочий помощник
+
+Один человек пишет свободно. Модель на S1 решает, что сделать, и вызывает инструменты MCP. Код смысл фразы не разбирает.
+
+## Стек
+
+Kotlin 2.4, Multiplatform (`jvm` и `js`/`nodejs`). Ktor 3.5 (Netty). MCP Kotlin SDK 0.15. Exposed 1.0, H2 по умолчанию, Postgres через `DATABASE_URL`. Ollama `http://10.10.1.101:11434`, модель `qwen2.5:3b`. kotlinx.serialization, kotlinx.datetime, kotlin.time.Clock. Логи — SLF4J/Logback. Тесты — kotlin.test и JUnit 5.
+
+Новые фреймворки, Spring, Koin и разбор текста регулярными выражениями не добавлять.
+
+## Архитектура
+
+`shared` — агент и домен, без Ktor и без базы. `server` — HTTP, Ollama, MCP, Exposed.
+
+Поток: `POST /api/sessions/{id}/messages` → `SessionBook` → `Agent`. Агент добавляет системную дату, отдаёт каталог инструментов модели и выполняет ровно те вызовы, которые вернула модель. Текст без вызовов — ответ или уточнение, код их не различает.
+
+Инструменты живут в одном MCP `POST /mcp`, регистрация разделена: `activities`, `jira`, `confluence`. Вид активности задаёт выбранный инструмент (`Log`, `Schedule`, `Backlog`), не содержимое фразы. Jira и Confluence читают только свои переменные окружения.
+
+## Структура
+
+```
+shared/src/commonMain/kotlin/app/work/agent
+shared/src/commonMain/kotlin/app/work/domain
+server/src/main/kotlin/app/work/server
+server/src/main/kotlin/app/work/server/activity
+server/src/main/kotlin/app/work/server/jira
+server/src/main/kotlin/app/work/server/confluence
+server/src/main/kotlin/app/work/server/mcp
+server/src/main/kotlin/app/work/server/session
+server/src/main/kotlin/app/work/server/tool
+```
+
+## Имена
+
+Пакет `app.work`. Типы и файлы — PascalCase, функции — camelCase, инструменты MCP — snake_case. Пользовательские строки по-русски, идентификаторы по-английски. Даты в аргументах и путях — `YYYY-MM-DD` (`LocalDate`).
+
+## Паттерны
+
+Роут только принимает тело и отвечает. Решение и база — за интерфейсом (`Turns`, `ActivityStore`, `ToolCatalog`, `LanguageModel`). Запрос к базе — DSL Exposed. Аргументы инструмента проверяются (`ToolArgs`, `IssueKeys`). Ошибка инструмента возвращается модели текстом. Пустое сообщение, чужая сессия и сбой модели — свои исключения и `ErrorBody`.
+
+## Как писать
+
+Агент не смотрит на слова пользователя. `Agent.handle` только дописывает реплику и исполняет вызовы модели:
+
+```kotlin
+conversation += ChatMessage.User(userText)
+val step = model.complete(prompt(conversation), definitions)
+if (step.toolCalls.isEmpty()) {
+    return AgentReply(step.text, calls.toList(), conversation.toList())
+}
+for (call in step.toolCalls) {
+    val result = tools.call(call.name, call.arguments)
+}
+```
+
+Роут тонкий. `Routes.api`:
+
+```kotlin
+post("/sessions/{id}/messages") {
+    val id = call.parameters["id"].orEmpty()
+    val body = call.receive<IncomingMessage>()
+    call.respond(sessions.message(id, body.text))
+}
+```
+
+Чтение дня — DSL, не строка SQL. `ExposedActivityStore.find`:
+
+```kotlin
+ActivityTable.selectAll()
+    .where { (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString()) }
+    .orderBy(ActivityTable.createdAt to SortOrder.ASC)
+```
+
+Вид активности фиксирует инструмент. `activities_log` всегда пишет `ActivityKind.Log`:
+
+```kotlin
+store.add(NewActivity(summary = args.summary(), kind = ActivityKind.Log, jiraKey = args.jiraKey(), onDate = args.isoDate("on_date")))
+```
+
+Тест держит запрет. Фраза про спринт не вызывает инструменты, если модель их не запросила: `AgentTest.wordsDoNotSelectTools`.
+
+## Запрещено
+
+Разбор фразы:
+
+```kotlin
+if (text.contains("спринт") || text.contains("завтра")) addToSprint()
+```
+
+`Any` и сырой JSON в домене, роуте и агенте. `Any` допустим только в `McpToolCatalog`, на границе SDK.
+
+`println` и `System.out` в `src/main`.
+
+SQL-строка в Kotlin:
+
+```kotlin
+statement.executeQuery("SELECT * FROM activity WHERE on_date = '$date'")
+```
+
+Пустой `catch`, звёздный импорт, ключи Jira и адреса, зашитые в код. Ветвление по тексту пользователя. Ветвление по полю инструмента (`kind` = `page` | `attachment` | `any`) — это проверка аргумента, её оставлять.
+
+## Шаблон файла
+
+```kotlin
+package app.work.server.activity
+
+import kotlin.time.Clock
+import kotlinx.datetime.LocalDate
+import org.jetbrains.exposed.v1.jdbc.Database
+
+class ExposedActivityStore(
+    private val database: Database,
+) : ActivityStore {
+    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity> {
+        return emptyList()
+    }
+}
+```
+
+Импорты тремя группами: `kotlin`, сторонние, `app.work`. Между группами пустая строка. Конструктор — скобки с хвостовой запятой, если аргументов больше одного. Публичная функция называет действие. DTO HTTP — `@Serializable data class` рядом с роутом.
+
+Новый read-endpoint берёт данные из `ActivityStore`, не из модели. Неверная дата пути — `400` и `ErrorBody`, не необработанное исключение. Рядом тест на H2, как `ActivityStoreTest`.

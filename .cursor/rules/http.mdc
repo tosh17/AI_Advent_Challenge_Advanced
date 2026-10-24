@@ -1,0 +1,13 @@
+---
+description: Тонкие роуты Ktor без решений по тексту
+globs: "server/**/*.kt"
+alwaysApply: false
+---
+
+# HTTP
+
+Роут принимает параметр или тело и вызывает один метод. Образец — `sessions.message`. `ActivityStore` из роута не вызывать.
+
+Чтение дня — интерфейс `Days` с одним `load(rawDate)`. Реализация сама зовёт `find` для `Log` и `Schedule`. DTO — `@Serializable data class` в файле роута. Беклог в этот ответ не входит.
+
+Исключение плохой даты и его ветка `StatusPages` лежат в `Module.kt` и отвечают `ErrorBody`.

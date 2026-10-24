@@ -1,0 +1,191 @@
+diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Application.kt server/src/main/kotlin/app/work/server/Application.kt
+--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Application.kt	2026-10-24 13:35:43
++++ server/src/main/kotlin/app/work/server/Application.kt	2026-10-24 13:41:15
+@@ -58,6 +58,6 @@
+     })
+ 
+     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {
+-        module(sessions)
++        module(sessions, store)
+     }.start(wait = true)
+ }
+diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Module.kt server/src/main/kotlin/app/work/server/Module.kt
+--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Module.kt	2026-10-24 13:19:06
++++ server/src/main/kotlin/app/work/server/Module.kt	2026-10-24 13:41:15
+@@ -1,5 +1,6 @@
+ package app.work.server
+ 
++import app.work.domain.ActivityStore
+ import app.work.server.session.BlankMessage
+ import app.work.server.session.SessionNotFound
+ import app.work.server.session.Turns
+@@ -13,7 +14,10 @@
+ import io.ktor.server.routing.routing
+ import kotlinx.serialization.Serializable
+ 
+-fun Application.module(sessions: Turns) {
++fun Application.module(
++    sessions: Turns,
++    store: ActivityStore,
++) {
+     install(ContentNegotiation) {
+         json()
+     }
+@@ -21,6 +25,9 @@
+         exception<BlankMessage> { call, _ ->
+             call.respond(HttpStatusCode.BadRequest, ErrorBody("Пустое сообщение"))
+         }
++        exception<BadDate> { call, _ ->
++            call.respond(HttpStatusCode.BadRequest, ErrorBody("Неверная дата"))
++        }
+         exception<SessionNotFound> { call, _ ->
+             call.respond(HttpStatusCode.NotFound, ErrorBody("Сессия не найдена"))
+         }
+@@ -29,7 +36,7 @@
+         }
+     }
+     routing {
+-        api(sessions)
++        api(sessions, store)
+     }
+ }
+ 
+diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Routes.kt server/src/main/kotlin/app/work/server/Routes.kt
+--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Routes.kt	2026-10-24 13:19:08
++++ server/src/main/kotlin/app/work/server/Routes.kt	2026-10-24 13:41:15
+@@ -1,19 +1,31 @@
+ package app.work.server
+ 
+-import app.work.server.session.Turns
+ import io.ktor.server.request.receive
+ import io.ktor.server.response.respond
+ import io.ktor.server.routing.Route
+ import io.ktor.server.routing.get
+ import io.ktor.server.routing.post
+ import io.ktor.server.routing.route
++import kotlinx.datetime.LocalDate
+ import kotlinx.serialization.Serializable
+ 
+-fun Route.api(sessions: Turns) {
++import app.work.domain.Activity
++import app.work.domain.ActivityKind
++import app.work.domain.ActivityStore
++import app.work.server.session.Turns
++
++fun Route.api(
++    sessions: Turns,
++    store: ActivityStore,
++) {
+     route("/api") {
+         get("/health") {
+             call.respond(Health("ok"))
+         }
++        get("/days/{date}") {
++            val date = call.parameters["date"].orEmpty()
++            call.respond(readDay(store, date))
++        }
+         post("/sessions") {
+             call.respond(SessionCreated(sessions.open()))
+         }
+@@ -25,6 +37,30 @@
+     }
+ }
+ 
++private suspend fun readDay(store: ActivityStore, rawDate: String): DayResponse {
++    val date = pathDate(rawDate)
++    return DayResponse(
++        date = date.toString(),
++        log = store.find(ActivityKind.Log, date).map { it.toEntry() },
++        schedule = store.find(ActivityKind.Schedule, date).map { it.toEntry() },
++    )
++}
++
++private fun pathDate(raw: String): LocalDate = try {
++    LocalDate.parse(raw)
++} catch (_: IllegalArgumentException) {
++    throw BadDate()
++}
++
++private fun Activity.toEntry() = DayEntry(
++    id = id,
++    summary = summary,
++    jiraKey = jiraKey,
++    createdAt = createdAt.toString(),
++)
++
++class BadDate : RuntimeException()
++
+ @Serializable
+ data class Health(val status: String)
+ 
+@@ -44,4 +80,19 @@
+ data class CallResponse(
+     val tool: String,
+     val result: String,
++)
++
++@Serializable
++data class DayResponse(
++    val date: String,
++    val log: List<DayEntry>,
++    val schedule: List<DayEntry>,
++)
++
++@Serializable
++data class DayEntry(
++    val id: String,
++    val summary: String,
++    val jiraKey: String?,
++    val createdAt: String,
+ )
+Only in server/src/test/kotlin/app/work/server: DayRoutesTest.kt
+diff -ru /tmp/wa-src-v1/server/src/test/kotlin/app/work/server/RoutesTest.kt server/src/test/kotlin/app/work/server/RoutesTest.kt
+--- /tmp/wa-src-v1/server/src/test/kotlin/app/work/server/RoutesTest.kt	2026-10-24 13:20:36
++++ server/src/test/kotlin/app/work/server/RoutesTest.kt	2026-10-24 13:41:16
+@@ -1,5 +1,9 @@
+ package app.work.server
+ 
++import app.work.domain.Activity
++import app.work.domain.ActivityKind
++import app.work.domain.ActivityStore
++import app.work.domain.NewActivity
+ import app.work.server.session.Turns
+ import io.ktor.client.call.body
+ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+@@ -11,6 +15,7 @@
+ import io.ktor.http.contentType
+ import io.ktor.serialization.kotlinx.json.json
+ import io.ktor.server.testing.testApplication
++import kotlinx.datetime.LocalDate
+ import kotlin.test.Test
+ import kotlin.test.assertEquals
+ 
+@@ -25,7 +30,7 @@
+                     seen += "$sessionId:$text"
+                     return TurnResponse("уточни проект", emptyList())
+                 }
+-            })
++            }, unusedStore())
+         }
+         val client = createClient {
+             install(ContentNegotiation) { json() }
+@@ -46,7 +51,7 @@
+ 
+     @Test
+     fun health() = testApplication {
+-        application { module(idleTurns()) }
++        application { module(idleTurns(), unusedStore()) }
+         assertEquals(HttpStatusCode.OK, client.get("/api/health").status)
+     }
+ }
+@@ -54,4 +59,10 @@
+ private fun idleTurns() = object : Turns {
+     override suspend fun open() = "x"
+     override suspend fun message(sessionId: String, text: String) = TurnResponse("", emptyList())
++}
++
++private fun unusedStore() = object : ActivityStore {
++    override suspend fun add(draft: NewActivity): Activity = error("не используется")
++
++    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity> = emptyList()
+ }

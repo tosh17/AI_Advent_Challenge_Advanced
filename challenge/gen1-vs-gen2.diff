@@ -1,0 +1,277 @@
+diff -ru challenge/gen1/Application.kt challenge/gen2/Application.kt
+--- challenge/gen1/Application.kt	2026-10-24 13:43:42
++++ challenge/gen2/Application.kt	2026-10-24 13:49:49
+@@ -2,6 +2,7 @@
+ 
+ import app.work.agent.Agent
+ import app.work.server.activity.ExposedActivityStore
++import app.work.server.activity.StoredDays
+ import app.work.server.activity.openDatabase
+ import app.work.server.agent.OllamaModel
+ import app.work.server.confluence.ConfluenceClient
+@@ -26,6 +27,7 @@
+     val config = AppConfig.fromEnv(System.getenv())
+     val database = openDatabase(config)
+     val store = ExposedActivityStore(database)
++    val days = StoredDays(store)
+     val jira = config.jira?.let { JiraClient(it) }
+     val confluence = config.confluence?.let { ConfluenceClient(it) }
+     val mcp = embeddedServer(Netty, host = "127.0.0.1", port = config.mcpPort) {
+@@ -58,6 +60,6 @@
+     })
+ 
+     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {
+-        module(sessions, store)
++        module(sessions, days)
+     }.start(wait = true)
+ }
+diff -ru challenge/gen1/DayRoutesTest.kt challenge/gen2/DayRoutesTest.kt
+--- challenge/gen1/DayRoutesTest.kt	2026-10-24 13:43:42
++++ challenge/gen2/DayRoutesTest.kt	2026-10-24 13:49:49
+@@ -10,22 +10,21 @@
+ import io.ktor.serialization.kotlinx.json.json
+ import io.ktor.server.testing.testApplication
+ import kotlinx.datetime.LocalDate
+-import org.jetbrains.exposed.v1.jdbc.Database
+ 
+ import app.work.domain.Activity
+ import app.work.domain.ActivityKind
+ import app.work.domain.ActivityStore
+ import app.work.domain.NewActivity
+ import app.work.server.activity.ExposedActivityStore
+-import app.work.server.session.Turns
++import app.work.server.activity.StoredDays
++import app.work.server.activity.connect
+ 
+ class DayRoutesTest {
+     @Test
+     fun returnsLogAndScheduleForTheDay() = testApplication {
+         val store = ExposedActivityStore(
+-            Database.connect(
+-                url = "jdbc:h2:mem:day_${System.nanoTime()};MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+-                driver = "org.h2.Driver",
++            connect(
++                url = "jdbc:h2:mem:days_${System.nanoTime()};MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+                 user = "sa",
+                 password = "",
+             ),
+@@ -33,9 +32,9 @@
+         val day = LocalDate(2026, 10, 23)
+         store.add(NewActivity("ревью", ActivityKind.Log, "APP-2", day))
+         store.add(NewActivity("созвон", ActivityKind.Schedule, null, day))
+-        store.add(NewActivity("идея", ActivityKind.Backlog, null, day))
++        store.add(NewActivity("идея", ActivityKind.Backlog, null, null))
+         store.add(NewActivity("чужой", ActivityKind.Log, null, LocalDate(2026, 10, 24)))
+-        application { module(idleTurns(), store) }
++        application { module(idleTurns(), StoredDays(store)) }
+         val client = createClient {
+             install(ContentNegotiation) { json() }
+         }
+@@ -47,7 +46,9 @@
+         assertEquals(listOf("ревью"), body.log.map { it.summary })
+         assertEquals(listOf("APP-2"), body.log.map { it.jiraKey })
+         assertEquals(listOf("созвон"), body.schedule.map { it.summary })
+-        assertEquals(listOf(null), body.schedule.map { it.jiraKey })
++        assertEquals(listOf<String?>(null), body.schedule.map { it.jiraKey })
++        assertEquals(false, "идея" in body.log.map { it.summary })
++        assertEquals(false, "идея" in body.schedule.map { it.summary })
+ 
+         val empty = client.get("/api/days/2026-10-25")
+         assertEquals(HttpStatusCode.OK, empty.status)
+@@ -59,7 +60,7 @@
+ 
+     @Test
+     fun rejectsBadDate() = testApplication {
+-        application { module(idleTurns(), closedStore()) }
++        application { module(idleTurns(), StoredDays(closedStore())) }
+         val client = createClient {
+             install(ContentNegotiation) { json() }
+         }
+@@ -68,11 +69,6 @@
+         assertEquals(HttpStatusCode.BadRequest, response.status)
+         assertEquals("Неверная дата", response.body<ErrorBody>().error)
+     }
+-}
+-
+-private fun idleTurns() = object : Turns {
+-    override suspend fun open() = "x"
+-    override suspend fun message(sessionId: String, text: String) = TurnResponse("", emptyList())
+ }
+ 
+ private fun closedStore() = object : ActivityStore {
+Only in challenge/gen2: Days.kt
+diff -ru challenge/gen1/Module.kt challenge/gen2/Module.kt
+--- challenge/gen1/Module.kt	2026-10-24 13:43:42
++++ challenge/gen2/Module.kt	2026-10-24 13:49:49
+@@ -1,6 +1,6 @@
+ package app.work.server
+ 
+-import app.work.domain.ActivityStore
++import app.work.server.activity.Days
+ import app.work.server.session.BlankMessage
+ import app.work.server.session.SessionNotFound
+ import app.work.server.session.Turns
+@@ -14,10 +14,7 @@
+ import io.ktor.server.routing.routing
+ import kotlinx.serialization.Serializable
+ 
+-fun Application.module(
+-    sessions: Turns,
+-    store: ActivityStore,
+-) {
++fun Application.module(sessions: Turns, days: Days) {
+     install(ContentNegotiation) {
+         json()
+     }
+@@ -36,9 +33,11 @@
+         }
+     }
+     routing {
+-        api(sessions, store)
++        api(sessions, days)
+     }
+ }
++
++class BadDate : RuntimeException()
+ 
+ class ModelFailure(message: String) : RuntimeException(message)
+ 
+diff -ru challenge/gen1/Routes.kt challenge/gen2/Routes.kt
+--- challenge/gen1/Routes.kt	2026-10-24 13:43:42
++++ challenge/gen2/Routes.kt	2026-10-24 13:49:49
+@@ -1,30 +1,23 @@
+ package app.work.server
+ 
++import app.work.server.activity.Days
++import app.work.server.session.Turns
+ import io.ktor.server.request.receive
+ import io.ktor.server.response.respond
+ import io.ktor.server.routing.Route
+ import io.ktor.server.routing.get
+ import io.ktor.server.routing.post
+ import io.ktor.server.routing.route
+-import kotlinx.datetime.LocalDate
+ import kotlinx.serialization.Serializable
+ 
+-import app.work.domain.Activity
+-import app.work.domain.ActivityKind
+-import app.work.domain.ActivityStore
+-import app.work.server.session.Turns
+-
+-fun Route.api(
+-    sessions: Turns,
+-    store: ActivityStore,
+-) {
++fun Route.api(sessions: Turns, days: Days) {
+     route("/api") {
+         get("/health") {
+             call.respond(Health("ok"))
+         }
+         get("/days/{date}") {
+-            val date = call.parameters["date"].orEmpty()
+-            call.respond(readDay(store, date))
++            val raw = call.parameters["date"].orEmpty()
++            call.respond(days.load(raw))
+         }
+         post("/sessions") {
+             call.respond(SessionCreated(sessions.open()))
+@@ -36,30 +29,6 @@
+         }
+     }
+ }
+-
+-private suspend fun readDay(store: ActivityStore, rawDate: String): DayResponse {
+-    val date = pathDate(rawDate)
+-    return DayResponse(
+-        date = date.toString(),
+-        log = store.find(ActivityKind.Log, date).map { it.toEntry() },
+-        schedule = store.find(ActivityKind.Schedule, date).map { it.toEntry() },
+-    )
+-}
+-
+-private fun pathDate(raw: String): LocalDate = try {
+-    LocalDate.parse(raw)
+-} catch (_: IllegalArgumentException) {
+-    throw BadDate()
+-}
+-
+-private fun Activity.toEntry() = DayEntry(
+-    id = id,
+-    summary = summary,
+-    jiraKey = jiraKey,
+-    createdAt = createdAt.toString(),
+-)
+-
+-class BadDate : RuntimeException()
+ 
+ @Serializable
+ data class Health(val status: String)
+diff -ru challenge/gen1/RoutesTest.kt challenge/gen2/RoutesTest.kt
+--- challenge/gen1/RoutesTest.kt	2026-10-24 13:43:42
++++ challenge/gen2/RoutesTest.kt	2026-10-24 13:49:49
+@@ -1,9 +1,6 @@
+ package app.work.server
+ 
+-import app.work.domain.Activity
+-import app.work.domain.ActivityKind
+-import app.work.domain.ActivityStore
+-import app.work.domain.NewActivity
++import app.work.server.activity.Days
+ import app.work.server.session.Turns
+ import io.ktor.client.call.body
+ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+@@ -15,7 +12,6 @@
+ import io.ktor.http.contentType
+ import io.ktor.serialization.kotlinx.json.json
+ import io.ktor.server.testing.testApplication
+-import kotlinx.datetime.LocalDate
+ import kotlin.test.Test
+ import kotlin.test.assertEquals
+ 
+@@ -24,13 +20,16 @@
+     fun passesTextThrough() = testApplication {
+         val seen = mutableListOf<String>()
+         application {
+-            module(object : Turns {
+-                override suspend fun open() = "session-1"
+-                override suspend fun message(sessionId: String, text: String): TurnResponse {
+-                    seen += "$sessionId:$text"
+-                    return TurnResponse("уточни проект", emptyList())
+-                }
+-            }, unusedStore())
++            module(
++                object : Turns {
++                    override suspend fun open() = "session-1"
++                    override suspend fun message(sessionId: String, text: String): TurnResponse {
++                        seen += "$sessionId:$text"
++                        return TurnResponse("уточни проект", emptyList())
++                    }
++                },
++                idleDays(),
++            )
+         }
+         val client = createClient {
+             install(ContentNegotiation) { json() }
+@@ -51,18 +50,16 @@
+ 
+     @Test
+     fun health() = testApplication {
+-        application { module(idleTurns(), unusedStore()) }
++        application { module(idleTurns(), idleDays()) }
+         assertEquals(HttpStatusCode.OK, client.get("/api/health").status)
+     }
+ }
+ 
+-private fun idleTurns() = object : Turns {
++internal fun idleTurns() = object : Turns {
+     override suspend fun open() = "x"
+     override suspend fun message(sessionId: String, text: String) = TurnResponse("", emptyList())
+ }
+ 
+-private fun unusedStore() = object : ActivityStore {
+-    override suspend fun add(draft: NewActivity): Activity = error("не используется")
+-
+-    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity> = emptyList()
++private fun idleDays() = object : Days {
++    override suspend fun load(rawDate: String): DayResponse = error("не используется")
+ }

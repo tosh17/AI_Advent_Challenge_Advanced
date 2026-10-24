@@ -1,0 +1,15 @@
+---
+description: Как писать Kotlin в рабочем помощнике
+globs: "**/*.kt"
+alwaysApply: false
+---
+
+# Kotlin
+
+Импорты: `kotlin`, затем сторонние, затем `app.work`. Без звёздочек.
+
+Имена: типы PascalCase, функции camelCase, инструменты MCP snake_case. Строки для человека по-русски.
+
+В домене, роуте и агенте нет `Any`, `println`, `System.out` и строк SQL. Запрос — DSL Exposed, как `ExposedActivityStore.find`.
+
+Неверная дата — `400` и `ErrorBody`. Рядом тест на H2.
