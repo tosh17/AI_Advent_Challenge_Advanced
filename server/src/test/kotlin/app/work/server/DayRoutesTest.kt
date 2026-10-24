@@ -30,7 +30,7 @@ class DayRoutesTest {
             ),
         )
         val day = LocalDate(2026, 10, 23)
-        store.add(NewActivity("ревью", ActivityKind.Log, "APP-2", day))
+        store.add(NewActivity("ревью", ActivityKind.Log, "APP-2", day, "https://example.test/review"))
         store.add(NewActivity("созвон", ActivityKind.Schedule, null, day))
         store.add(NewActivity("идея", ActivityKind.Backlog, null, null))
         store.add(NewActivity("чужой", ActivityKind.Log, null, LocalDate(2026, 10, 24)))
@@ -44,9 +44,11 @@ class DayRoutesTest {
         val body = response.body<DayResponse>()
         assertEquals("2026-10-23", body.date)
         assertEquals(listOf("ревью"), body.log.map { it.summary })
-        assertEquals(listOf("APP-2"), body.log.map { it.jiraKey })
+        assertEquals(listOf("APP-2"), body.log.map { it.issueKey })
+        assertEquals(listOf("https://example.test/review"), body.log.map { it.link })
         assertEquals(listOf("созвон"), body.schedule.map { it.summary })
-        assertEquals(listOf<String?>(null), body.schedule.map { it.jiraKey })
+        assertEquals(listOf<String?>(null), body.schedule.map { it.issueKey })
+        assertEquals(listOf<String?>(null), body.schedule.map { it.link })
         assertEquals(false, "идея" in body.log.map { it.summary })
         assertEquals(false, "идея" in body.schedule.map { it.summary })
 
@@ -75,4 +77,8 @@ private fun closedStore() = object : ActivityStore {
     override suspend fun add(draft: NewActivity): Activity = error("не используется")
 
     override suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity> = error("не используется")
+
+    override suspend fun list(kind: ActivityKind): List<Activity> = error("не используется")
+
+    override suspend fun search(query: String): List<Activity> = error("не используется")
 }

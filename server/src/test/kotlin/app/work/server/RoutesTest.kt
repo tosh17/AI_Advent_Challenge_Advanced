@@ -9,11 +9,13 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class RoutesTest {
     @Test
@@ -52,6 +54,14 @@ class RoutesTest {
     fun health() = testApplication {
         application { module(idleTurns(), idleDays()) }
         assertEquals(HttpStatusCode.OK, client.get("/api/health").status)
+    }
+
+    @Test
+    fun chatPage() = testApplication {
+        application { module(idleTurns(), idleDays()) }
+        val response = client.get("/")
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue("Рабочий помощник" in response.bodyAsText())
     }
 }
 

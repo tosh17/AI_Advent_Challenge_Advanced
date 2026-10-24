@@ -9,6 +9,8 @@ Kotlin 2.4 Multiplatform (`jvm`, `js`). Ktor 3.5, MCP SDK 0.15, Exposed 1.0, Oll
 
 `shared` — агент и домен. `server` — HTTP, Ollama, MCP, база. Смысл фразы решает только модель. Код исполняет вызовы MCP и не ищет слова в тексте.
 
-Роут делегирует узкий интерфейс и не вызывает `ActivityStore`. Вид активности задаёт инструмент: `Log`, `Schedule`, `Backlog`. Даты — `YYYY-MM-DD`.
+Веб-чат лежит в `server/src/main/resources/web` и только вызывает API. Десктоп и мобильный клиент потом ходят в тот же API.
+
+Роут делегирует узкий интерфейс и не вызывает `ActivityStore`. Вид активности задаёт инструмент: `Log`, `Schedule`, `Backlog`, `Sprint`. Номер задачи и ссылка необязательны. Даты — `YYYY-MM-DD`. Запросов в Jira и Confluence нет.
 
 Примеры, запреты и шаблон файла — в `project.mdc` и в `.cursorrules`.

@@ -12,8 +12,6 @@ data class AppConfig(
     val ollamaUrl: String,
     val ollamaModel: String,
     val zone: TimeZone,
-    val jira: JiraConfig?,
-    val confluence: ConfluenceConfig?,
 ) {
     companion object {
         fun fromEnv(env: Map<String, String>): AppConfig {
@@ -29,29 +27,7 @@ data class AppConfig(
                 ollamaUrl = (env["OLLAMA_URL"] ?: "http://10.10.1.101:11434").trimEnd('/'),
                 ollamaModel = env["OLLAMA_MODEL"] ?: "qwen2.5:3b",
                 zone = TimeZone.of(zoneId),
-                jira = jira(env),
-                confluence = confluence(env),
             )
-        }
-
-        private fun jira(env: Map<String, String>): JiraConfig? {
-            val baseUrl = env["JIRA_BASE_URL"] ?: return null
-            val email = env["JIRA_EMAIL"] ?: return null
-            val token = env["JIRA_API_TOKEN"] ?: return null
-            return JiraConfig(
-                baseUrl = baseUrl.trimEnd('/'),
-                email = email,
-                token = token,
-                boardId = env["JIRA_BOARD_ID"],
-                projectKey = env["JIRA_PROJECT_KEY"],
-            )
-        }
-
-        private fun confluence(env: Map<String, String>): ConfluenceConfig? {
-            val baseUrl = env["CONFLUENCE_BASE_URL"] ?: return null
-            val email = env["CONFLUENCE_EMAIL"] ?: return null
-            val token = env["CONFLUENCE_API_TOKEN"] ?: return null
-            return ConfluenceConfig(baseUrl.trimEnd('/'), email, token)
         }
 
         private fun Map<String, String>.int(name: String, default: Int): Int {
@@ -60,17 +36,3 @@ data class AppConfig(
         }
     }
 }
-
-data class JiraConfig(
-    val baseUrl: String,
-    val email: String,
-    val token: String,
-    val boardId: String?,
-    val projectKey: String?,
-)
-
-data class ConfluenceConfig(
-    val baseUrl: String,
-    val email: String,
-    val token: String,
-)

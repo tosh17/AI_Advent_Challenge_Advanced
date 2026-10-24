@@ -35,3 +35,19 @@ fun JsonObject.summary(): String {
     if (value.length > 2_000) throw ToolInputError("Слишком длинное описание")
     return value.trim()
 }
+
+fun JsonObject.issueKey(): String? {
+    val value = optionalText("issue_key") ?: return null
+    if (value.length > 40) throw ToolInputError("Слишком длинный номер задачи")
+    if (value.any { it.isWhitespace() }) throw ToolInputError("В номере задачи не должно быть пробелов")
+    return value
+}
+
+fun JsonObject.link(): String? {
+    val value = optionalText("link") ?: return null
+    if (value.length > 2_000) throw ToolInputError("Слишком длинная ссылка")
+    if (!value.startsWith("https://") && !value.startsWith("http://")) {
+        throw ToolInputError("Ссылка должна начинаться с http:// или https://")
+    }
+    return value
+}

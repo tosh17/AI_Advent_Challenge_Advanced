@@ -1,15 +1,13 @@
 package app.work.server.activity
 
-import app.work.domain.Activity
-import app.work.domain.ActivityKind
-import app.work.domain.ActivityStore
-import app.work.domain.NewActivity
-import app.work.server.AppConfig
 import kotlin.time.Clock
 import kotlin.time.Instant
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import kotlinx.datetime.LocalDate
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
@@ -19,7 +17,12 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.util.UUID
+
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+import app.work.domain.ActivityStore
+import app.work.domain.NewActivity
+import app.work.server.AppConfig
 
 fun openDatabase(config: AppConfig): Database = connect(
     url = config.databaseUrl,
@@ -36,7 +39,8 @@ object ActivityTable : Table("activity") {
     val id = varchar("id", 36)
     val summary = varchar("summary", 2_000)
     val kind = varchar("kind", 16)
-    val jiraKey = varchar("jira_key", 40).nullable()
+    val issueKey = varchar("jira_key", 40).nullable()
+    val link = varchar("link", 2_000).nullable()
     val onDate = varchar("on_date", 10).nullable()
     val createdAt = long("created_at")
 
@@ -46,7 +50,7 @@ object ActivityTable : Table("activity") {
 class ExposedActivityStore(private val database: Database) : ActivityStore {
     init {
         transaction(database) {
-            SchemaUtils.create(ActivityTable)
+            SchemaUtils.createMissingTablesAndColumns(ActivityTable)
         }
     }
 
@@ -59,7 +63,8 @@ class ExposedActivityStore(private val database: Database) : ActivityStore {
             it[ActivityTable.id] = id
             it[summary] = draft.summary
             it[kind] = draft.kind.name
-            it[jiraKey] = draft.jiraKey
+            it[issueKey] = draft.issueKey
+            it[link] = draft.link
             it[onDate] = draft.onDate?.toString()
             it[ActivityTable.createdAt] = createdAt.toEpochMilliseconds()
         }
@@ -67,7 +72,8 @@ class ExposedActivityStore(private val database: Database) : ActivityStore {
             id = id,
             summary = draft.summary,
             kind = draft.kind,
-            jiraKey = draft.jiraKey,
+            issueKey = draft.issueKey,
+            link = draft.link,
             onDate = draft.onDate,
             createdAt = createdAt,
         )
@@ -79,15 +85,25 @@ class ExposedActivityStore(private val database: Database) : ActivityStore {
                 (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString())
             }
             .orderBy(ActivityTable.createdAt to SortOrder.ASC)
-            .map { row ->
-                Activity(
-                    id = row[ActivityTable.id],
-                    summary = row[ActivityTable.summary],
-                    kind = ActivityKind.valueOf(row[ActivityTable.kind]),
-                    jiraKey = row[ActivityTable.jiraKey],
-                    onDate = row[ActivityTable.onDate]?.let(LocalDate::parse),
-                    createdAt = Instant.fromEpochMilliseconds(row[ActivityTable.createdAt]),
-                )
+            .map { it.toActivity() }
+    }
+
+    override suspend fun list(kind: ActivityKind): List<Activity> = db {
+        ActivityTable.selectAll()
+            .where { ActivityTable.kind eq kind.name }
+            .orderBy(ActivityTable.createdAt to SortOrder.ASC)
+            .map { it.toActivity() }
+    }
+
+    override suspend fun search(query: String): List<Activity> = db {
+        val needle = query.trim().lowercase()
+        ActivityTable.selectAll()
+            .orderBy(ActivityTable.createdAt to SortOrder.ASC)
+            .map { it.toActivity() }
+            .filter { activity ->
+                activity.summary.lowercase().contains(needle) ||
+                    activity.issueKey?.lowercase()?.contains(needle) == true ||
+                    activity.link?.lowercase()?.contains(needle) == true
             }
     }
 
@@ -95,3 +111,13 @@ class ExposedActivityStore(private val database: Database) : ActivityStore {
         transaction(database) { block() }
     }
 }
+
+private fun ResultRow.toActivity() = Activity(
+    id = this[ActivityTable.id],
+    summary = this[ActivityTable.summary],
+    kind = ActivityKind.valueOf(this[ActivityTable.kind]),
+    issueKey = this[ActivityTable.issueKey],
+    link = this[ActivityTable.link],
+    onDate = this[ActivityTable.onDate]?.let(LocalDate::parse),
+    createdAt = Instant.fromEpochMilliseconds(this[ActivityTable.createdAt]),
+)

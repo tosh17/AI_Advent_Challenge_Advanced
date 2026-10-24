@@ -22,10 +22,12 @@ class ActivityStoreTest {
         val day = LocalDate(2026, 10, 23)
         store.add(NewActivity("ревью", ActivityKind.Log, "APP-2", day))
         store.add(NewActivity("созвон", ActivityKind.Schedule, null, day))
-        store.add(NewActivity("идея", ActivityKind.Backlog, null, null))
+        store.add(NewActivity("идея", ActivityKind.Backlog, null, null, "https://example.test/mock"))
 
         assertEquals(listOf("ревью"), store.find(ActivityKind.Log, day).map { it.summary })
         assertEquals(listOf("созвон"), store.find(ActivityKind.Schedule, day).map { it.summary })
         assertEquals(emptyList(), store.find(ActivityKind.Log, LocalDate(2026, 10, 24)))
+        assertEquals(listOf("https://example.test/mock"), store.search("mock").map { it.link })
+        assertEquals(listOf(null), store.search("mock").map { it.issueKey })
     }
 }

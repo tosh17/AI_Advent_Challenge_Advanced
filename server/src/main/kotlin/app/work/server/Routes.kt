@@ -62,6 +62,7 @@ data class DayResponse(
 data class DayEntry(
     val id: String,
     val summary: String,
-    val jiraKey: String?,
+    val issueKey: String?,
+    val link: String?,
     val createdAt: String,
 )

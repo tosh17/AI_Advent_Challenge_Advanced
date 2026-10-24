@@ -5,8 +5,6 @@ import app.work.server.activity.ExposedActivityStore
 import app.work.server.activity.StoredDays
 import app.work.server.activity.openDatabase
 import app.work.server.agent.OllamaModel
-import app.work.server.confluence.ConfluenceClient
-import app.work.server.jira.JiraClient
 import app.work.server.mcp.McpToolCatalog
 import app.work.server.mcp.workMcp
 import app.work.server.session.SessionBook
@@ -28,10 +26,8 @@ fun main() {
     val database = openDatabase(config)
     val store = ExposedActivityStore(database)
     val days = StoredDays(store)
-    val jira = config.jira?.let { JiraClient(it) }
-    val confluence = config.confluence?.let { ConfluenceClient(it) }
     val mcp = embeddedServer(Netty, host = "127.0.0.1", port = config.mcpPort) {
-        workMcp(store, jira, confluence)
+        workMcp(store)
     }.start(wait = false)
 
     val mcpHttp = HttpClient(CIO) { install(SSE) }
@@ -55,8 +51,6 @@ fun main() {
         mcp.stop(1_000, 2_000)
         mcpHttp.close()
         ollamaHttp.close()
-        jira?.close()
-        confluence?.close()
     })
 
     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {

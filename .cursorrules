@@ -12,9 +12,9 @@ Kotlin 2.4, Multiplatform (`jvm` и `js`/`nodejs`). Ktor 3.5 (Netty). MCP Kotlin
 
 `shared` — агент и домен, без Ktor и без базы. `server` — HTTP, Ollama, MCP, Exposed.
 
-Поток: `POST /api/sessions/{id}/messages` → `SessionBook` → `Agent`. Агент добавляет системную дату, отдаёт каталог инструментов модели и выполняет ровно те вызовы, которые вернула модель. Текст без вызовов — ответ или уточнение, код их не различает.
+Поток: `POST /api/sessions/{id}/messages` → `SessionBook` → `Agent`. Агент добавляет системную дату, отдаёт каталог инструментов модели и выполняет ровно те вызовы, которые вернула модель. Текст без вызовов — ответ или уточнение, код их не различает. Веб-чат в `resources/web` только вызывает этот API. Десктоп и мобильный клиент потом ходят туда же.
 
-Инструменты живут в одном MCP `POST /mcp`, регистрация разделена: `activities`, `jira`, `confluence`. Вид активности задаёт выбранный инструмент (`Log`, `Schedule`, `Backlog`), не содержимое фразы. Jira и Confluence читают только свои переменные окружения.
+Инструменты живут в одном MCP `POST /mcp`, регистрация в `activities`. Вид активности задаёт выбранный инструмент (`Log`, `Schedule`, `Backlog`, `Sprint`), не содержимое фразы. Номер задачи и ссылка необязательны. Запросов в Jira и Confluence нет: поиск идёт по уже записанному.
 
 ## Структура
 
@@ -23,11 +23,10 @@ shared/src/commonMain/kotlin/app/work/agent
 shared/src/commonMain/kotlin/app/work/domain
 server/src/main/kotlin/app/work/server
 server/src/main/kotlin/app/work/server/activity
-server/src/main/kotlin/app/work/server/jira
-server/src/main/kotlin/app/work/server/confluence
 server/src/main/kotlin/app/work/server/mcp
 server/src/main/kotlin/app/work/server/session
 server/src/main/kotlin/app/work/server/tool
+server/src/main/resources/web
 ```
 
 ## Имена
@@ -36,7 +35,7 @@ server/src/main/kotlin/app/work/server/tool
 
 ## Паттерны
 
-Роут только принимает параметр или тело и отвечает. Он не вызывает `ActivityStore` и не разбирает дату. Сообщения идут через `Turns`, чтение дня — через такой же узкий интерфейс с одним методом `load`. Разбор даты, два вызова `find` и сборка DTO живут в реализации этого интерфейса. Запрос к базе — DSL Exposed. Аргументы инструмента проверяются (`ToolArgs`, `IssueKeys`). Ошибка инструмента возвращается модели текстом. Пустое сообщение, чужая сессия, плохая дата и сбой модели — свои исключения рядом со `StatusPages` в `Module.kt`, ответ `ErrorBody`.
+Роут только принимает параметр или тело и отвечает. Он не вызывает `ActivityStore` и не разбирает дату. Сообщения идут через `Turns`, чтение дня — через такой же узкий интерфейс с одним методом `load`. Разбор даты, два вызова `find` и сборка DTO живут в реализации этого интерфейса. Запрос к базе — DSL Exposed. Аргументы инструмента проверяются (`ToolArgs`). Ошибка инструмента возвращается модели текстом. Пустое сообщение, чужая сессия, плохая дата и сбой модели — свои исключения рядом со `StatusPages` в `Module.kt`, ответ `ErrorBody`.
 
 ## Как писать
 
@@ -74,7 +73,7 @@ ActivityTable.selectAll()
 Вид активности фиксирует инструмент. `activities_log` всегда пишет `ActivityKind.Log`:
 
 ```kotlin
-store.add(NewActivity(summary = args.summary(), kind = ActivityKind.Log, jiraKey = args.jiraKey(), onDate = args.isoDate("on_date")))
+store.add(NewActivity(summary = args.summary(), kind = ActivityKind.Log, issueKey = args.issueKey(), onDate = args.isoDate("on_date"), link = args.link()))
 ```
 
 Тест держит запрет. Фраза про спринт не вызывает инструменты, если модель их не запросила: `AgentTest.wordsDoNotSelectTools`.
@@ -97,7 +96,7 @@ SQL-строка в Kotlin:
 statement.executeQuery("SELECT * FROM activity WHERE on_date = '$date'")
 ```
 
-Пустой `catch`, звёздный импорт, ключи Jira и адреса, зашитые в код. Ветвление по тексту пользователя. Ветвление по полю инструмента (`kind` = `page` | `attachment` | `any`) — это проверка аргумента, её оставлять.
+Пустой `catch`, звёздный импорт, номера задач и адреса, зашитые в код. Ветвление по тексту пользователя. Проверка аргумента инструмента (номер, ссылка, дата) остаётся.
 
 ## Шаблон файла
 

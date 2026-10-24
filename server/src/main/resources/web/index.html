@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Рабочий помощник</title>
+  <link rel="stylesheet" href="/chat.css">
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>Рабочий помощник</h1>
+      <p>Пиши свободно. Если данных не хватает, помощник спросит.</p>
+    </header>
+    <ol id="log">
+      <li class="hint" id="hint">Можно спросить план на сегодня, записать, чем занимался, положить дело в беклог или приложить ссылку и номер задачи.</li>
+    </ol>
+    <form id="composer">
+      <label class="visually-hidden" for="text">Сообщение</label>
+      <textarea id="text" rows="2" placeholder="Что записать или о чём спросить" required></textarea>
+      <button type="submit" id="send">Отправить</button>
+    </form>
+  </main>
+  <script src="/chat.js"></script>
+</body>
+</html>

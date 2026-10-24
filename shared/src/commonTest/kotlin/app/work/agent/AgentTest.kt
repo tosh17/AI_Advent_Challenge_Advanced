@@ -32,8 +32,8 @@ class AgentTest {
     @Test
     fun executesEveryToolTheModelRequested() = runTest {
         val catalog = RecordingCatalog()
-        val sprint = ToolCall("1", "jira_add_to_current_sprint", json("issue_key" to "APP-4"))
-        val due = ToolCall("2", "jira_set_due_date", json("issue_key" to "APP-4", "due_date" to "2026-10-25"))
+        val sprint = ToolCall("1", "activities_add_to_sprint", json("summary" to "ревью", "issue_key" to "APP-4"))
+        val due = ToolCall("2", "activities_schedule", json("summary" to "ревью", "on_date" to "2026-10-25", "issue_key" to "APP-4"))
         val model = ScriptedModel(
             listOf(
                 ModelStep("", listOf(sprint, due)),
@@ -43,9 +43,9 @@ class AgentTest {
 
         val reply = agent(model, catalog).handle(emptyList(), "в спринт и на завтра")
 
-        assertEquals(listOf("jira_add_to_current_sprint", "jira_set_due_date"), catalog.calls.map { it.first })
+        assertEquals(listOf("activities_add_to_sprint", "activities_schedule"), catalog.calls.map { it.first })
         assertEquals("Поставил APP-4 в спринт и на завтра.", reply.text)
-        assertEquals(listOf("jira_add_to_current_sprint", "jira_set_due_date"), reply.calls.map { it.name })
+        assertEquals(listOf("activities_add_to_sprint", "activities_schedule"), reply.calls.map { it.name })
         assertTrue(model.seen.first().filterIsInstance<ChatMessage.System>().single().text.contains("2026-10-24"))
     }
 
@@ -77,8 +77,8 @@ private class RecordingCatalog : ToolCatalog {
     val calls = mutableListOf<Pair<String, JsonObject>>()
 
     override suspend fun definitions(): List<ToolDefinition> = listOf(
-        ToolDefinition("jira_add_to_current_sprint", "sprint", JsonObject(emptyMap())),
-        ToolDefinition("jira_set_due_date", "due", JsonObject(emptyMap())),
+        ToolDefinition("activities_add_to_sprint", "sprint", JsonObject(emptyMap())),
+        ToolDefinition("activities_schedule", "plan", JsonObject(emptyMap())),
     )
 
     override suspend fun call(name: String, arguments: JsonObject): String {

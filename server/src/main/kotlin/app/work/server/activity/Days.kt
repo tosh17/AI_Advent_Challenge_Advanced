@@ -33,6 +33,7 @@ private fun parseDay(raw: String): LocalDate = try {
 private fun Activity.toEntry() = DayEntry(
     id = id,
     summary = summary,
-    jiraKey = jiraKey,
+    issueKey = issueKey,
+    link = link,
     createdAt = createdAt.toString(),
 )
