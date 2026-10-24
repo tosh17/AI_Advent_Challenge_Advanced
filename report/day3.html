@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>День 3. Тесты</title>
+<style>
+  :root {
+    --bg: #f3efe6;
+    --paper: #fffdf8;
+    --ink: #1d1a16;
+    --muted: #6d655c;
+    --line: #e3dcd0;
+    --accent: #8a3d22;
+    --nav: #2a241e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.55 "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+  }
+  a { color: var(--accent); }
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+  nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: auto;
+    background: var(--nav);
+    color: #f6f1e8;
+    padding: 28px 22px 40px;
+    font: 13px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  nav strong {
+    display: block;
+    margin: 22px 0 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: #c8b8a4;
+  }
+  nav a {
+    display: block;
+    color: #f6f1e8;
+    text-decoration: none;
+    padding: 4px 0;
+  }
+  nav a:hover { color: #f0c7a2; }
+  main { padding: 48px 56px 80px; max-width: 980px; }
+  h1 { font-size: 42px; line-height: 1.1; font-weight: 600; margin: 0 0 12px; }
+  h2 { font-size: 28px; margin: 56px 0 16px; scroll-margin-top: 24px; }
+  h3 { font: 600 18px/1.3 ui-sans-serif, system-ui, sans-serif; margin: 28px 0 8px; }
+  .lead { font-size: 20px; max-width: 42rem; }
+  .meta { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    font: 15px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  th, td { border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; padding: 10px 12px; }
+  th { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  p code, li code, td code {
+    font-size: 0.9em;
+    background: #efe8dc;
+    padding: 0 0.25em;
+  }
+  pre {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+  .stack { list-style: none; margin: 12px 0 0; padding: 0; counter-reset: step; }
+  .stack li {
+    position: relative;
+    margin: 0;
+    padding: 12px 14px 12px 58px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+  }
+  .stack li:first-child { border-radius: 12px 12px 0 0; }
+  .stack li:last-child { border-bottom: 1px solid var(--line); border-radius: 0 0 12px 12px; }
+  .stack li::before {
+    content: counter(step);
+    counter-increment: step;
+    position: absolute;
+    left: 14px;
+    top: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--nav);
+    color: #f6f1e8;
+    font: 600 13px/28px ui-sans-serif, system-ui, sans-serif;
+    text-align: center;
+  }
+  .stack b { display: block; font: 600 14px/1.3 ui-sans-serif, system-ui, sans-serif; }
+  .stack span { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  .prose { max-width: 46rem; }
+  figure { margin: 18px 0 28px; }
+  figure img {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+  }
+  figcaption { margin-top: 8px; color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  .ok { color: #14532d; font-weight: 600; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: relative; height: auto; }
+    main { padding: 28px 18px 60px; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <strong>День 3</strong>
+  <a href="#itog">Итог</a>
+  <a href="#kod">Код-тесты</a>
+  <a href="#smoke">Smoke</a>
+  <a href="#shot">Скриншоты</a>
+  <a href="#flow">Поток разработки</a>
+  <a href="#video">Видео</a>
+</nav>
+<main>
+  <p class="meta">Ветка day3 · коммит b63a1b7 · от day2 4f5168f</p>
+  <h1>День 3. Тесты</h1>
+  <p class="lead">Два уровня: тесты на код и smoke веб-чата. Оба собраны в один отчёт. После новой ручки сценарий дописывается и прогоняется снова.</p>
+
+  <h2 id="itog">Итог</h2>
+  <div class="prose">
+    <p><code>./gradlew :server:test :shared:jvmTest</code> прошёл. Добавлены три файла тестов на дыры, которые на дне 2 назвал Research. Smoke из пяти шагов пройден в браузере, скриншот есть на каждом шаге интерфейса.</p>
+    <p>Первая компиляция тестов упала: дата ушла в параметр <code>maxSteps</code>. Вызов переписан с именем <code>today</code>. После этого тесты прошли с первого запуска. Код продукта не менялся.</p>
+    <p>Playwright MCP в сессии не был подключён. Сценарии пройдены встроенным браузером. Порт <code>8080</code> был занят старой сборкой, на ней <code>GET /api/sprint</code> отвечает 404. Прогон шёл на <code>http://127.0.0.1:8099</code>.</p>
+  </div>
+
+  <h2 id="kod">Код-тесты</h2>
+  <table>
+    <thead>
+      <tr><th>Файл</th><th>Что закрывает</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>session/SessionBookTest.kt</code></td>
+        <td>Пустое сообщение, чужая сессия, ответ модели и история второго хода</td>
+      </tr>
+      <tr>
+        <td><code>activity/ActivitySearchTest.kt</code></td>
+        <td>Список только спринта, поиск по номеру и по ссылке, пустой беклог</td>
+      </tr>
+      <tr>
+        <td><code>StatusRoutesTest.kt</code></td>
+        <td><code>400</code> «Пустое сообщение», <code>404</code> «Сессия не найдена», <code>502</code> при сбое модели, <code>GET /chat.js</code> и <code>GET /chat.css</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Стек</h3>
+  <ol class="stack">
+    <li><b>Дыры уже названы</b><span>Research на дне 2: <code>SessionBook</code> не исполняется тестом роута, нет веток 400/404/502, нет <code>/chat.js</code> и <code>/chat.css</code>. Поиск спринта тестом почти не закрыт.</span></li>
+    <li><b>Три файла</b><span><code>SessionBookTest</code>, <code>ActivitySearchTest</code>, <code>StatusRoutesTest</code>. База в поиске открывается через <code>connect()</code>.</span></li>
+    <li><b>Первая компиляция</b><span>Хвостовая лямбда <code>{ LocalDate(...) }</code> попала в <code>maxSteps: Int</code>. Исправлено на <code>today = { LocalDate(2026, 10, 24) }</code>.</span></li>
+    <li><b>Прогон</b><span>Сначала три новых класса, затем <code>./gradlew :server:test :shared:jvmTest</code>. Оба зелёные.</span></li>
+  </ol>
+
+  <h2 id="smoke">Smoke</h2>
+  <div class="prose">
+    <p>Сценарии записаны в <code>challenge/day3/SMOKE.md</code>. Логина нет: сессия создаётся при первом сообщении. Пятый шаг — «выложили <code>GET /api/sprint</code>, обновить smoke и прогнать снова».</p>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Шаг</th><th>Результат</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Открыть чат: заголовок, подсказка, поле, кнопка</td><td class="ok">Прошёл</td></tr>
+      <tr><td>«что в спринте»</td><td class="ok">Прошёл. Спринт пуст, поле снова можно писать</td></tr>
+      <tr><td>Обновить и «покажи журнал за сегодня»</td><td class="ok">Прошёл. Та же сессия <code>21918abb-1f04-4134-adac-139affb0cd77</code>, журнал за 2026-10-24 пуст</td></tr>
+      <tr><td>Одни пробелы и «Отправить»</td><td class="ok">Прошёл. Новой реплики нет</td></tr>
+      <tr><td>Чат после <code>GET /api/sprint</code></td><td class="ok">Прошёл. Страница на месте, ответ <code>{"items":[]}</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Стек прогона</h3>
+  <ol class="stack">
+    <li><b>Сервер этой ветки</b><span><code>HTTP_PORT=8099</code>. На <code>8080</code> уже слушала другая сборка, её не останавливал.</span></li>
+    <li><b>Открыть страницу</b><span>Заголовок «Рабочий помощник», поле и кнопка «Отправить».</span></li>
+    <li><b>Сообщение про спринт</b><span>Модель на S1 вызвала список спринта. Ответ: в спринте пусто. Поле снова свободно.</span></li>
+    <li><b>Обновление страницы</b><span><code>sessionStorage</code> с ключом <code>work-session</code> сохранил тот же id. Журнал за сегодня пуст.</span></li>
+    <li><b>Пробелы</b><span>Страница обрезает текст и не отправляет пустое сообщение. Лента не изменилась.</span></li>
+    <li><b>Новая ручка</b><span><code>GET /api/sprint</code> ответил <code>200</code> и <code>{"items":[]}</code>. Чат при этом остался на месте.</span></li>
+  </ol>
+
+  <h2 id="shot">Скриншоты</h2>
+  <figure>
+    <img src="../challenge/day3/01-open.png" alt="Пустой чат с заголовком и полем сообщения">
+    <figcaption>1. Чат открыт.</figcaption>
+  </figure>
+  <figure>
+    <img src="../challenge/day3/02-sprint.png" alt="Ответ, что в спринте пусто">
+    <figcaption>2. «что в спринте» — спринт пуст.</figcaption>
+  </figure>
+  <figure>
+    <img src="../challenge/day3/03-journal.png" alt="Ответ, что журнал за день пуст">
+    <figcaption>3. После обновления страницы журнал за 2026-10-24 пуст.</figcaption>
+  </figure>
+  <figure>
+    <img src="../challenge/day3/04-blank.png" alt="Лента без новой реплики из пробелов">
+    <figcaption>4. Пробелы не ушли в ленту. Картинка совпадает с шагом 3: новой реплики нет.</figcaption>
+  </figure>
+
+  <h2 id="flow">Поток разработки</h2>
+  <div class="prose">
+    <p>Скилл <code>.cursor/skills/verify-change/SKILL.md</code> запускается после правки или новой ручки.</p>
+  </div>
+  <ol class="stack">
+    <li><b>Код-тесты</b><span><code>./gradlew :server:test :shared:jvmTest</code>. В отчёт — прошло или имя упавшего теста.</span></li>
+    <li><b>Smoke</b><span>Прочитать <code>challenge/day3/SMOKE.md</code>. Новый экран или ручка дописывается в конец, старые шаги остаются.</span></li>
+    <li><b>Браузер</b><span>Поднять сервер, пройти шаги, скриншот на каждом. Для ручки без страницы записать код ответа.</span></li>
+    <li><b>Один отчёт</b><span>Код-тесты, каждый сценарий, скриншот, где сломалось.</span></li>
+  </ol>
+
+  <h2 id="video">Видео</h2>
+  <div class="prose">
+    <p>8–10 минут. Экран на ветке <code>day3</code>, коммит <code>b63a1b7</code>. День 2 в этот ролик не пересказывать, только отсылка: дыры взяты из ответа Research.</p>
+  </div>
+  <ol class="stack">
+    <li><b>Задание, ~40 секунд</b><span>Два уровня: тесты на код, минимум три файла, и smoke чата. Оба входят в один отчёт. После новой ручки сценарий обновляется.</span></li>
+    <li><b>Три файла, ~2 минуты</b><span>Открыть <code>SessionBookTest</code>, <code>ActivitySearchTest</code>, <code>StatusRoutesTest</code>. Показать пустое сообщение, поиск <code>APP-9</code> и ответ 400.</span></li>
+    <li><b>Прогон, ~1,5 минуты</b><span>На камеру <code>./gradlew :server:test --tests app.work.server.session.SessionBookTest --tests app.work.server.activity.ActivitySearchTest --tests app.work.server.StatusRoutesTest --console=plain</code>. Сказать, что первая компиляция упала на <code>today</code>, продукт не трогали, второй запуск зелёный.</span></li>
+    <li><b>Smoke, ~3 минуты</b><span>Открыть четыре картинки в <code>challenge/day3</code> и строку <code>GET /api/sprint</code> → <code>{"items":[]}</code>. Сказать, что Playwright MCP не было, ходил встроенный браузер, порт был 8099.</span></li>
+    <li><b>Поток, ~1 минута</b><span>Открыть <code>.cursor/skills/verify-change/SKILL.md</code> и пятый пункт <code>SMOKE.md</code>. Это сценарий «выложил спринт, обновил smoke, прогнал снова».</span></li>
+  </ol>
+</main>
+</div>
+</body>
+</html>
