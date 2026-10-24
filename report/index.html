@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отчёт по правилам и двум генерациям</title>
+<style>
+  :root {
+    --bg: #f3efe6;
+    --paper: #fffdf8;
+    --ink: #1d1a16;
+    --muted: #6d655c;
+    --line: #e3dcd0;
+    --accent: #8a3d22;
+    --nav: #2a241e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.55 "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+  }
+  a { color: var(--accent); }
+  .layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+  nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: auto;
+    background: var(--nav);
+    color: #f6f1e8;
+    padding: 28px 22px 40px;
+    font: 13px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  nav strong {
+    display: block;
+    margin: 22px 0 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: #c8b8a4;
+  }
+  nav a {
+    display: block;
+    color: #f6f1e8;
+    text-decoration: none;
+    padding: 4px 0;
+    overflow-wrap: anywhere;
+  }
+  nav a:hover { color: #f0c7a2; }
+  main { padding: 48px 56px 80px; max-width: 1080px; }
+  h1 { font-size: 42px; line-height: 1.1; font-weight: 600; margin: 0 0 12px; }
+  h2 { font-size: 28px; margin: 56px 0 16px; scroll-margin-top: 24px; }
+  h3 { font: 600 18px/1.3 ui-sans-serif, system-ui, sans-serif; margin: 0; }
+  article { scroll-margin-top: 24px; }
+  .lead { font-size: 20px; max-width: 42rem; }
+  .meta { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    font: 15px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  th, td { border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; padding: 10px 12px; }
+  th:first-child, td:first-child { white-space: nowrap; }
+  th { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); }
+  ol { padding-left: 1.2rem; }
+  li { margin: 6px 0; }
+  code, .sheet code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  p code, li code, td code {
+    font-size: 0.9em;
+    background: #efe8dc;
+    padding: 0 0.25em;
+  }
+  article { margin: 28px 0 40px; }
+  article header p { margin: 6px 0 10px; color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  .sheet {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: auto;
+    font: 12.5px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    min-width: max-content;
+  }
+  .row span {
+    color: #a3988b;
+    text-align: right;
+    padding: 0 10px 0 8px;
+    user-select: none;
+    border-right: 1px solid var(--line);
+  }
+  .row code { white-space: pre; padding: 0 16px 0 12px; }
+  .diff .add { background: #e5f6ea; }
+  .diff .add code { color: #14532d; }
+  .diff .del { background: #fde8e8; }
+  .diff .del code { color: #7f1d1d; }
+  .diff .hunk { background: #e8eefc; }
+  .diff .hunk code { color: #1e3a8a; }
+  .diff .meta code { color: #6d655c; }
+  .legend { font: 13px/1.4 ui-sans-serif, system-ui, sans-serif; color: var(--muted); }
+  .legend b.add { background: #e5f6ea; color: #14532d; padding: 0 6px; }
+  .legend b.del { background: #fde8e8; color: #7f1d1d; padding: 0 6px; }
+  .prose { max-width: 46rem; }
+  .prose .sheet { margin-top: 8px; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: relative; height: auto; }
+    main { padding: 28px 18px 60px; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <strong>Отчёт</strong>
+  <a href="#vyvod">Вывод</a>
+  <a href="#prompt">Промпт</a>
+  <a href="#razbor">Разбор дифов</a>
+  <strong>Правила</strong>
+  <a href="#cursorrules">.cursorrules</a>
+<a href="#project">.cursor/rules/project.mdc</a>
+<a href="#architecture">.cursor/rules/architecture.mdc</a>
+<a href="#kotlin">.cursor/rules/kotlin.mdc</a>
+<a href="#http">.cursor/rules/http.mdc</a>
+<a href="#baseline">~/.cursor/rules/kotlin-baseline.mdc</a>
+<a href="#agent">.cursor/agents/endpoint-author.md</a>
+<a href="#skill">.cursor/skills/add-kotlin-endpoint/SKILL.md</a>
+<a href="#v1">challenge/rules-v1.md</a>
+<a href="#v2">challenge/rules-v2.md</a>
+  <strong>Дифы</strong>
+  <a href="#gen1">challenge/gen1.diff</a>
+<a href="#gen2">challenge/gen2.diff</a>
+<a href="#vs">challenge/gen1-vs-gen2.diff</a>
+</nav>
+<main>
+  <p class="meta">24 октября 2026 · рабочий помощник · Cursor</p>
+  <h1>Отчёт по правилам и двум генерациям</h1>
+  <p class="lead">Один и тот же промпт на endpoint <code>GET /api/days/{date}</code> отдан ассистенту дважды. Между прогонами менялись только правила.</p>
+
+  <h2 id="vyvod">Вывод</h2>
+  <div class="prose">
+    <p>Правила, которые читает Cursor, лежат в <code>.cursorrules</code> и <code>.cursor/rules/project.mdc</code>. Текст один, это v2. Снимок первой генерации — <code>challenge/rules-v1.md</code>, снимок второй — <code>challenge/rules-v2.md</code>.</p>
+    <table>
+      <thead><tr><th>Требование</th><th>Статус</th><th>Где</th></tr></thead>
+      <tbody>
+        <tr><td>Стек</td><td>есть</td><td><code>.cursorrules</code>, <code>project.mdc</code>, раздел «Стек»</td></tr>
+        <tr><td>Архитектура</td><td>есть</td><td>раздел «Архитектура»</td></tr>
+        <tr><td>Структура папок</td><td>есть</td><td>раздел «Структура»</td></tr>
+        <tr><td>Имена</td><td>есть</td><td>пакет <code>app.work</code>, PascalCase, camelCase, MCP snake_case, даты <code>YYYY-MM-DD</code></td></tr>
+        <tr><td>Паттерны</td><td>есть</td><td>тонкий роут, <code>Turns</code> и <code>Days.load</code>, Exposed, проверка аргументов, ошибки через <code>StatusPages</code></td></tr>
+        <tr><td>Локальный конфиг</td><td>есть</td><td><code>.cursor/rules/</code> и <code>.cursorrules</code></td></tr>
+        <tr><td>Глобальный конфиг</td><td>есть</td><td><code>~/.cursor/rules/kotlin-baseline.mdc</code></td></tr>
+        <tr><td>Субагент</td><td>есть</td><td><code>.cursor/agents/endpoint-author.md</code></td></tr>
+        <tr><td>Скилл</td><td>есть</td><td><code>.cursor/skills/add-kotlin-endpoint/SKILL.md</code></td></tr>
+        <tr><td>5 примеров</td><td>есть</td><td>раздел «Как писать»: агент, тонкий POST, Exposed <code>find</code>, <code>activities_log</code>, тест <code>wordsDoNotSelectTools</code></td></tr>
+        <tr><td>Запреты</td><td>есть</td><td>разбор фразы, <code>Any</code>, <code>println</code>, SQL-строка, пустой <code>catch</code> и звёздный импорт</td></tr>
+        <tr><td>Шаблон файла</td><td>есть</td><td>три группы импортов и образец <code>days.load(raw)</code></td></tr>
+        <tr><td>Один промпт</td><td>есть</td><td>два прогона без уточнений, текст ниже</td></tr>
+        <tr><td>Сборка и стиль</td><td>есть</td><td>обе генерации собрались, <code>:server:test</code> прошёл, запреты проверяет <code>SourceRulesTest</code></td></tr>
+        <tr><td>Усиление и повтор</td><td>есть</td><td>v1 → v2, тот же промпт</td></tr>
+        <tr><td>Диффы</td><td>есть</td><td><code>gen1.diff</code>, <code>gen2.diff</code>, <code>gen1-vs-gen2.diff</code>, разбор в <code>ДИФЫ.md</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:28px">Две генерации</h3>
+    <table>
+      <thead><tr><th></th><th>Правила v1</th><th>Правила v2</th></tr></thead>
+      <tbody>
+        <tr><td>Сборка</td><td>собралось</td><td>собралось</td></tr>
+        <tr><td>Тесты</td><td><code>:server:test</code>, включая <code>SourceRulesTest</code></td><td><code>:server:test</code> и <code>:shared:jvmTest</code></td></tr>
+        <tr><td>Роут</td><td><code>readDay(store, date)</code>, база в аргументах роута</td><td><code>days.load(raw)</code>, чтение в <code>StoredDays</code></td></tr>
+        <tr><td>Плохая дата</td><td><code>BadDate</code> в <code>Routes.kt</code>, ответ 400 в <code>Module.kt</code></td><td><code>BadDate</code> рядом со <code>StatusPages</code> в <code>Module.kt</code></td></tr>
+        <tr><td>Тест</td><td>два <code>idleTurns</code>, прямой <code>Database.connect</code>, беклог с датой дня</td><td>один <code>idleTurns</code>, база через <code>connect()</code>, беклог с <code>onDate = null</code>, summary «идея» проверен</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:28px">Что сдвинуло качество</h3>
+    <ol>
+      <li>Из v1 убрана фраза «роут делегирует <code>Turns</code> или <code>ActivityStore</code>». По ней первая генерация отдала базу в роут.</li>
+      <li>В v2 вставлен готовый вид ветки из двух строк: параметр и <code>days.load(raw)</code>.</li>
+      <li><code>BadDate</code> и <code>StatusPages</code> собраны в <code>Module.kt</code>.</li>
+      <li>Тест расписан конкретно: <code>connect()</code>, один <code>idleTurns</code>, беклог без даты и отдельная проверка summary.</li>
+    </ol>
+
+    <h3 style="margin-top:28px">Что осталось</h3>
+    <ol>
+      <li>Скриншотов нет. Сравнение — диффы и текст <code>challenge/ДИФЫ.md</code>.</li>
+      <li>ktlint и detekt не подключены. <code>println</code>, SQL и <code>.contains(</code> в агенте и роуте ловит <code>SourceRulesTest</code>.</li>
+      <li>Во второй генерации импорты <code>app.work</code> в <code>Routes.kt</code> стоят выше Ktor: файл скопировал старый порядок.</li>
+      <li>Строка JDBC URL в тесте осталась: <code>connect</code> принимает её аргументом.</li>
+      <li>Файл <code>challenge/prompt.txt</code> в git не попал. Текст промпта приведён в этом отчёте.</li>
+    </ol>
+  </div>
+
+  <h2 id="prompt">Промпт</h2>
+  <div class="prose">
+    <p>Один текст, без уточнений. Оба прогона получили его целиком. После записи файлов генерация проект не собирала и код не переписывала.</p>
+  </div>
+  <div class="sheet file"><div class="row"><span>1</span><code>Добавь HTTP endpoint GET /api/days/{date}.</code></div>
+<div class="row"><span>2</span><code> </code></div>
+<div class="row"><span>3</span><code>Дата в пути — YYYY-MM-DD.</code></div>
+<div class="row"><span>4</span><code>Ответ: журнал (kind log) за этот день и план (kind schedule) на этот день. Беклог не включай.</code></div>
+<div class="row"><span>5</span><code>Нужны тест и соответствие правилам проекта.</code></div>
+<div class="row"><span>6</span><code> </code></div>
+<div class="row"><span>7</span><code>Прочитай CLAUDE.md, .cursorrules и .cursor/rules. Сделай сразу одну реализацию. Уточняющих вопросов не задавай. Проект не собирай и после записи файлов результат не переписывай. Правила, скиллы и субагентов не меняй.</code></div>
+<div class="row"><span>8</span><code> </code></div>
+<div class="row"><span>9</span><code>В конце перечисли изменённые файлы.</code></div></div>
+
+  <h2 id="rules">Тексты правил</h2>
+  
+<article id="cursorrules">
+  <header>
+    <h3>.cursorrules</h3>
+    <p>Локальный файл Cursor. Полный текст правил v2.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code># Рабочий помощник</code></div>
+<div class="row"><span>2</span><code> </code></div>
+<div class="row"><span>3</span><code>Один человек пишет свободно. Модель на S1 решает, что сделать, и вызывает инструменты MCP. Код смысл фразы не разбирает.</code></div>
+<div class="row"><span>4</span><code> </code></div>
+<div class="row"><span>5</span><code>## Стек</code></div>
+<div class="row"><span>6</span><code> </code></div>
+<div class="row"><span>7</span><code>Kotlin 2.4, Multiplatform (`jvm` и `js`/`nodejs`). Ktor 3.5 (Netty). MCP Kotlin SDK 0.15. Exposed 1.0, H2 по умолчанию, Postgres через `DATABASE_URL`. Ollama `http://10.10.1.101:11434`, модель `qwen2.5:3b`. kotlinx.serialization, kotlinx.datetime, kotlin.time.Clock. Логи — SLF4J/Logback. Тесты — kotlin.test и JUnit 5.</code></div>
+<div class="row"><span>8</span><code> </code></div>
+<div class="row"><span>9</span><code>Новые фреймворки, Spring, Koin и разбор текста регулярными выражениями не добавлять.</code></div>
+<div class="row"><span>10</span><code> </code></div>
+<div class="row"><span>11</span><code>## Архитектура</code></div>
+<div class="row"><span>12</span><code> </code></div>
+<div class="row"><span>13</span><code>`shared` — агент и домен, без Ktor и без базы. `server` — HTTP, Ollama, MCP, Exposed.</code></div>
+<div class="row"><span>14</span><code> </code></div>
+<div class="row"><span>15</span><code>Поток: `POST /api/sessions/{id}/messages` → `SessionBook` → `Agent`. Агент добавляет системную дату, отдаёт каталог инструментов модели и выполняет ровно те вызовы, которые вернула модель. Текст без вызовов — ответ или уточнение, код их не различает.</code></div>
+<div class="row"><span>16</span><code> </code></div>
+<div class="row"><span>17</span><code>Инструменты живут в одном MCP `POST /mcp`, регистрация разделена: `activities`, `jira`, `confluence`. Вид активности задаёт выбранный инструмент (`Log`, `Schedule`, `Backlog`), не содержимое фразы. Jira и Confluence читают только свои переменные окружения.</code></div>
+<div class="row"><span>18</span><code> </code></div>
+<div class="row"><span>19</span><code>## Структура</code></div>
+<div class="row"><span>20</span><code> </code></div>
+<div class="row"><span>21</span><code>```</code></div>
+<div class="row"><span>22</span><code>shared/src/commonMain/kotlin/app/work/agent</code></div>
+<div class="row"><span>23</span><code>shared/src/commonMain/kotlin/app/work/domain</code></div>
+<div class="row"><span>24</span><code>server/src/main/kotlin/app/work/server</code></div>
+<div class="row"><span>25</span><code>server/src/main/kotlin/app/work/server/activity</code></div>
+<div class="row"><span>26</span><code>server/src/main/kotlin/app/work/server/jira</code></div>
+<div class="row"><span>27</span><code>server/src/main/kotlin/app/work/server/confluence</code></div>
+<div class="row"><span>28</span><code>server/src/main/kotlin/app/work/server/mcp</code></div>
+<div class="row"><span>29</span><code>server/src/main/kotlin/app/work/server/session</code></div>
+<div class="row"><span>30</span><code>server/src/main/kotlin/app/work/server/tool</code></div>
+<div class="row"><span>31</span><code>```</code></div>
+<div class="row"><span>32</span><code> </code></div>
+<div class="row"><span>33</span><code>## Имена</code></div>
+<div class="row"><span>34</span><code> </code></div>
+<div class="row"><span>35</span><code>Пакет `app.work`. Типы и файлы — PascalCase, функции — camelCase, инструменты MCP — snake_case. Пользовательские строки по-русски, идентификаторы по-английски. Даты в аргументах и путях — `YYYY-MM-DD` (`LocalDate`).</code></div>
+<div class="row"><span>36</span><code> </code></div>
+<div class="row"><span>37</span><code>## Паттерны</code></div>
+<div class="row"><span>38</span><code> </code></div>
+<div class="row"><span>39</span><code>Роут только принимает параметр или тело и отвечает. Он не вызывает `ActivityStore` и не разбирает дату. Сообщения идут через `Turns`, чтение дня — через такой же узкий интерфейс с одним методом `load`. Разбор даты, два вызова `find` и сборка DTO живут в реализации этого интерфейса. Запрос к базе — DSL Exposed. Аргументы инструмента проверяются (`ToolArgs`, `IssueKeys`). Ошибка инструмента возвращается модели текстом. Пустое сообщение, чужая сессия, плохая дата и сбой модели — свои исключения рядом со `StatusPages` в `Module.kt`, ответ `ErrorBody`.</code></div>
+<div class="row"><span>40</span><code> </code></div>
+<div class="row"><span>41</span><code>## Как писать</code></div>
+<div class="row"><span>42</span><code> </code></div>
+<div class="row"><span>43</span><code>Агент не смотрит на слова пользователя. `Agent.handle` только дописывает реплику и исполняет вызовы модели:</code></div>
+<div class="row"><span>44</span><code> </code></div>
+<div class="row"><span>45</span><code>```kotlin</code></div>
+<div class="row"><span>46</span><code>conversation += ChatMessage.User(userText)</code></div>
+<div class="row"><span>47</span><code>val step = model.complete(prompt(conversation), definitions)</code></div>
+<div class="row"><span>48</span><code>if (step.toolCalls.isEmpty()) {</code></div>
+<div class="row"><span>49</span><code>    return AgentReply(step.text, calls.toList(), conversation.toList())</code></div>
+<div class="row"><span>50</span><code>}</code></div>
+<div class="row"><span>51</span><code>for (call in step.toolCalls) {</code></div>
+<div class="row"><span>52</span><code>    val result = tools.call(call.name, call.arguments)</code></div>
+<div class="row"><span>53</span><code>}</code></div>
+<div class="row"><span>54</span><code>```</code></div>
+<div class="row"><span>55</span><code> </code></div>
+<div class="row"><span>56</span><code>Роут тонкий. `Routes.api`:</code></div>
+<div class="row"><span>57</span><code> </code></div>
+<div class="row"><span>58</span><code>```kotlin</code></div>
+<div class="row"><span>59</span><code>post(&quot;/sessions/{id}/messages&quot;) {</code></div>
+<div class="row"><span>60</span><code>    val id = call.parameters[&quot;id&quot;].orEmpty()</code></div>
+<div class="row"><span>61</span><code>    val body = call.receive&lt;IncomingMessage&gt;()</code></div>
+<div class="row"><span>62</span><code>    call.respond(sessions.message(id, body.text))</code></div>
+<div class="row"><span>63</span><code>}</code></div>
+<div class="row"><span>64</span><code>```</code></div>
+<div class="row"><span>65</span><code> </code></div>
+<div class="row"><span>66</span><code>Чтение дня — DSL, не строка SQL. `ExposedActivityStore.find`:</code></div>
+<div class="row"><span>67</span><code> </code></div>
+<div class="row"><span>68</span><code>```kotlin</code></div>
+<div class="row"><span>69</span><code>ActivityTable.selectAll()</code></div>
+<div class="row"><span>70</span><code>    .where { (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString()) }</code></div>
+<div class="row"><span>71</span><code>    .orderBy(ActivityTable.createdAt to SortOrder.ASC)</code></div>
+<div class="row"><span>72</span><code>```</code></div>
+<div class="row"><span>73</span><code> </code></div>
+<div class="row"><span>74</span><code>Вид активности фиксирует инструмент. `activities_log` всегда пишет `ActivityKind.Log`:</code></div>
+<div class="row"><span>75</span><code> </code></div>
+<div class="row"><span>76</span><code>```kotlin</code></div>
+<div class="row"><span>77</span><code>store.add(NewActivity(summary = args.summary(), kind = ActivityKind.Log, jiraKey = args.jiraKey(), onDate = args.isoDate(&quot;on_date&quot;)))</code></div>
+<div class="row"><span>78</span><code>```</code></div>
+<div class="row"><span>79</span><code> </code></div>
+<div class="row"><span>80</span><code>Тест держит запрет. Фраза про спринт не вызывает инструменты, если модель их не запросила: `AgentTest.wordsDoNotSelectTools`.</code></div>
+<div class="row"><span>81</span><code> </code></div>
+<div class="row"><span>82</span><code>## Запрещено</code></div>
+<div class="row"><span>83</span><code> </code></div>
+<div class="row"><span>84</span><code>Разбор фразы:</code></div>
+<div class="row"><span>85</span><code> </code></div>
+<div class="row"><span>86</span><code>```kotlin</code></div>
+<div class="row"><span>87</span><code>if (text.contains(&quot;спринт&quot;) || text.contains(&quot;завтра&quot;)) addToSprint()</code></div>
+<div class="row"><span>88</span><code>```</code></div>
+<div class="row"><span>89</span><code> </code></div>
+<div class="row"><span>90</span><code>`Any` и сырой JSON в домене, роуте и агенте. `Any` допустим только в `McpToolCatalog`, на границе SDK.</code></div>
+<div class="row"><span>91</span><code> </code></div>
+<div class="row"><span>92</span><code>`println` и `System.out` в `src/main`.</code></div>
+<div class="row"><span>93</span><code> </code></div>
+<div class="row"><span>94</span><code>SQL-строка в Kotlin:</code></div>
+<div class="row"><span>95</span><code> </code></div>
+<div class="row"><span>96</span><code>```kotlin</code></div>
+<div class="row"><span>97</span><code>statement.executeQuery(&quot;SELECT * FROM activity WHERE on_date = &#x27;$date&#x27;&quot;)</code></div>
+<div class="row"><span>98</span><code>```</code></div>
+<div class="row"><span>99</span><code> </code></div>
+<div class="row"><span>100</span><code>Пустой `catch`, звёздный импорт, ключи Jira и адреса, зашитые в код. Ветвление по тексту пользователя. Ветвление по полю инструмента (`kind` = `page` | `attachment` | `any`) — это проверка аргумента, её оставлять.</code></div>
+<div class="row"><span>101</span><code> </code></div>
+<div class="row"><span>102</span><code>## Шаблон файла</code></div>
+<div class="row"><span>103</span><code> </code></div>
+<div class="row"><span>104</span><code>```kotlin</code></div>
+<div class="row"><span>105</span><code>package app.work.server.activity</code></div>
+<div class="row"><span>106</span><code> </code></div>
+<div class="row"><span>107</span><code>import kotlin.time.Clock</code></div>
+<div class="row"><span>108</span><code>import kotlinx.datetime.LocalDate</code></div>
+<div class="row"><span>109</span><code>import org.jetbrains.exposed.v1.jdbc.Database</code></div>
+<div class="row"><span>110</span><code> </code></div>
+<div class="row"><span>111</span><code>class ExposedActivityStore(</code></div>
+<div class="row"><span>112</span><code>    private val database: Database,</code></div>
+<div class="row"><span>113</span><code>) : ActivityStore {</code></div>
+<div class="row"><span>114</span><code>    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List&lt;Activity&gt; {</code></div>
+<div class="row"><span>115</span><code>        return emptyList()</code></div>
+<div class="row"><span>116</span><code>    }</code></div>
+<div class="row"><span>117</span><code>}</code></div>
+<div class="row"><span>118</span><code>```</code></div>
+<div class="row"><span>119</span><code> </code></div>
+<div class="row"><span>120</span><code>Импорты тремя группами: `kotlin`, сторонние, `app.work`. Между группами пустая строка. Конструктор — скобки с хвостовой запятой, если аргументов больше одного. Публичная функция называет действие. DTO HTTP — `@Serializable data class` рядом с роутом.</code></div>
+<div class="row"><span>121</span><code> </code></div>
+<div class="row"><span>122</span><code>Новый read-endpoint берёт данные не из модели. Роут выглядит так:</code></div>
+<div class="row"><span>123</span><code> </code></div>
+<div class="row"><span>124</span><code>```kotlin</code></div>
+<div class="row"><span>125</span><code>get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row"><span>126</span><code>    val raw = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row"><span>127</span><code>    call.respond(days.load(raw))</code></div>
+<div class="row"><span>128</span><code>}</code></div>
+<div class="row"><span>129</span><code>```</code></div>
+<div class="row"><span>130</span><code> </code></div>
+<div class="row"><span>131</span><code>`Days.load` внутри вызывает `ActivityStore.find` отдельно для `Log` и для `Schedule`. Беклог не попадает в ответ. Плохая дата — исключение из `Module.kt`, снаружи это `400` и `ErrorBody`.</code></div>
+<div class="row"><span>132</span><code> </code></div>
+<div class="row"><span>133</span><code>Тест открывает базу через `connect()`, JDBC URL не копирует. `idleTurns` объявлен один раз. В фикстуре беклог записан с `onDate = null`, и тест проверяет, что его summary нет ни в журнале, ни в плане.</code></div>
+  </div>
+</article>
+
+
+<article id="project">
+  <header>
+    <h3>.cursor/rules/project.mdc</h3>
+    <p>Всегда включено. Тот же текст v2: стек, архитектура, примеры, запреты, шаблон.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code>---</code></div>
+<div class="row"><span>2</span><code>description: Стек, архитектура, примеры и запреты рабочего помощника</code></div>
+<div class="row"><span>3</span><code>alwaysApply: true</code></div>
+<div class="row"><span>4</span><code>---</code></div>
+<div class="row"><span>5</span><code> </code></div>
+<div class="row"><span>6</span><code># Рабочий помощник</code></div>
+<div class="row"><span>7</span><code> </code></div>
+<div class="row"><span>8</span><code>Один человек пишет свободно. Модель на S1 решает, что сделать, и вызывает инструменты MCP. Код смысл фразы не разбирает.</code></div>
+<div class="row"><span>9</span><code> </code></div>
+<div class="row"><span>10</span><code>## Стек</code></div>
+<div class="row"><span>11</span><code> </code></div>
+<div class="row"><span>12</span><code>Kotlin 2.4, Multiplatform (`jvm` и `js`/`nodejs`). Ktor 3.5 (Netty). MCP Kotlin SDK 0.15. Exposed 1.0, H2 по умолчанию, Postgres через `DATABASE_URL`. Ollama `http://10.10.1.101:11434`, модель `qwen2.5:3b`. kotlinx.serialization, kotlinx.datetime, kotlin.time.Clock. Логи — SLF4J/Logback. Тесты — kotlin.test и JUnit 5.</code></div>
+<div class="row"><span>13</span><code> </code></div>
+<div class="row"><span>14</span><code>Новые фреймворки, Spring, Koin и разбор текста регулярными выражениями не добавлять.</code></div>
+<div class="row"><span>15</span><code> </code></div>
+<div class="row"><span>16</span><code>## Архитектура</code></div>
+<div class="row"><span>17</span><code> </code></div>
+<div class="row"><span>18</span><code>`shared` — агент и домен, без Ktor и без базы. `server` — HTTP, Ollama, MCP, Exposed.</code></div>
+<div class="row"><span>19</span><code> </code></div>
+<div class="row"><span>20</span><code>Поток: `POST /api/sessions/{id}/messages` → `SessionBook` → `Agent`. Агент добавляет системную дату, отдаёт каталог инструментов модели и выполняет ровно те вызовы, которые вернула модель. Текст без вызовов — ответ или уточнение, код их не различает.</code></div>
+<div class="row"><span>21</span><code> </code></div>
+<div class="row"><span>22</span><code>Инструменты живут в одном MCP `POST /mcp`, регистрация разделена: `activities`, `jira`, `confluence`. Вид активности задаёт выбранный инструмент (`Log`, `Schedule`, `Backlog`), не содержимое фразы. Jira и Confluence читают только свои переменные окружения.</code></div>
+<div class="row"><span>23</span><code> </code></div>
+<div class="row"><span>24</span><code>## Структура</code></div>
+<div class="row"><span>25</span><code> </code></div>
+<div class="row"><span>26</span><code>```</code></div>
+<div class="row"><span>27</span><code>shared/src/commonMain/kotlin/app/work/agent</code></div>
+<div class="row"><span>28</span><code>shared/src/commonMain/kotlin/app/work/domain</code></div>
+<div class="row"><span>29</span><code>server/src/main/kotlin/app/work/server</code></div>
+<div class="row"><span>30</span><code>server/src/main/kotlin/app/work/server/activity</code></div>
+<div class="row"><span>31</span><code>server/src/main/kotlin/app/work/server/jira</code></div>
+<div class="row"><span>32</span><code>server/src/main/kotlin/app/work/server/confluence</code></div>
+<div class="row"><span>33</span><code>server/src/main/kotlin/app/work/server/mcp</code></div>
+<div class="row"><span>34</span><code>server/src/main/kotlin/app/work/server/session</code></div>
+<div class="row"><span>35</span><code>server/src/main/kotlin/app/work/server/tool</code></div>
+<div class="row"><span>36</span><code>```</code></div>
+<div class="row"><span>37</span><code> </code></div>
+<div class="row"><span>38</span><code>## Имена</code></div>
+<div class="row"><span>39</span><code> </code></div>
+<div class="row"><span>40</span><code>Пакет `app.work`. Типы и файлы — PascalCase, функции — camelCase, инструменты MCP — snake_case. Пользовательские строки по-русски, идентификаторы по-английски. Даты в аргументах и путях — `YYYY-MM-DD` (`LocalDate`).</code></div>
+<div class="row"><span>41</span><code> </code></div>
+<div class="row"><span>42</span><code>## Паттерны</code></div>
+<div class="row"><span>43</span><code> </code></div>
+<div class="row"><span>44</span><code>Роут только принимает параметр или тело и отвечает. Он не вызывает `ActivityStore` и не разбирает дату. Сообщения идут через `Turns`, чтение дня — через такой же узкий интерфейс с одним методом `load`. Разбор даты, два вызова `find` и сборка DTO живут в реализации этого интерфейса. Запрос к базе — DSL Exposed. Аргументы инструмента проверяются (`ToolArgs`, `IssueKeys`). Ошибка инструмента возвращается модели текстом. Пустое сообщение, чужая сессия, плохая дата и сбой модели — свои исключения рядом со `StatusPages` в `Module.kt`, ответ `ErrorBody`.</code></div>
+<div class="row"><span>45</span><code> </code></div>
+<div class="row"><span>46</span><code>## Как писать</code></div>
+<div class="row"><span>47</span><code> </code></div>
+<div class="row"><span>48</span><code>Агент не смотрит на слова пользователя. `Agent.handle` только дописывает реплику и исполняет вызовы модели:</code></div>
+<div class="row"><span>49</span><code> </code></div>
+<div class="row"><span>50</span><code>```kotlin</code></div>
+<div class="row"><span>51</span><code>conversation += ChatMessage.User(userText)</code></div>
+<div class="row"><span>52</span><code>val step = model.complete(prompt(conversation), definitions)</code></div>
+<div class="row"><span>53</span><code>if (step.toolCalls.isEmpty()) {</code></div>
+<div class="row"><span>54</span><code>    return AgentReply(step.text, calls.toList(), conversation.toList())</code></div>
+<div class="row"><span>55</span><code>}</code></div>
+<div class="row"><span>56</span><code>for (call in step.toolCalls) {</code></div>
+<div class="row"><span>57</span><code>    val result = tools.call(call.name, call.arguments)</code></div>
+<div class="row"><span>58</span><code>}</code></div>
+<div class="row"><span>59</span><code>```</code></div>
+<div class="row"><span>60</span><code> </code></div>
+<div class="row"><span>61</span><code>Роут тонкий. `Routes.api`:</code></div>
+<div class="row"><span>62</span><code> </code></div>
+<div class="row"><span>63</span><code>```kotlin</code></div>
+<div class="row"><span>64</span><code>post(&quot;/sessions/{id}/messages&quot;) {</code></div>
+<div class="row"><span>65</span><code>    val id = call.parameters[&quot;id&quot;].orEmpty()</code></div>
+<div class="row"><span>66</span><code>    val body = call.receive&lt;IncomingMessage&gt;()</code></div>
+<div class="row"><span>67</span><code>    call.respond(sessions.message(id, body.text))</code></div>
+<div class="row"><span>68</span><code>}</code></div>
+<div class="row"><span>69</span><code>```</code></div>
+<div class="row"><span>70</span><code> </code></div>
+<div class="row"><span>71</span><code>Чтение дня — DSL, не строка SQL. `ExposedActivityStore.find`:</code></div>
+<div class="row"><span>72</span><code> </code></div>
+<div class="row"><span>73</span><code>```kotlin</code></div>
+<div class="row"><span>74</span><code>ActivityTable.selectAll()</code></div>
+<div class="row"><span>75</span><code>    .where { (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString()) }</code></div>
+<div class="row"><span>76</span><code>    .orderBy(ActivityTable.createdAt to SortOrder.ASC)</code></div>
+<div class="row"><span>77</span><code>```</code></div>
+<div class="row"><span>78</span><code> </code></div>
+<div class="row"><span>79</span><code>Вид активности фиксирует инструмент. `activities_log` всегда пишет `ActivityKind.Log`:</code></div>
+<div class="row"><span>80</span><code> </code></div>
+<div class="row"><span>81</span><code>```kotlin</code></div>
+<div class="row"><span>82</span><code>store.add(NewActivity(summary = args.summary(), kind = ActivityKind.Log, jiraKey = args.jiraKey(), onDate = args.isoDate(&quot;on_date&quot;)))</code></div>
+<div class="row"><span>83</span><code>```</code></div>
+<div class="row"><span>84</span><code> </code></div>
+<div class="row"><span>85</span><code>Тест держит запрет. Фраза про спринт не вызывает инструменты, если модель их не запросила: `AgentTest.wordsDoNotSelectTools`.</code></div>
+<div class="row"><span>86</span><code> </code></div>
+<div class="row"><span>87</span><code>## Запрещено</code></div>
+<div class="row"><span>88</span><code> </code></div>
+<div class="row"><span>89</span><code>Разбор фразы:</code></div>
+<div class="row"><span>90</span><code> </code></div>
+<div class="row"><span>91</span><code>```kotlin</code></div>
+<div class="row"><span>92</span><code>if (text.contains(&quot;спринт&quot;) || text.contains(&quot;завтра&quot;)) addToSprint()</code></div>
+<div class="row"><span>93</span><code>```</code></div>
+<div class="row"><span>94</span><code> </code></div>
+<div class="row"><span>95</span><code>`Any` и сырой JSON в домене, роуте и агенте. `Any` допустим только в `McpToolCatalog`, на границе SDK.</code></div>
+<div class="row"><span>96</span><code> </code></div>
+<div class="row"><span>97</span><code>`println` и `System.out` в `src/main`.</code></div>
+<div class="row"><span>98</span><code> </code></div>
+<div class="row"><span>99</span><code>SQL-строка в Kotlin:</code></div>
+<div class="row"><span>100</span><code> </code></div>
+<div class="row"><span>101</span><code>```kotlin</code></div>
+<div class="row"><span>102</span><code>statement.executeQuery(&quot;SELECT * FROM activity WHERE on_date = &#x27;$date&#x27;&quot;)</code></div>
+<div class="row"><span>103</span><code>```</code></div>
+<div class="row"><span>104</span><code> </code></div>
+<div class="row"><span>105</span><code>Пустой `catch`, звёздный импорт, ключи Jira и адреса, зашитые в код. Ветвление по тексту пользователя. Ветвление по полю инструмента (`kind` = `page` | `attachment` | `any`) — это проверка аргумента, её оставлять.</code></div>
+<div class="row"><span>106</span><code> </code></div>
+<div class="row"><span>107</span><code>## Шаблон файла</code></div>
+<div class="row"><span>108</span><code> </code></div>
+<div class="row"><span>109</span><code>```kotlin</code></div>
+<div class="row"><span>110</span><code>package app.work.server.activity</code></div>
+<div class="row"><span>111</span><code> </code></div>
+<div class="row"><span>112</span><code>import kotlin.time.Clock</code></div>
+<div class="row"><span>113</span><code>import kotlinx.datetime.LocalDate</code></div>
+<div class="row"><span>114</span><code>import org.jetbrains.exposed.v1.jdbc.Database</code></div>
+<div class="row"><span>115</span><code> </code></div>
+<div class="row"><span>116</span><code>class ExposedActivityStore(</code></div>
+<div class="row"><span>117</span><code>    private val database: Database,</code></div>
+<div class="row"><span>118</span><code>) : ActivityStore {</code></div>
+<div class="row"><span>119</span><code>    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List&lt;Activity&gt; {</code></div>
+<div class="row"><span>120</span><code>        return emptyList()</code></div>
+<div class="row"><span>121</span><code>    }</code></div>
+<div class="row"><span>122</span><code>}</code></div>
+<div class="row"><span>123</span><code>```</code></div>
+<div class="row"><span>124</span><code> </code></div>
+<div class="row"><span>125</span><code>Импорты тремя группами: `kotlin`, сторонние, `app.work`. Между группами пустая строка. Конструктор — скобки с хвостовой запятой, если аргументов больше одного. Публичная функция называет действие. DTO HTTP — `@Serializable data class` рядом с роутом.</code></div>
+<div class="row"><span>126</span><code> </code></div>
+<div class="row"><span>127</span><code>Новый read-endpoint берёт данные не из модели. Роут выглядит так:</code></div>
+<div class="row"><span>128</span><code> </code></div>
+<div class="row"><span>129</span><code>```kotlin</code></div>
+<div class="row"><span>130</span><code>get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row"><span>131</span><code>    val raw = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row"><span>132</span><code>    call.respond(days.load(raw))</code></div>
+<div class="row"><span>133</span><code>}</code></div>
+<div class="row"><span>134</span><code>```</code></div>
+<div class="row"><span>135</span><code> </code></div>
+<div class="row"><span>136</span><code>`Days.load` внутри вызывает `ActivityStore.find` отдельно для `Log` и для `Schedule`. Беклог не попадает в ответ. Плохая дата — исключение из `Module.kt`, снаружи это `400` и `ErrorBody`.</code></div>
+<div class="row"><span>137</span><code> </code></div>
+<div class="row"><span>138</span><code>Тест открывает базу через `connect()`, JDBC URL не копирует. `idleTurns` объявлен один раз. В фикстуре беклог записан с `onDate = null`, и тест проверяет, что его summary нет ни в журнале, ни в плане.</code></div>
+  </div>
+</article>
+
+
+<article id="architecture">
+  <header>
+    <h3>.cursor/rules/architecture.mdc</h3>
+    <p>Всегда включено. Короткая архитектура.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code>---</code></div>
+<div class="row"><span>2</span><code>description: Архитектура рабочего помощника и запрет разбирать фразу пользователя</code></div>
+<div class="row"><span>3</span><code>alwaysApply: true</code></div>
+<div class="row"><span>4</span><code>---</code></div>
+<div class="row"><span>5</span><code> </code></div>
+<div class="row"><span>6</span><code># Архитектура</code></div>
+<div class="row"><span>7</span><code> </code></div>
+<div class="row"><span>8</span><code>Kotlin 2.4 Multiplatform (`jvm`, `js`). Ktor 3.5, MCP SDK 0.15, Exposed 1.0, Ollama на `10.10.1.101:11434`.</code></div>
+<div class="row"><span>9</span><code> </code></div>
+<div class="row"><span>10</span><code>`shared` — агент и домен. `server` — HTTP, Ollama, MCP, база. Смысл фразы решает только модель. Код исполняет вызовы MCP и не ищет слова в тексте.</code></div>
+<div class="row"><span>11</span><code> </code></div>
+<div class="row"><span>12</span><code>Роут делегирует узкий интерфейс и не вызывает `ActivityStore`. Вид активности задаёт инструмент: `Log`, `Schedule`, `Backlog`. Даты — `YYYY-MM-DD`.</code></div>
+<div class="row"><span>13</span><code> </code></div>
+<div class="row"><span>14</span><code>Примеры, запреты и шаблон файла — в `project.mdc` и в `.cursorrules`.</code></div>
+  </div>
+</article>
+
+
+<article id="kotlin">
+  <header>
+    <h3>.cursor/rules/kotlin.mdc</h3>
+    <p>Подключается к файлам Kotlin.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code>---</code></div>
+<div class="row"><span>2</span><code>description: Как писать Kotlin в рабочем помощнике</code></div>
+<div class="row"><span>3</span><code>globs: &quot;**/*.kt&quot;</code></div>
+<div class="row"><span>4</span><code>alwaysApply: false</code></div>
+<div class="row"><span>5</span><code>---</code></div>
+<div class="row"><span>6</span><code> </code></div>
+<div class="row"><span>7</span><code># Kotlin</code></div>
+<div class="row"><span>8</span><code> </code></div>
+<div class="row"><span>9</span><code>Импорты: `kotlin`, затем сторонние, затем `app.work`. Без звёздочек.</code></div>
+<div class="row"><span>10</span><code> </code></div>
+<div class="row"><span>11</span><code>Имена: типы PascalCase, функции camelCase, инструменты MCP snake_case. Строки для человека по-русски.</code></div>
+<div class="row"><span>12</span><code> </code></div>
+<div class="row"><span>13</span><code>В домене, роуте и агенте нет `Any`, `println`, `System.out` и строк SQL. Запрос — DSL Exposed, как `ExposedActivityStore.find`.</code></div>
+<div class="row"><span>14</span><code> </code></div>
+<div class="row"><span>15</span><code>Неверная дата — `400` и `ErrorBody`. Рядом тест на H2.</code></div>
+  </div>
+</article>
+
+
+<article id="http">
+  <header>
+    <h3>.cursor/rules/http.mdc</h3>
+    <p>Подключается к Kotlin в server.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code>---</code></div>
+<div class="row"><span>2</span><code>description: Тонкие роуты Ktor без решений по тексту</code></div>
+<div class="row"><span>3</span><code>globs: &quot;server/**/*.kt&quot;</code></div>
+<div class="row"><span>4</span><code>alwaysApply: false</code></div>
+<div class="row"><span>5</span><code>---</code></div>
+<div class="row"><span>6</span><code> </code></div>
+<div class="row"><span>7</span><code># HTTP</code></div>
+<div class="row"><span>8</span><code> </code></div>
+<div class="row"><span>9</span><code>Роут принимает параметр или тело и вызывает один метод. Образец — `sessions.message`. `ActivityStore` из роута не вызывать.</code></div>
+<div class="row"><span>10</span><code> </code></div>
+<div class="row"><span>11</span><code>Чтение дня — интерфейс `Days` с одним `load(rawDate)`. Реализация сама зовёт `find` для `Log` и `Schedule`. DTO — `@Serializable data class` в файле роута. Беклог в этот ответ не входит.</code></div>
+<div class="row"><span>12</span><code> </code></div>
+<div class="row"><span>13</span><code>Исключение плохой даты и его ветка `StatusPages` лежат в `Module.kt` и отвечают `ErrorBody`.</code></div>
+  </div>
+</article>
+
+
+<article id="baseline">
+  <header>
+    <h3>~/.cursor/rules/kotlin-baseline.mdc</h3>
+    <p>Глобальные правила Cursor, вне репозитория.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code>---</code></div>
+<div class="row"><span>2</span><code>description: Базовый стиль Kotlin для всех проектов</code></div>
+<div class="row"><span>3</span><code>alwaysApply: true</code></div>
+<div class="row"><span>4</span><code>---</code></div>
+<div class="row"><span>5</span><code> </code></div>
+<div class="row"><span>6</span><code># Kotlin</code></div>
+<div class="row"><span>7</span><code> </code></div>
+<div class="row"><span>8</span><code>- Тип может быть null, вместо этого не используй `Any` и пустые строки-заглушки.</code></div>
+<div class="row"><span>9</span><code>- В исходниках приложения нет `println` и `System.out`. Для логов — логгер.</code></div>
+<div class="row"><span>10</span><code>- Импорты без звёздочек: сначала `kotlin`, потом сторонние библиотеки, потом код проекта.</code></div>
+<div class="row"><span>11</span><code>- Имя функции говорит, что она делает.</code></div>
+  </div>
+</article>
+
+
+<article id="agent">
+  <header>
+    <h3>.cursor/agents/endpoint-author.md</h3>
+    <p>Субагент, который пишет HTTP endpoint.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code>---</code></div>
+<div class="row"><span>2</span><code>name: endpoint-author</code></div>
+<div class="row"><span>3</span><code>description: Пишет HTTP endpoint рабочего помощника по правилам проекта. Use proactively when adding a Ktor route, endpoint, or HTTP handler in this repository.</code></div>
+<div class="row"><span>4</span><code>---</code></div>
+<div class="row"><span>5</span><code> </code></div>
+<div class="row"><span>6</span><code>Ты добавляешь endpoint в этот репозиторий.</code></div>
+<div class="row"><span>7</span><code> </code></div>
+<div class="row"><span>8</span><code>1. Прочитай `.cursor/rules` и `.cursorrules`.</code></div>
+<div class="row"><span>9</span><code>2. Повтори форму `Route.api`: роут не решает, что делать с фразой.</code></div>
+<div class="row"><span>10</span><code>3. Роут не вызывает `ActivityStore`. Для дня заведи `Days.load`, как сообщения идут через `Turns`.</code></div>
+<div class="row"><span>11</span><code>4. DTO пометь `@Serializable` и положи в `Routes.kt`. Исключение плохой даты и `StatusPages` — в `Module.kt`.</code></div>
+<div class="row"><span>12</span><code>5. Тест открывает базу через `connect()`. `idleTurns` не копируй. Беклог с `onDate = null` не должен попасть в ответ.</code></div>
+<div class="row"><span>13</span><code>6. Не разбирай свободный текст. Не добавляй SQL-строки, `println` и `Any` в домен.</code></div>
+<div class="row"><span>14</span><code>7. Правила и скиллы не меняй.</code></div>
+  </div>
+</article>
+
+
+<article id="skill">
+  <header>
+    <h3>.cursor/skills/add-kotlin-endpoint/SKILL.md</h3>
+    <p>Скилл добавления endpoint.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code>---</code></div>
+<div class="row"><span>2</span><code>name: add-kotlin-endpoint</code></div>
+<div class="row"><span>3</span><code>description: Adds a Ktor HTTP endpoint in the work assistant using ActivityStore, a thin route, and an H2 test. Use when adding an endpoint, route, GET/POST handler, or HTTP API in this project.</code></div>
+<div class="row"><span>4</span><code>---</code></div>
+<div class="row"><span>5</span><code> </code></div>
+<div class="row"><span>6</span><code># Endpoint</code></div>
+<div class="row"><span>7</span><code> </code></div>
+<div class="row"><span>8</span><code>1. Открой `Routes.kt` и `Module.kt`. Роут не вызывает `ActivityStore`.</code></div>
+<div class="row"><span>9</span><code>2. Добавь интерфейс `Days` с `suspend fun load(rawDate: String): DayResponse`. Ветка роута: параметр и `call.respond(days.load(raw))`.</code></div>
+<div class="row"><span>10</span><code>3. Реализация `load` разбирает `YYYY-MM-DD`, зовёт `find` для `Log` и `Schedule` и собирает DTO. Беклог не включает.</code></div>
+<div class="row"><span>11</span><code>4. Плохая дата — исключение, объявленное в `Module.kt`. Там же ветка `StatusPages` на `400` и `ErrorBody`.</code></div>
+<div class="row"><span>12</span><code>5. DTO — `@Serializable data class` в `Routes.kt`.</code></div>
+<div class="row"><span>13</span><code>6. Тест открывает H2 через `connect()`. JDBC URL не копируй. `idleTurns` не дублируй. Беклог в фикстуре с `onDate = null`, summary беклога отсутствует в обоих списках.</code></div>
+<div class="row"><span>14</span><code>7. Не ищи слова во входной фразе и не пиши SQL строкой.</code></div>
+  </div>
+</article>
+
+
+<article id="v1">
+  <header>
+    <h3>challenge/rules-v1.md</h3>
+    <p>Снимок правил первой генерации.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code># Рабочий помощник</code></div>
+<div class="row"><span>2</span><code> </code></div>
+<div class="row"><span>3</span><code>Один человек пишет свободно. Модель на S1 решает, что сделать, и вызывает инструменты MCP. Код смысл фразы не разбирает.</code></div>
+<div class="row"><span>4</span><code> </code></div>
+<div class="row"><span>5</span><code>## Стек</code></div>
+<div class="row"><span>6</span><code> </code></div>
+<div class="row"><span>7</span><code>Kotlin 2.4, Multiplatform (`jvm` и `js`/`nodejs`). Ktor 3.5 (Netty). MCP Kotlin SDK 0.15. Exposed 1.0, H2 по умолчанию, Postgres через `DATABASE_URL`. Ollama `http://10.10.1.101:11434`, модель `qwen2.5:3b`. kotlinx.serialization, kotlinx.datetime, kotlin.time.Clock. Логи — SLF4J/Logback. Тесты — kotlin.test и JUnit 5.</code></div>
+<div class="row"><span>8</span><code> </code></div>
+<div class="row"><span>9</span><code>Новые фреймворки, Spring, Koin и разбор текста регулярными выражениями не добавлять.</code></div>
+<div class="row"><span>10</span><code> </code></div>
+<div class="row"><span>11</span><code>## Архитектура</code></div>
+<div class="row"><span>12</span><code> </code></div>
+<div class="row"><span>13</span><code>`shared` — агент и домен, без Ktor и без базы. `server` — HTTP, Ollama, MCP, Exposed.</code></div>
+<div class="row"><span>14</span><code> </code></div>
+<div class="row"><span>15</span><code>Поток: `POST /api/sessions/{id}/messages` → `SessionBook` → `Agent`. Агент добавляет системную дату, отдаёт каталог инструментов модели и выполняет ровно те вызовы, которые вернула модель. Текст без вызовов — ответ или уточнение, код их не различает.</code></div>
+<div class="row"><span>16</span><code> </code></div>
+<div class="row"><span>17</span><code>Инструменты живут в одном MCP `POST /mcp`, регистрация разделена: `activities`, `jira`, `confluence`. Вид активности задаёт выбранный инструмент (`Log`, `Schedule`, `Backlog`), не содержимое фразы. Jira и Confluence читают только свои переменные окружения.</code></div>
+<div class="row"><span>18</span><code> </code></div>
+<div class="row"><span>19</span><code>## Структура</code></div>
+<div class="row"><span>20</span><code> </code></div>
+<div class="row"><span>21</span><code>```</code></div>
+<div class="row"><span>22</span><code>shared/src/commonMain/kotlin/app/work/agent</code></div>
+<div class="row"><span>23</span><code>shared/src/commonMain/kotlin/app/work/domain</code></div>
+<div class="row"><span>24</span><code>server/src/main/kotlin/app/work/server</code></div>
+<div class="row"><span>25</span><code>server/src/main/kotlin/app/work/server/activity</code></div>
+<div class="row"><span>26</span><code>server/src/main/kotlin/app/work/server/jira</code></div>
+<div class="row"><span>27</span><code>server/src/main/kotlin/app/work/server/confluence</code></div>
+<div class="row"><span>28</span><code>server/src/main/kotlin/app/work/server/mcp</code></div>
+<div class="row"><span>29</span><code>server/src/main/kotlin/app/work/server/session</code></div>
+<div class="row"><span>30</span><code>server/src/main/kotlin/app/work/server/tool</code></div>
+<div class="row"><span>31</span><code>```</code></div>
+<div class="row"><span>32</span><code> </code></div>
+<div class="row"><span>33</span><code>## Имена</code></div>
+<div class="row"><span>34</span><code> </code></div>
+<div class="row"><span>35</span><code>Пакет `app.work`. Типы и файлы — PascalCase, функции — camelCase, инструменты MCP — snake_case. Пользовательские строки по-русски, идентификаторы по-английски. Даты в аргументах и путях — `YYYY-MM-DD` (`LocalDate`).</code></div>
+<div class="row"><span>36</span><code> </code></div>
+<div class="row"><span>37</span><code>## Паттерны</code></div>
+<div class="row"><span>38</span><code> </code></div>
+<div class="row"><span>39</span><code>Роут только принимает тело и отвечает. Решение и база — за интерфейсом (`Turns`, `ActivityStore`, `ToolCatalog`, `LanguageModel`). Запрос к базе — DSL Exposed. Аргументы инструмента проверяются (`ToolArgs`, `IssueKeys`). Ошибка инструмента возвращается модели текстом. Пустое сообщение, чужая сессия и сбой модели — свои исключения и `ErrorBody`.</code></div>
+<div class="row"><span>40</span><code> </code></div>
+<div class="row"><span>41</span><code>## Как писать</code></div>
+<div class="row"><span>42</span><code> </code></div>
+<div class="row"><span>43</span><code>Агент не смотрит на слова пользователя. `Agent.handle` только дописывает реплику и исполняет вызовы модели:</code></div>
+<div class="row"><span>44</span><code> </code></div>
+<div class="row"><span>45</span><code>```kotlin</code></div>
+<div class="row"><span>46</span><code>conversation += ChatMessage.User(userText)</code></div>
+<div class="row"><span>47</span><code>val step = model.complete(prompt(conversation), definitions)</code></div>
+<div class="row"><span>48</span><code>if (step.toolCalls.isEmpty()) {</code></div>
+<div class="row"><span>49</span><code>    return AgentReply(step.text, calls.toList(), conversation.toList())</code></div>
+<div class="row"><span>50</span><code>}</code></div>
+<div class="row"><span>51</span><code>for (call in step.toolCalls) {</code></div>
+<div class="row"><span>52</span><code>    val result = tools.call(call.name, call.arguments)</code></div>
+<div class="row"><span>53</span><code>}</code></div>
+<div class="row"><span>54</span><code>```</code></div>
+<div class="row"><span>55</span><code> </code></div>
+<div class="row"><span>56</span><code>Роут тонкий. `Routes.api`:</code></div>
+<div class="row"><span>57</span><code> </code></div>
+<div class="row"><span>58</span><code>```kotlin</code></div>
+<div class="row"><span>59</span><code>post(&quot;/sessions/{id}/messages&quot;) {</code></div>
+<div class="row"><span>60</span><code>    val id = call.parameters[&quot;id&quot;].orEmpty()</code></div>
+<div class="row"><span>61</span><code>    val body = call.receive&lt;IncomingMessage&gt;()</code></div>
+<div class="row"><span>62</span><code>    call.respond(sessions.message(id, body.text))</code></div>
+<div class="row"><span>63</span><code>}</code></div>
+<div class="row"><span>64</span><code>```</code></div>
+<div class="row"><span>65</span><code> </code></div>
+<div class="row"><span>66</span><code>Чтение дня — DSL, не строка SQL. `ExposedActivityStore.find`:</code></div>
+<div class="row"><span>67</span><code> </code></div>
+<div class="row"><span>68</span><code>```kotlin</code></div>
+<div class="row"><span>69</span><code>ActivityTable.selectAll()</code></div>
+<div class="row"><span>70</span><code>    .where { (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString()) }</code></div>
+<div class="row"><span>71</span><code>    .orderBy(ActivityTable.createdAt to SortOrder.ASC)</code></div>
+<div class="row"><span>72</span><code>```</code></div>
+<div class="row"><span>73</span><code> </code></div>
+<div class="row"><span>74</span><code>Вид активности фиксирует инструмент. `activities_log` всегда пишет `ActivityKind.Log`:</code></div>
+<div class="row"><span>75</span><code> </code></div>
+<div class="row"><span>76</span><code>```kotlin</code></div>
+<div class="row"><span>77</span><code>store.add(NewActivity(summary = args.summary(), kind = ActivityKind.Log, jiraKey = args.jiraKey(), onDate = args.isoDate(&quot;on_date&quot;)))</code></div>
+<div class="row"><span>78</span><code>```</code></div>
+<div class="row"><span>79</span><code> </code></div>
+<div class="row"><span>80</span><code>Тест держит запрет. Фраза про спринт не вызывает инструменты, если модель их не запросила: `AgentTest.wordsDoNotSelectTools`.</code></div>
+<div class="row"><span>81</span><code> </code></div>
+<div class="row"><span>82</span><code>## Запрещено</code></div>
+<div class="row"><span>83</span><code> </code></div>
+<div class="row"><span>84</span><code>Разбор фразы:</code></div>
+<div class="row"><span>85</span><code> </code></div>
+<div class="row"><span>86</span><code>```kotlin</code></div>
+<div class="row"><span>87</span><code>if (text.contains(&quot;спринт&quot;) || text.contains(&quot;завтра&quot;)) addToSprint()</code></div>
+<div class="row"><span>88</span><code>```</code></div>
+<div class="row"><span>89</span><code> </code></div>
+<div class="row"><span>90</span><code>`Any` и сырой JSON в домене, роуте и агенте. `Any` допустим только в `McpToolCatalog`, на границе SDK.</code></div>
+<div class="row"><span>91</span><code> </code></div>
+<div class="row"><span>92</span><code>`println` и `System.out` в `src/main`.</code></div>
+<div class="row"><span>93</span><code> </code></div>
+<div class="row"><span>94</span><code>SQL-строка в Kotlin:</code></div>
+<div class="row"><span>95</span><code> </code></div>
+<div class="row"><span>96</span><code>```kotlin</code></div>
+<div class="row"><span>97</span><code>statement.executeQuery(&quot;SELECT * FROM activity WHERE on_date = &#x27;$date&#x27;&quot;)</code></div>
+<div class="row"><span>98</span><code>```</code></div>
+<div class="row"><span>99</span><code> </code></div>
+<div class="row"><span>100</span><code>Пустой `catch`, звёздный импорт, ключи Jira и адреса, зашитые в код. Ветвление по тексту пользователя. Ветвление по полю инструмента (`kind` = `page` | `attachment` | `any`) — это проверка аргумента, её оставлять.</code></div>
+<div class="row"><span>101</span><code> </code></div>
+<div class="row"><span>102</span><code>## Шаблон файла</code></div>
+<div class="row"><span>103</span><code> </code></div>
+<div class="row"><span>104</span><code>```kotlin</code></div>
+<div class="row"><span>105</span><code>package app.work.server.activity</code></div>
+<div class="row"><span>106</span><code> </code></div>
+<div class="row"><span>107</span><code>import kotlin.time.Clock</code></div>
+<div class="row"><span>108</span><code>import kotlinx.datetime.LocalDate</code></div>
+<div class="row"><span>109</span><code>import org.jetbrains.exposed.v1.jdbc.Database</code></div>
+<div class="row"><span>110</span><code> </code></div>
+<div class="row"><span>111</span><code>class ExposedActivityStore(</code></div>
+<div class="row"><span>112</span><code>    private val database: Database,</code></div>
+<div class="row"><span>113</span><code>) : ActivityStore {</code></div>
+<div class="row"><span>114</span><code>    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List&lt;Activity&gt; {</code></div>
+<div class="row"><span>115</span><code>        return emptyList()</code></div>
+<div class="row"><span>116</span><code>    }</code></div>
+<div class="row"><span>117</span><code>}</code></div>
+<div class="row"><span>118</span><code>```</code></div>
+<div class="row"><span>119</span><code> </code></div>
+<div class="row"><span>120</span><code>Импорты тремя группами: `kotlin`, сторонние, `app.work`. Между группами пустая строка. Конструктор — скобки с хвостовой запятой, если аргументов больше одного. Публичная функция называет действие. DTO HTTP — `@Serializable data class` рядом с роутом.</code></div>
+<div class="row"><span>121</span><code> </code></div>
+<div class="row"><span>122</span><code>Новый read-endpoint берёт данные из `ActivityStore`, не из модели. Неверная дата пути — `400` и `ErrorBody`, не необработанное исключение. Рядом тест на H2, как `ActivityStoreTest`.</code></div>
+  </div>
+</article>
+
+
+<article id="v2">
+  <header>
+    <h3>challenge/rules-v2.md</h3>
+    <p>Снимок правил второй генерации.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code># Рабочий помощник</code></div>
+<div class="row"><span>2</span><code> </code></div>
+<div class="row"><span>3</span><code>Один человек пишет свободно. Модель на S1 решает, что сделать, и вызывает инструменты MCP. Код смысл фразы не разбирает.</code></div>
+<div class="row"><span>4</span><code> </code></div>
+<div class="row"><span>5</span><code>## Стек</code></div>
+<div class="row"><span>6</span><code> </code></div>
+<div class="row"><span>7</span><code>Kotlin 2.4, Multiplatform (`jvm` и `js`/`nodejs`). Ktor 3.5 (Netty). MCP Kotlin SDK 0.15. Exposed 1.0, H2 по умолчанию, Postgres через `DATABASE_URL`. Ollama `http://10.10.1.101:11434`, модель `qwen2.5:3b`. kotlinx.serialization, kotlinx.datetime, kotlin.time.Clock. Логи — SLF4J/Logback. Тесты — kotlin.test и JUnit 5.</code></div>
+<div class="row"><span>8</span><code> </code></div>
+<div class="row"><span>9</span><code>Новые фреймворки, Spring, Koin и разбор текста регулярными выражениями не добавлять.</code></div>
+<div class="row"><span>10</span><code> </code></div>
+<div class="row"><span>11</span><code>## Архитектура</code></div>
+<div class="row"><span>12</span><code> </code></div>
+<div class="row"><span>13</span><code>`shared` — агент и домен, без Ktor и без базы. `server` — HTTP, Ollama, MCP, Exposed.</code></div>
+<div class="row"><span>14</span><code> </code></div>
+<div class="row"><span>15</span><code>Поток: `POST /api/sessions/{id}/messages` → `SessionBook` → `Agent`. Агент добавляет системную дату, отдаёт каталог инструментов модели и выполняет ровно те вызовы, которые вернула модель. Текст без вызовов — ответ или уточнение, код их не различает.</code></div>
+<div class="row"><span>16</span><code> </code></div>
+<div class="row"><span>17</span><code>Инструменты живут в одном MCP `POST /mcp`, регистрация разделена: `activities`, `jira`, `confluence`. Вид активности задаёт выбранный инструмент (`Log`, `Schedule`, `Backlog`), не содержимое фразы. Jira и Confluence читают только свои переменные окружения.</code></div>
+<div class="row"><span>18</span><code> </code></div>
+<div class="row"><span>19</span><code>## Структура</code></div>
+<div class="row"><span>20</span><code> </code></div>
+<div class="row"><span>21</span><code>```</code></div>
+<div class="row"><span>22</span><code>shared/src/commonMain/kotlin/app/work/agent</code></div>
+<div class="row"><span>23</span><code>shared/src/commonMain/kotlin/app/work/domain</code></div>
+<div class="row"><span>24</span><code>server/src/main/kotlin/app/work/server</code></div>
+<div class="row"><span>25</span><code>server/src/main/kotlin/app/work/server/activity</code></div>
+<div class="row"><span>26</span><code>server/src/main/kotlin/app/work/server/jira</code></div>
+<div class="row"><span>27</span><code>server/src/main/kotlin/app/work/server/confluence</code></div>
+<div class="row"><span>28</span><code>server/src/main/kotlin/app/work/server/mcp</code></div>
+<div class="row"><span>29</span><code>server/src/main/kotlin/app/work/server/session</code></div>
+<div class="row"><span>30</span><code>server/src/main/kotlin/app/work/server/tool</code></div>
+<div class="row"><span>31</span><code>```</code></div>
+<div class="row"><span>32</span><code> </code></div>
+<div class="row"><span>33</span><code>## Имена</code></div>
+<div class="row"><span>34</span><code> </code></div>
+<div class="row"><span>35</span><code>Пакет `app.work`. Типы и файлы — PascalCase, функции — camelCase, инструменты MCP — snake_case. Пользовательские строки по-русски, идентификаторы по-английски. Даты в аргументах и путях — `YYYY-MM-DD` (`LocalDate`).</code></div>
+<div class="row"><span>36</span><code> </code></div>
+<div class="row"><span>37</span><code>## Паттерны</code></div>
+<div class="row"><span>38</span><code> </code></div>
+<div class="row"><span>39</span><code>Роут только принимает параметр или тело и отвечает. Он не вызывает `ActivityStore` и не разбирает дату. Сообщения идут через `Turns`, чтение дня — через такой же узкий интерфейс с одним методом `load`. Разбор даты, два вызова `find` и сборка DTO живут в реализации этого интерфейса. Запрос к базе — DSL Exposed. Аргументы инструмента проверяются (`ToolArgs`, `IssueKeys`). Ошибка инструмента возвращается модели текстом. Пустое сообщение, чужая сессия, плохая дата и сбой модели — свои исключения рядом со `StatusPages` в `Module.kt`, ответ `ErrorBody`.</code></div>
+<div class="row"><span>40</span><code> </code></div>
+<div class="row"><span>41</span><code>## Как писать</code></div>
+<div class="row"><span>42</span><code> </code></div>
+<div class="row"><span>43</span><code>Агент не смотрит на слова пользователя. `Agent.handle` только дописывает реплику и исполняет вызовы модели:</code></div>
+<div class="row"><span>44</span><code> </code></div>
+<div class="row"><span>45</span><code>```kotlin</code></div>
+<div class="row"><span>46</span><code>conversation += ChatMessage.User(userText)</code></div>
+<div class="row"><span>47</span><code>val step = model.complete(prompt(conversation), definitions)</code></div>
+<div class="row"><span>48</span><code>if (step.toolCalls.isEmpty()) {</code></div>
+<div class="row"><span>49</span><code>    return AgentReply(step.text, calls.toList(), conversation.toList())</code></div>
+<div class="row"><span>50</span><code>}</code></div>
+<div class="row"><span>51</span><code>for (call in step.toolCalls) {</code></div>
+<div class="row"><span>52</span><code>    val result = tools.call(call.name, call.arguments)</code></div>
+<div class="row"><span>53</span><code>}</code></div>
+<div class="row"><span>54</span><code>```</code></div>
+<div class="row"><span>55</span><code> </code></div>
+<div class="row"><span>56</span><code>Роут тонкий. `Routes.api`:</code></div>
+<div class="row"><span>57</span><code> </code></div>
+<div class="row"><span>58</span><code>```kotlin</code></div>
+<div class="row"><span>59</span><code>post(&quot;/sessions/{id}/messages&quot;) {</code></div>
+<div class="row"><span>60</span><code>    val id = call.parameters[&quot;id&quot;].orEmpty()</code></div>
+<div class="row"><span>61</span><code>    val body = call.receive&lt;IncomingMessage&gt;()</code></div>
+<div class="row"><span>62</span><code>    call.respond(sessions.message(id, body.text))</code></div>
+<div class="row"><span>63</span><code>}</code></div>
+<div class="row"><span>64</span><code>```</code></div>
+<div class="row"><span>65</span><code> </code></div>
+<div class="row"><span>66</span><code>Чтение дня — DSL, не строка SQL. `ExposedActivityStore.find`:</code></div>
+<div class="row"><span>67</span><code> </code></div>
+<div class="row"><span>68</span><code>```kotlin</code></div>
+<div class="row"><span>69</span><code>ActivityTable.selectAll()</code></div>
+<div class="row"><span>70</span><code>    .where { (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString()) }</code></div>
+<div class="row"><span>71</span><code>    .orderBy(ActivityTable.createdAt to SortOrder.ASC)</code></div>
+<div class="row"><span>72</span><code>```</code></div>
+<div class="row"><span>73</span><code> </code></div>
+<div class="row"><span>74</span><code>Вид активности фиксирует инструмент. `activities_log` всегда пишет `ActivityKind.Log`:</code></div>
+<div class="row"><span>75</span><code> </code></div>
+<div class="row"><span>76</span><code>```kotlin</code></div>
+<div class="row"><span>77</span><code>store.add(NewActivity(summary = args.summary(), kind = ActivityKind.Log, jiraKey = args.jiraKey(), onDate = args.isoDate(&quot;on_date&quot;)))</code></div>
+<div class="row"><span>78</span><code>```</code></div>
+<div class="row"><span>79</span><code> </code></div>
+<div class="row"><span>80</span><code>Тест держит запрет. Фраза про спринт не вызывает инструменты, если модель их не запросила: `AgentTest.wordsDoNotSelectTools`.</code></div>
+<div class="row"><span>81</span><code> </code></div>
+<div class="row"><span>82</span><code>## Запрещено</code></div>
+<div class="row"><span>83</span><code> </code></div>
+<div class="row"><span>84</span><code>Разбор фразы:</code></div>
+<div class="row"><span>85</span><code> </code></div>
+<div class="row"><span>86</span><code>```kotlin</code></div>
+<div class="row"><span>87</span><code>if (text.contains(&quot;спринт&quot;) || text.contains(&quot;завтра&quot;)) addToSprint()</code></div>
+<div class="row"><span>88</span><code>```</code></div>
+<div class="row"><span>89</span><code> </code></div>
+<div class="row"><span>90</span><code>`Any` и сырой JSON в домене, роуте и агенте. `Any` допустим только в `McpToolCatalog`, на границе SDK.</code></div>
+<div class="row"><span>91</span><code> </code></div>
+<div class="row"><span>92</span><code>`println` и `System.out` в `src/main`.</code></div>
+<div class="row"><span>93</span><code> </code></div>
+<div class="row"><span>94</span><code>SQL-строка в Kotlin:</code></div>
+<div class="row"><span>95</span><code> </code></div>
+<div class="row"><span>96</span><code>```kotlin</code></div>
+<div class="row"><span>97</span><code>statement.executeQuery(&quot;SELECT * FROM activity WHERE on_date = &#x27;$date&#x27;&quot;)</code></div>
+<div class="row"><span>98</span><code>```</code></div>
+<div class="row"><span>99</span><code> </code></div>
+<div class="row"><span>100</span><code>Пустой `catch`, звёздный импорт, ключи Jira и адреса, зашитые в код. Ветвление по тексту пользователя. Ветвление по полю инструмента (`kind` = `page` | `attachment` | `any`) — это проверка аргумента, её оставлять.</code></div>
+<div class="row"><span>101</span><code> </code></div>
+<div class="row"><span>102</span><code>## Шаблон файла</code></div>
+<div class="row"><span>103</span><code> </code></div>
+<div class="row"><span>104</span><code>```kotlin</code></div>
+<div class="row"><span>105</span><code>package app.work.server.activity</code></div>
+<div class="row"><span>106</span><code> </code></div>
+<div class="row"><span>107</span><code>import kotlin.time.Clock</code></div>
+<div class="row"><span>108</span><code>import kotlinx.datetime.LocalDate</code></div>
+<div class="row"><span>109</span><code>import org.jetbrains.exposed.v1.jdbc.Database</code></div>
+<div class="row"><span>110</span><code> </code></div>
+<div class="row"><span>111</span><code>class ExposedActivityStore(</code></div>
+<div class="row"><span>112</span><code>    private val database: Database,</code></div>
+<div class="row"><span>113</span><code>) : ActivityStore {</code></div>
+<div class="row"><span>114</span><code>    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List&lt;Activity&gt; {</code></div>
+<div class="row"><span>115</span><code>        return emptyList()</code></div>
+<div class="row"><span>116</span><code>    }</code></div>
+<div class="row"><span>117</span><code>}</code></div>
+<div class="row"><span>118</span><code>```</code></div>
+<div class="row"><span>119</span><code> </code></div>
+<div class="row"><span>120</span><code>Импорты тремя группами: `kotlin`, сторонние, `app.work`. Между группами пустая строка. Конструктор — скобки с хвостовой запятой, если аргументов больше одного. Публичная функция называет действие. DTO HTTP — `@Serializable data class` рядом с роутом.</code></div>
+<div class="row"><span>121</span><code> </code></div>
+<div class="row"><span>122</span><code>Новый read-endpoint берёт данные не из модели. Роут выглядит так:</code></div>
+<div class="row"><span>123</span><code> </code></div>
+<div class="row"><span>124</span><code>```kotlin</code></div>
+<div class="row"><span>125</span><code>get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row"><span>126</span><code>    val raw = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row"><span>127</span><code>    call.respond(days.load(raw))</code></div>
+<div class="row"><span>128</span><code>}</code></div>
+<div class="row"><span>129</span><code>```</code></div>
+<div class="row"><span>130</span><code> </code></div>
+<div class="row"><span>131</span><code>`Days.load` внутри вызывает `ActivityStore.find` отдельно для `Log` и для `Schedule`. Беклог не попадает в ответ. Плохая дата — исключение из `Module.kt`, снаружи это `400` и `ErrorBody`.</code></div>
+<div class="row"><span>132</span><code> </code></div>
+<div class="row"><span>133</span><code>Тест открывает базу через `connect()`, JDBC URL не копирует. `idleTurns` объявлен один раз. В фикстуре беклог записан с `onDate = null`, и тест проверяет, что его summary нет ни в журнале, ни в плане.</code></div>
+  </div>
+</article>
+
+
+  <h2 id="razbor">Разбор дифов</h2>
+  <div class="prose">
+    <p>Сырые патчи похожи, потому что оба посчитаны от дерева, где чтения дня ещё не было: тот же endpoint, те же DTO, тот же ответ 400. Сдвиг в том, какой тип приходит в роут и в каком файле вызывается <code>find</code>. Ниже полный текст <code>challenge/ДИФЫ.md</code>, затем три патча.</p>
+  </div>
+  
+<article id="dify">
+  <header>
+    <h3>challenge/ДИФЫ.md</h3>
+    <p>Почему unified diff выглядит слабо и что реально изменилось.</p>
+  </header>
+  <div class="sheet file">
+    <div class="row"><span>1</span><code># Чем отличаются две генерации `GET /api/days/{date}`</code></div>
+<div class="row"><span>2</span><code> </code></div>
+<div class="row"><span>3</span><code>Промпт один и тот же. Правила разные: первая генерация шла по `challenge/rules-v1.md`, вторая — по `challenge/rules-v2.md`. Снимки кода лежат в `challenge/gen1/` и `challenge/gen2/`.</code></div>
+<div class="row"><span>4</span><code> </code></div>
+<div class="row"><span>5</span><code>## Почему unified diff выглядит слабо</code></div>
+<div class="row"><span>6</span><code> </code></div>
+<div class="row"><span>7</span><code>`gen1.diff` и `gen2.diff` посчитаны от одного и того же дерева `/tmp/wa-src-v1`, в котором чтения дня ещё не было. Оба патча поэтому похожи: тот же endpoint `GET /api/days/{date}`, те же DTO `DayResponse` и `DayEntry`, тот же ответ `400` с текстом «Неверная дата». Сдвиг — в том, какой тип приходит в роут и в каком файле вызывается `find`. В добавлении к пустой базе эти строки теряются среди одинаковых кусков. В `gen1-vs-gen2.diff` новый `Days.kt` и вовсе помечен как «Only in», без тела файла.</code></div>
+<div class="row"><span>8</span><code> </code></div>
+<div class="row"><span>9</span><code>## Было и стало</code></div>
+<div class="row"><span>10</span><code> </code></div>
+<div class="row"><span>11</span><code>| Место | Генерация 1 | Генерация 2 |</code></div>
+<div class="row"><span>12</span><code>| --- | --- | --- |</code></div>
+<div class="row"><span>13</span><code>| Где живёт чтение базы | В `Routes.kt`: `readDay` разбирает дату и дважды вызывает `store.find` — для `Log` и для `Schedule`. В `main` в `module` передаётся сам `store`. | В `activity/Days.kt`: `StoredDays.load` делает те же два `find`. Роут этого не видит. В `Application.kt` база оборачивается: `StoredDays(store)`, в `module` уходит `days`. |</code></div>
+<div class="row"><span>14</span><code>| Как выглядит роут | `Route.api(sessions, store: ActivityStore)`. Ветка дня зовёт `readDay(store, date)`. | `Route.api(sessions, days: Days)`. Ветка дня зовёт `days.load(raw)`. |</code></div>
+<div class="row"><span>15</span><code>| Где объявлен `BadDate` | Класс в `Routes.kt`. Обработчик `400` уже в `StatusPages` внутри `Module.kt`. | Класс стоит в `Module.kt`, сразу под `install(StatusPages)`, рядом с `ModelFailure`. Текст ответа тот же: «Неверная дата». |</code></div>
+<div class="row"><span>16</span><code>| Как открывается H2 в тесте | `DayRoutesTest` сам вызывает `Database.connect` и передаёт JDBC URL и драйвер `org.h2.Driver`. | Тот же тест вызывает `connect(...)` из `app.work.server.activity`. Строка JDBC URL в тесте осталась: `connect` принимает её аргументом. |</code></div>
+<div class="row"><span>17</span><code>| Сколько копий `idleTurns` | Две. Своя `private fun idleTurns()` в `DayRoutesTest.kt` и ещё одна в `RoutesTest.kt`. | Одна. `internal fun idleTurns()` в `RoutesTest.kt`. Тест дня берёт её оттуда и свою копию не объявляет. |</code></div>
+<div class="row"><span>18</span><code>| Как записан беклог в фикстуре | `NewActivity(&quot;идея&quot;, ActivityKind.Backlog, null, day)` — с той же датой, что у журнала и плана. | `NewActivity(&quot;идея&quot;, ActivityKind.Backlog, null, null)` — `onDate = null`. |</code></div>
+<div class="row"><span>19</span><code>| Как проверяется, что беклога нет в ответе | Отдельной проверки нет. Тест сверяет журнал со списком `ревью` и план со списком `созвон`. | Две явные проверки: summary `идея` нет ни в `body.log`, ни в `body.schedule`. |</code></div>
+<div class="row"><span>20</span><code> </code></div>
+<div class="row"><span>21</span><code>## Роут</code></div>
+<div class="row"><span>22</span><code> </code></div>
+<div class="row"><span>23</span><code>Фрагменты взяты из снимков как есть.</code></div>
+<div class="row"><span>24</span><code> </code></div>
+<div class="row"><span>25</span><code>Генерация 1, `challenge/gen1/Routes.kt`:</code></div>
+<div class="row"><span>26</span><code> </code></div>
+<div class="row"><span>27</span><code>```kotlin</code></div>
+<div class="row"><span>28</span><code>fun Route.api(</code></div>
+<div class="row"><span>29</span><code>    sessions: Turns,</code></div>
+<div class="row"><span>30</span><code>    store: ActivityStore,</code></div>
+<div class="row"><span>31</span><code>) {</code></div>
+<div class="row"><span>32</span><code>    route(&quot;/api&quot;) {</code></div>
+<div class="row"><span>33</span><code>        get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row"><span>34</span><code>            val date = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row"><span>35</span><code>            call.respond(readDay(store, date))</code></div>
+<div class="row"><span>36</span><code>        }</code></div>
+<div class="row"><span>37</span><code>```</code></div>
+<div class="row"><span>38</span><code> </code></div>
+<div class="row"><span>39</span><code>Генерация 2, `challenge/gen2/Routes.kt`:</code></div>
+<div class="row"><span>40</span><code> </code></div>
+<div class="row"><span>41</span><code>```kotlin</code></div>
+<div class="row"><span>42</span><code>fun Route.api(sessions: Turns, days: Days) {</code></div>
+<div class="row"><span>43</span><code>    route(&quot;/api&quot;) {</code></div>
+<div class="row"><span>44</span><code>        get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row"><span>45</span><code>            val raw = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row"><span>46</span><code>            call.respond(days.load(raw))</code></div>
+<div class="row"><span>47</span><code>        }</code></div>
+<div class="row"><span>48</span><code>```</code></div>
+<div class="row"><span>49</span><code> </code></div>
+<div class="row"><span>50</span><code>В первой генерации сразу под роутом лежат `readDay`, `pathDate` и `class BadDate`. Во второй этих функций в `Routes.kt` нет: разбор даты и два `find` живут в `StoredDays.load`.</code></div>
+<div class="row"><span>51</span><code> </code></div>
+<div class="row"><span>52</span><code>## Что в правилах вызвало сдвиг</code></div>
+<div class="row"><span>53</span><code> </code></div>
+<div class="row"><span>54</span><code>1. В v1 роуту было можно получить базу. Раздел «Паттерны»: «Роут только принимает тело и отвечает. Решение и база — за интерфейсом (`Turns`, `ActivityStore`, `ToolCatalog`, `LanguageModel`)». В конце файла прямо сказано: «Новый read-endpoint берёт данные из `ActivityStore`, не из модели». Первая генерация так и сделала: `store` в аргументах `api` и `readDay(store, date)`.</code></div>
+<div class="row"><span>55</span><code> </code></div>
+<div class="row"><span>56</span><code>2. В v2 эта лазейка закрыта образцом, а не одним запретом. «Паттерны»: «Он не вызывает `ActivityStore` и не разбирает дату. Сообщения идут через `Turns`, чтение дня — через такой же узкий интерфейс с одним методом `load`». Ниже дан готовый вид ветки:</code></div>
+<div class="row"><span>57</span><code> </code></div>
+<div class="row"><span>58</span><code>```kotlin</code></div>
+<div class="row"><span>59</span><code>get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row"><span>60</span><code>    val raw = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row"><span>61</span><code>    call.respond(days.load(raw))</code></div>
+<div class="row"><span>62</span><code>}</code></div>
+<div class="row"><span>63</span><code>```</code></div>
+<div class="row"><span>64</span><code> </code></div>
+<div class="row"><span>65</span><code>Вторая генерация повторила этот фрагмент. Рядом написано, что `Days.load` сам вызывает `ActivityStore.find` отдельно для `Log` и для `Schedule`.</code></div>
+<div class="row"><span>66</span><code> </code></div>
+<div class="row"><span>67</span><code>3. Плохая дата привязана к `Module.kt`. В v2 в том же абзаце: «Пустое сообщение, чужая сессия, плохая дата и сбой модели — свои исключения рядом со `StatusPages` в `Module.kt`». И ещё раз в шаблоне: «Плохая дата — исключение из `Module.kt`, снаружи это `400` и `ErrorBody`». Поэтому `class BadDate` переехал из `Routes.kt` к обработчикам статуса.</code></div>
+<div class="row"><span>68</span><code> </code></div>
+<div class="row"><span>69</span><code>4. Тест расписан по шагам. Последняя фраза v2: «Тест открывает базу через `connect()`, JDBC URL не копирует. `idleTurns` объявлен один раз. В фикстуре беклог записан с `onDate = null`, и тест проверяет, что его summary нет ни в журнале, ни в плане». В v1 на этом месте было только «Рядом тест на H2, как `ActivityStoreTest`» — отсюда прямой `Database.connect`, две копии `idleTurns` и беклог с датой дня.</code></div>
+<div class="row"><span>70</span><code> </code></div>
+<div class="row"><span>71</span><code>## Что осталось похожим</code></div>
+<div class="row"><span>72</span><code> </code></div>
+<div class="row"><span>73</span><code>Снаружи ответ тот же, и это уже было в первой генерации.</code></div>
+<div class="row"><span>74</span><code> </code></div>
+<div class="row"><span>75</span><code>- DTO те же: `DayResponse` с полями `date`, `log`, `schedule` и `DayEntry` с полями `id`, `summary`, `jiraKey`, `createdAt`. Оба класса по-прежнему лежат рядом с роутом.</code></div>
+<div class="row"><span>76</span><code>- Плохая дата по-прежнему даёт `400` и `ErrorBody(&quot;Неверная дата&quot;)`. Обработчик в `StatusPages` был уже в v1.</code></div>
+<div class="row"><span>77</span><code>- Состав ответа тот же: журнал и план за день, беклог в тело не попадает, пустой день — пустые списки. Вторая генерация это не выдумала, она унаследовала.</code></div>
+<div class="row"><span>78</span><code> </code></div>
+<div class="row"><span>79</span><code>Совпадение здесь ожидаемое: промпт не менялся, и v1 уже требовал журнал, план и `400`.</code></div>
+  </div>
+</article>
+
+
+  <h2 id="diffs">Дифы</h2>
+  <p class="legend"><b class="add">+ добавлено</b> <b class="del">− удалено</b> синим помечены заголовки хунков.</p>
+  
+<article id="gen1">
+  <header>
+    <h3>challenge/gen1.diff</h3>
+    <p>Первая генерация против дерева до endpoint.</p>
+  </header>
+  <div class="sheet diff">
+    <div class="row meta"><span>1</span><code>diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Application.kt server/src/main/kotlin/app/work/server/Application.kt</code></div>
+<div class="row meta"><span>2</span><code>--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Application.kt	2026-10-24 13:35:43</code></div>
+<div class="row meta"><span>3</span><code>+++ server/src/main/kotlin/app/work/server/Application.kt	2026-10-24 13:41:15</code></div>
+<div class="row hunk"><span>4</span><code>@@ -58,6 +58,6 @@</code></div>
+<div class="row"><span>5</span><code>     })</code></div>
+<div class="row"><span>6</span><code> </code></div>
+<div class="row"><span>7</span><code>     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {</code></div>
+<div class="row del"><span>8</span><code>-        module(sessions)</code></div>
+<div class="row add"><span>9</span><code>+        module(sessions, store)</code></div>
+<div class="row"><span>10</span><code>     }.start(wait = true)</code></div>
+<div class="row"><span>11</span><code> }</code></div>
+<div class="row meta"><span>12</span><code>diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Module.kt server/src/main/kotlin/app/work/server/Module.kt</code></div>
+<div class="row meta"><span>13</span><code>--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Module.kt	2026-10-24 13:19:06</code></div>
+<div class="row meta"><span>14</span><code>+++ server/src/main/kotlin/app/work/server/Module.kt	2026-10-24 13:41:15</code></div>
+<div class="row hunk"><span>15</span><code>@@ -1,5 +1,6 @@</code></div>
+<div class="row"><span>16</span><code> package app.work.server</code></div>
+<div class="row"><span>17</span><code> </code></div>
+<div class="row add"><span>18</span><code>+import app.work.domain.ActivityStore</code></div>
+<div class="row"><span>19</span><code> import app.work.server.session.BlankMessage</code></div>
+<div class="row"><span>20</span><code> import app.work.server.session.SessionNotFound</code></div>
+<div class="row"><span>21</span><code> import app.work.server.session.Turns</code></div>
+<div class="row hunk"><span>22</span><code>@@ -13,7 +14,10 @@</code></div>
+<div class="row"><span>23</span><code> import io.ktor.server.routing.routing</code></div>
+<div class="row"><span>24</span><code> import kotlinx.serialization.Serializable</code></div>
+<div class="row"><span>25</span><code> </code></div>
+<div class="row del"><span>26</span><code>-fun Application.module(sessions: Turns) {</code></div>
+<div class="row add"><span>27</span><code>+fun Application.module(</code></div>
+<div class="row add"><span>28</span><code>+    sessions: Turns,</code></div>
+<div class="row add"><span>29</span><code>+    store: ActivityStore,</code></div>
+<div class="row add"><span>30</span><code>+) {</code></div>
+<div class="row"><span>31</span><code>     install(ContentNegotiation) {</code></div>
+<div class="row"><span>32</span><code>         json()</code></div>
+<div class="row"><span>33</span><code>     }</code></div>
+<div class="row hunk"><span>34</span><code>@@ -21,6 +25,9 @@</code></div>
+<div class="row"><span>35</span><code>         exception&lt;BlankMessage&gt; { call, _ -&gt;</code></div>
+<div class="row"><span>36</span><code>             call.respond(HttpStatusCode.BadRequest, ErrorBody(&quot;Пустое сообщение&quot;))</code></div>
+<div class="row"><span>37</span><code>         }</code></div>
+<div class="row add"><span>38</span><code>+        exception&lt;BadDate&gt; { call, _ -&gt;</code></div>
+<div class="row add"><span>39</span><code>+            call.respond(HttpStatusCode.BadRequest, ErrorBody(&quot;Неверная дата&quot;))</code></div>
+<div class="row add"><span>40</span><code>+        }</code></div>
+<div class="row"><span>41</span><code>         exception&lt;SessionNotFound&gt; { call, _ -&gt;</code></div>
+<div class="row"><span>42</span><code>             call.respond(HttpStatusCode.NotFound, ErrorBody(&quot;Сессия не найдена&quot;))</code></div>
+<div class="row"><span>43</span><code>         }</code></div>
+<div class="row hunk"><span>44</span><code>@@ -29,7 +36,7 @@</code></div>
+<div class="row"><span>45</span><code>         }</code></div>
+<div class="row"><span>46</span><code>     }</code></div>
+<div class="row"><span>47</span><code>     routing {</code></div>
+<div class="row del"><span>48</span><code>-        api(sessions)</code></div>
+<div class="row add"><span>49</span><code>+        api(sessions, store)</code></div>
+<div class="row"><span>50</span><code>     }</code></div>
+<div class="row"><span>51</span><code> }</code></div>
+<div class="row"><span>52</span><code> </code></div>
+<div class="row meta"><span>53</span><code>diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Routes.kt server/src/main/kotlin/app/work/server/Routes.kt</code></div>
+<div class="row meta"><span>54</span><code>--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Routes.kt	2026-10-24 13:19:08</code></div>
+<div class="row meta"><span>55</span><code>+++ server/src/main/kotlin/app/work/server/Routes.kt	2026-10-24 13:41:15</code></div>
+<div class="row hunk"><span>56</span><code>@@ -1,19 +1,31 @@</code></div>
+<div class="row"><span>57</span><code> package app.work.server</code></div>
+<div class="row"><span>58</span><code> </code></div>
+<div class="row del"><span>59</span><code>-import app.work.server.session.Turns</code></div>
+<div class="row"><span>60</span><code> import io.ktor.server.request.receive</code></div>
+<div class="row"><span>61</span><code> import io.ktor.server.response.respond</code></div>
+<div class="row"><span>62</span><code> import io.ktor.server.routing.Route</code></div>
+<div class="row"><span>63</span><code> import io.ktor.server.routing.get</code></div>
+<div class="row"><span>64</span><code> import io.ktor.server.routing.post</code></div>
+<div class="row"><span>65</span><code> import io.ktor.server.routing.route</code></div>
+<div class="row add"><span>66</span><code>+import kotlinx.datetime.LocalDate</code></div>
+<div class="row"><span>67</span><code> import kotlinx.serialization.Serializable</code></div>
+<div class="row"><span>68</span><code> </code></div>
+<div class="row del"><span>69</span><code>-fun Route.api(sessions: Turns) {</code></div>
+<div class="row add"><span>70</span><code>+import app.work.domain.Activity</code></div>
+<div class="row add"><span>71</span><code>+import app.work.domain.ActivityKind</code></div>
+<div class="row add"><span>72</span><code>+import app.work.domain.ActivityStore</code></div>
+<div class="row add"><span>73</span><code>+import app.work.server.session.Turns</code></div>
+<div class="row add"><span>74</span><code>+</code></div>
+<div class="row add"><span>75</span><code>+fun Route.api(</code></div>
+<div class="row add"><span>76</span><code>+    sessions: Turns,</code></div>
+<div class="row add"><span>77</span><code>+    store: ActivityStore,</code></div>
+<div class="row add"><span>78</span><code>+) {</code></div>
+<div class="row"><span>79</span><code>     route(&quot;/api&quot;) {</code></div>
+<div class="row"><span>80</span><code>         get(&quot;/health&quot;) {</code></div>
+<div class="row"><span>81</span><code>             call.respond(Health(&quot;ok&quot;))</code></div>
+<div class="row"><span>82</span><code>         }</code></div>
+<div class="row add"><span>83</span><code>+        get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row add"><span>84</span><code>+            val date = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row add"><span>85</span><code>+            call.respond(readDay(store, date))</code></div>
+<div class="row add"><span>86</span><code>+        }</code></div>
+<div class="row"><span>87</span><code>         post(&quot;/sessions&quot;) {</code></div>
+<div class="row"><span>88</span><code>             call.respond(SessionCreated(sessions.open()))</code></div>
+<div class="row"><span>89</span><code>         }</code></div>
+<div class="row hunk"><span>90</span><code>@@ -25,6 +37,30 @@</code></div>
+<div class="row"><span>91</span><code>     }</code></div>
+<div class="row"><span>92</span><code> }</code></div>
+<div class="row"><span>93</span><code> </code></div>
+<div class="row add"><span>94</span><code>+private suspend fun readDay(store: ActivityStore, rawDate: String): DayResponse {</code></div>
+<div class="row add"><span>95</span><code>+    val date = pathDate(rawDate)</code></div>
+<div class="row add"><span>96</span><code>+    return DayResponse(</code></div>
+<div class="row add"><span>97</span><code>+        date = date.toString(),</code></div>
+<div class="row add"><span>98</span><code>+        log = store.find(ActivityKind.Log, date).map { it.toEntry() },</code></div>
+<div class="row add"><span>99</span><code>+        schedule = store.find(ActivityKind.Schedule, date).map { it.toEntry() },</code></div>
+<div class="row add"><span>100</span><code>+    )</code></div>
+<div class="row add"><span>101</span><code>+}</code></div>
+<div class="row add"><span>102</span><code>+</code></div>
+<div class="row add"><span>103</span><code>+private fun pathDate(raw: String): LocalDate = try {</code></div>
+<div class="row add"><span>104</span><code>+    LocalDate.parse(raw)</code></div>
+<div class="row add"><span>105</span><code>+} catch (_: IllegalArgumentException) {</code></div>
+<div class="row add"><span>106</span><code>+    throw BadDate()</code></div>
+<div class="row add"><span>107</span><code>+}</code></div>
+<div class="row add"><span>108</span><code>+</code></div>
+<div class="row add"><span>109</span><code>+private fun Activity.toEntry() = DayEntry(</code></div>
+<div class="row add"><span>110</span><code>+    id = id,</code></div>
+<div class="row add"><span>111</span><code>+    summary = summary,</code></div>
+<div class="row add"><span>112</span><code>+    jiraKey = jiraKey,</code></div>
+<div class="row add"><span>113</span><code>+    createdAt = createdAt.toString(),</code></div>
+<div class="row add"><span>114</span><code>+)</code></div>
+<div class="row add"><span>115</span><code>+</code></div>
+<div class="row add"><span>116</span><code>+class BadDate : RuntimeException()</code></div>
+<div class="row add"><span>117</span><code>+</code></div>
+<div class="row"><span>118</span><code> @Serializable</code></div>
+<div class="row"><span>119</span><code> data class Health(val status: String)</code></div>
+<div class="row"><span>120</span><code> </code></div>
+<div class="row hunk"><span>121</span><code>@@ -44,4 +80,19 @@</code></div>
+<div class="row"><span>122</span><code> data class CallResponse(</code></div>
+<div class="row"><span>123</span><code>     val tool: String,</code></div>
+<div class="row"><span>124</span><code>     val result: String,</code></div>
+<div class="row add"><span>125</span><code>+)</code></div>
+<div class="row add"><span>126</span><code>+</code></div>
+<div class="row add"><span>127</span><code>+@Serializable</code></div>
+<div class="row add"><span>128</span><code>+data class DayResponse(</code></div>
+<div class="row add"><span>129</span><code>+    val date: String,</code></div>
+<div class="row add"><span>130</span><code>+    val log: List&lt;DayEntry&gt;,</code></div>
+<div class="row add"><span>131</span><code>+    val schedule: List&lt;DayEntry&gt;,</code></div>
+<div class="row add"><span>132</span><code>+)</code></div>
+<div class="row add"><span>133</span><code>+</code></div>
+<div class="row add"><span>134</span><code>+@Serializable</code></div>
+<div class="row add"><span>135</span><code>+data class DayEntry(</code></div>
+<div class="row add"><span>136</span><code>+    val id: String,</code></div>
+<div class="row add"><span>137</span><code>+    val summary: String,</code></div>
+<div class="row add"><span>138</span><code>+    val jiraKey: String?,</code></div>
+<div class="row add"><span>139</span><code>+    val createdAt: String,</code></div>
+<div class="row"><span>140</span><code> )</code></div>
+<div class="row meta"><span>141</span><code>Only in server/src/test/kotlin/app/work/server: DayRoutesTest.kt</code></div>
+<div class="row meta"><span>142</span><code>diff -ru /tmp/wa-src-v1/server/src/test/kotlin/app/work/server/RoutesTest.kt server/src/test/kotlin/app/work/server/RoutesTest.kt</code></div>
+<div class="row meta"><span>143</span><code>--- /tmp/wa-src-v1/server/src/test/kotlin/app/work/server/RoutesTest.kt	2026-10-24 13:20:36</code></div>
+<div class="row meta"><span>144</span><code>+++ server/src/test/kotlin/app/work/server/RoutesTest.kt	2026-10-24 13:41:16</code></div>
+<div class="row hunk"><span>145</span><code>@@ -1,5 +1,9 @@</code></div>
+<div class="row"><span>146</span><code> package app.work.server</code></div>
+<div class="row"><span>147</span><code> </code></div>
+<div class="row add"><span>148</span><code>+import app.work.domain.Activity</code></div>
+<div class="row add"><span>149</span><code>+import app.work.domain.ActivityKind</code></div>
+<div class="row add"><span>150</span><code>+import app.work.domain.ActivityStore</code></div>
+<div class="row add"><span>151</span><code>+import app.work.domain.NewActivity</code></div>
+<div class="row"><span>152</span><code> import app.work.server.session.Turns</code></div>
+<div class="row"><span>153</span><code> import io.ktor.client.call.body</code></div>
+<div class="row"><span>154</span><code> import io.ktor.client.plugins.contentnegotiation.ContentNegotiation</code></div>
+<div class="row hunk"><span>155</span><code>@@ -11,6 +15,7 @@</code></div>
+<div class="row"><span>156</span><code> import io.ktor.http.contentType</code></div>
+<div class="row"><span>157</span><code> import io.ktor.serialization.kotlinx.json.json</code></div>
+<div class="row"><span>158</span><code> import io.ktor.server.testing.testApplication</code></div>
+<div class="row add"><span>159</span><code>+import kotlinx.datetime.LocalDate</code></div>
+<div class="row"><span>160</span><code> import kotlin.test.Test</code></div>
+<div class="row"><span>161</span><code> import kotlin.test.assertEquals</code></div>
+<div class="row"><span>162</span><code> </code></div>
+<div class="row hunk"><span>163</span><code>@@ -25,7 +30,7 @@</code></div>
+<div class="row"><span>164</span><code>                     seen += &quot;$sessionId:$text&quot;</code></div>
+<div class="row"><span>165</span><code>                     return TurnResponse(&quot;уточни проект&quot;, emptyList())</code></div>
+<div class="row"><span>166</span><code>                 }</code></div>
+<div class="row del"><span>167</span><code>-            })</code></div>
+<div class="row add"><span>168</span><code>+            }, unusedStore())</code></div>
+<div class="row"><span>169</span><code>         }</code></div>
+<div class="row"><span>170</span><code>         val client = createClient {</code></div>
+<div class="row"><span>171</span><code>             install(ContentNegotiation) { json() }</code></div>
+<div class="row hunk"><span>172</span><code>@@ -46,7 +51,7 @@</code></div>
+<div class="row"><span>173</span><code> </code></div>
+<div class="row"><span>174</span><code>     @Test</code></div>
+<div class="row"><span>175</span><code>     fun health() = testApplication {</code></div>
+<div class="row del"><span>176</span><code>-        application { module(idleTurns()) }</code></div>
+<div class="row add"><span>177</span><code>+        application { module(idleTurns(), unusedStore()) }</code></div>
+<div class="row"><span>178</span><code>         assertEquals(HttpStatusCode.OK, client.get(&quot;/api/health&quot;).status)</code></div>
+<div class="row"><span>179</span><code>     }</code></div>
+<div class="row"><span>180</span><code> }</code></div>
+<div class="row hunk"><span>181</span><code>@@ -54,4 +59,10 @@</code></div>
+<div class="row"><span>182</span><code> private fun idleTurns() = object : Turns {</code></div>
+<div class="row"><span>183</span><code>     override suspend fun open() = &quot;x&quot;</code></div>
+<div class="row"><span>184</span><code>     override suspend fun message(sessionId: String, text: String) = TurnResponse(&quot;&quot;, emptyList())</code></div>
+<div class="row add"><span>185</span><code>+}</code></div>
+<div class="row add"><span>186</span><code>+</code></div>
+<div class="row add"><span>187</span><code>+private fun unusedStore() = object : ActivityStore {</code></div>
+<div class="row add"><span>188</span><code>+    override suspend fun add(draft: NewActivity): Activity = error(&quot;не используется&quot;)</code></div>
+<div class="row add"><span>189</span><code>+</code></div>
+<div class="row add"><span>190</span><code>+    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List&lt;Activity&gt; = emptyList()</code></div>
+<div class="row"><span>191</span><code> }</code></div>
+  </div>
+</article>
+
+
+<article id="gen2">
+  <header>
+    <h3>challenge/gen2.diff</h3>
+    <p>Вторая генерация против того же дерева.</p>
+  </header>
+  <div class="sheet diff">
+    <div class="row meta"><span>1</span><code>diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Application.kt server/src/main/kotlin/app/work/server/Application.kt</code></div>
+<div class="row meta"><span>2</span><code>--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Application.kt	2026-10-24 13:35:43</code></div>
+<div class="row meta"><span>3</span><code>+++ server/src/main/kotlin/app/work/server/Application.kt	2026-10-24 13:48:16</code></div>
+<div class="row hunk"><span>4</span><code>@@ -2,6 +2,7 @@</code></div>
+<div class="row"><span>5</span><code> </code></div>
+<div class="row"><span>6</span><code> import app.work.agent.Agent</code></div>
+<div class="row"><span>7</span><code> import app.work.server.activity.ExposedActivityStore</code></div>
+<div class="row add"><span>8</span><code>+import app.work.server.activity.StoredDays</code></div>
+<div class="row"><span>9</span><code> import app.work.server.activity.openDatabase</code></div>
+<div class="row"><span>10</span><code> import app.work.server.agent.OllamaModel</code></div>
+<div class="row"><span>11</span><code> import app.work.server.confluence.ConfluenceClient</code></div>
+<div class="row hunk"><span>12</span><code>@@ -26,6 +27,7 @@</code></div>
+<div class="row"><span>13</span><code>     val config = AppConfig.fromEnv(System.getenv())</code></div>
+<div class="row"><span>14</span><code>     val database = openDatabase(config)</code></div>
+<div class="row"><span>15</span><code>     val store = ExposedActivityStore(database)</code></div>
+<div class="row add"><span>16</span><code>+    val days = StoredDays(store)</code></div>
+<div class="row"><span>17</span><code>     val jira = config.jira?.let { JiraClient(it) }</code></div>
+<div class="row"><span>18</span><code>     val confluence = config.confluence?.let { ConfluenceClient(it) }</code></div>
+<div class="row"><span>19</span><code>     val mcp = embeddedServer(Netty, host = &quot;127.0.0.1&quot;, port = config.mcpPort) {</code></div>
+<div class="row hunk"><span>20</span><code>@@ -58,6 +60,6 @@</code></div>
+<div class="row"><span>21</span><code>     })</code></div>
+<div class="row"><span>22</span><code> </code></div>
+<div class="row"><span>23</span><code>     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {</code></div>
+<div class="row del"><span>24</span><code>-        module(sessions)</code></div>
+<div class="row add"><span>25</span><code>+        module(sessions, days)</code></div>
+<div class="row"><span>26</span><code>     }.start(wait = true)</code></div>
+<div class="row"><span>27</span><code> }</code></div>
+<div class="row meta"><span>28</span><code>diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Module.kt server/src/main/kotlin/app/work/server/Module.kt</code></div>
+<div class="row meta"><span>29</span><code>--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Module.kt	2026-10-24 13:19:06</code></div>
+<div class="row meta"><span>30</span><code>+++ server/src/main/kotlin/app/work/server/Module.kt	2026-10-24 13:48:16</code></div>
+<div class="row hunk"><span>31</span><code>@@ -1,5 +1,6 @@</code></div>
+<div class="row"><span>32</span><code> package app.work.server</code></div>
+<div class="row"><span>33</span><code> </code></div>
+<div class="row add"><span>34</span><code>+import app.work.server.activity.Days</code></div>
+<div class="row"><span>35</span><code> import app.work.server.session.BlankMessage</code></div>
+<div class="row"><span>36</span><code> import app.work.server.session.SessionNotFound</code></div>
+<div class="row"><span>37</span><code> import app.work.server.session.Turns</code></div>
+<div class="row hunk"><span>38</span><code>@@ -13,7 +14,7 @@</code></div>
+<div class="row"><span>39</span><code> import io.ktor.server.routing.routing</code></div>
+<div class="row"><span>40</span><code> import kotlinx.serialization.Serializable</code></div>
+<div class="row"><span>41</span><code> </code></div>
+<div class="row del"><span>42</span><code>-fun Application.module(sessions: Turns) {</code></div>
+<div class="row add"><span>43</span><code>+fun Application.module(sessions: Turns, days: Days) {</code></div>
+<div class="row"><span>44</span><code>     install(ContentNegotiation) {</code></div>
+<div class="row"><span>45</span><code>         json()</code></div>
+<div class="row"><span>46</span><code>     }</code></div>
+<div class="row hunk"><span>47</span><code>@@ -21,6 +22,9 @@</code></div>
+<div class="row"><span>48</span><code>         exception&lt;BlankMessage&gt; { call, _ -&gt;</code></div>
+<div class="row"><span>49</span><code>             call.respond(HttpStatusCode.BadRequest, ErrorBody(&quot;Пустое сообщение&quot;))</code></div>
+<div class="row"><span>50</span><code>         }</code></div>
+<div class="row add"><span>51</span><code>+        exception&lt;BadDate&gt; { call, _ -&gt;</code></div>
+<div class="row add"><span>52</span><code>+            call.respond(HttpStatusCode.BadRequest, ErrorBody(&quot;Неверная дата&quot;))</code></div>
+<div class="row add"><span>53</span><code>+        }</code></div>
+<div class="row"><span>54</span><code>         exception&lt;SessionNotFound&gt; { call, _ -&gt;</code></div>
+<div class="row"><span>55</span><code>             call.respond(HttpStatusCode.NotFound, ErrorBody(&quot;Сессия не найдена&quot;))</code></div>
+<div class="row"><span>56</span><code>         }</code></div>
+<div class="row hunk"><span>57</span><code>@@ -29,9 +33,11 @@</code></div>
+<div class="row"><span>58</span><code>         }</code></div>
+<div class="row"><span>59</span><code>     }</code></div>
+<div class="row"><span>60</span><code>     routing {</code></div>
+<div class="row del"><span>61</span><code>-        api(sessions)</code></div>
+<div class="row add"><span>62</span><code>+        api(sessions, days)</code></div>
+<div class="row"><span>63</span><code>     }</code></div>
+<div class="row"><span>64</span><code> }</code></div>
+<div class="row add"><span>65</span><code>+</code></div>
+<div class="row add"><span>66</span><code>+class BadDate : RuntimeException()</code></div>
+<div class="row"><span>67</span><code> </code></div>
+<div class="row"><span>68</span><code> class ModelFailure(message: String) : RuntimeException(message)</code></div>
+<div class="row"><span>69</span><code> </code></div>
+<div class="row meta"><span>70</span><code>diff -ru /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Routes.kt server/src/main/kotlin/app/work/server/Routes.kt</code></div>
+<div class="row meta"><span>71</span><code>--- /tmp/wa-src-v1/server/src/main/kotlin/app/work/server/Routes.kt	2026-10-24 13:19:08</code></div>
+<div class="row meta"><span>72</span><code>+++ server/src/main/kotlin/app/work/server/Routes.kt	2026-10-24 13:48:16</code></div>
+<div class="row hunk"><span>73</span><code>@@ -1,5 +1,6 @@</code></div>
+<div class="row"><span>74</span><code> package app.work.server</code></div>
+<div class="row"><span>75</span><code> </code></div>
+<div class="row add"><span>76</span><code>+import app.work.server.activity.Days</code></div>
+<div class="row"><span>77</span><code> import app.work.server.session.Turns</code></div>
+<div class="row"><span>78</span><code> import io.ktor.server.request.receive</code></div>
+<div class="row"><span>79</span><code> import io.ktor.server.response.respond</code></div>
+<div class="row hunk"><span>80</span><code>@@ -9,11 +10,15 @@</code></div>
+<div class="row"><span>81</span><code> import io.ktor.server.routing.route</code></div>
+<div class="row"><span>82</span><code> import kotlinx.serialization.Serializable</code></div>
+<div class="row"><span>83</span><code> </code></div>
+<div class="row del"><span>84</span><code>-fun Route.api(sessions: Turns) {</code></div>
+<div class="row add"><span>85</span><code>+fun Route.api(sessions: Turns, days: Days) {</code></div>
+<div class="row"><span>86</span><code>     route(&quot;/api&quot;) {</code></div>
+<div class="row"><span>87</span><code>         get(&quot;/health&quot;) {</code></div>
+<div class="row"><span>88</span><code>             call.respond(Health(&quot;ok&quot;))</code></div>
+<div class="row"><span>89</span><code>         }</code></div>
+<div class="row add"><span>90</span><code>+        get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row add"><span>91</span><code>+            val raw = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row add"><span>92</span><code>+            call.respond(days.load(raw))</code></div>
+<div class="row add"><span>93</span><code>+        }</code></div>
+<div class="row"><span>94</span><code>         post(&quot;/sessions&quot;) {</code></div>
+<div class="row"><span>95</span><code>             call.respond(SessionCreated(sessions.open()))</code></div>
+<div class="row"><span>96</span><code>         }</code></div>
+<div class="row hunk"><span>97</span><code>@@ -44,4 +49,19 @@</code></div>
+<div class="row"><span>98</span><code> data class CallResponse(</code></div>
+<div class="row"><span>99</span><code>     val tool: String,</code></div>
+<div class="row"><span>100</span><code>     val result: String,</code></div>
+<div class="row add"><span>101</span><code>+)</code></div>
+<div class="row add"><span>102</span><code>+</code></div>
+<div class="row add"><span>103</span><code>+@Serializable</code></div>
+<div class="row add"><span>104</span><code>+data class DayResponse(</code></div>
+<div class="row add"><span>105</span><code>+    val date: String,</code></div>
+<div class="row add"><span>106</span><code>+    val log: List&lt;DayEntry&gt;,</code></div>
+<div class="row add"><span>107</span><code>+    val schedule: List&lt;DayEntry&gt;,</code></div>
+<div class="row add"><span>108</span><code>+)</code></div>
+<div class="row add"><span>109</span><code>+</code></div>
+<div class="row add"><span>110</span><code>+@Serializable</code></div>
+<div class="row add"><span>111</span><code>+data class DayEntry(</code></div>
+<div class="row add"><span>112</span><code>+    val id: String,</code></div>
+<div class="row add"><span>113</span><code>+    val summary: String,</code></div>
+<div class="row add"><span>114</span><code>+    val jiraKey: String?,</code></div>
+<div class="row add"><span>115</span><code>+    val createdAt: String,</code></div>
+<div class="row"><span>116</span><code> )</code></div>
+<div class="row meta"><span>117</span><code>Only in server/src/main/kotlin/app/work/server/activity: Days.kt</code></div>
+<div class="row meta"><span>118</span><code>Only in server/src/test/kotlin/app/work/server: DayRoutesTest.kt</code></div>
+<div class="row meta"><span>119</span><code>diff -ru /tmp/wa-src-v1/server/src/test/kotlin/app/work/server/RoutesTest.kt server/src/test/kotlin/app/work/server/RoutesTest.kt</code></div>
+<div class="row meta"><span>120</span><code>--- /tmp/wa-src-v1/server/src/test/kotlin/app/work/server/RoutesTest.kt	2026-10-24 13:20:36</code></div>
+<div class="row meta"><span>121</span><code>+++ server/src/test/kotlin/app/work/server/RoutesTest.kt	2026-10-24 13:48:16</code></div>
+<div class="row hunk"><span>122</span><code>@@ -1,5 +1,6 @@</code></div>
+<div class="row"><span>123</span><code> package app.work.server</code></div>
+<div class="row"><span>124</span><code> </code></div>
+<div class="row add"><span>125</span><code>+import app.work.server.activity.Days</code></div>
+<div class="row"><span>126</span><code> import app.work.server.session.Turns</code></div>
+<div class="row"><span>127</span><code> import io.ktor.client.call.body</code></div>
+<div class="row"><span>128</span><code> import io.ktor.client.plugins.contentnegotiation.ContentNegotiation</code></div>
+<div class="row hunk"><span>129</span><code>@@ -19,13 +20,16 @@</code></div>
+<div class="row"><span>130</span><code>     fun passesTextThrough() = testApplication {</code></div>
+<div class="row"><span>131</span><code>         val seen = mutableListOf&lt;String&gt;()</code></div>
+<div class="row"><span>132</span><code>         application {</code></div>
+<div class="row del"><span>133</span><code>-            module(object : Turns {</code></div>
+<div class="row del"><span>134</span><code>-                override suspend fun open() = &quot;session-1&quot;</code></div>
+<div class="row del"><span>135</span><code>-                override suspend fun message(sessionId: String, text: String): TurnResponse {</code></div>
+<div class="row del"><span>136</span><code>-                    seen += &quot;$sessionId:$text&quot;</code></div>
+<div class="row del"><span>137</span><code>-                    return TurnResponse(&quot;уточни проект&quot;, emptyList())</code></div>
+<div class="row del"><span>138</span><code>-                }</code></div>
+<div class="row del"><span>139</span><code>-            })</code></div>
+<div class="row add"><span>140</span><code>+            module(</code></div>
+<div class="row add"><span>141</span><code>+                object : Turns {</code></div>
+<div class="row add"><span>142</span><code>+                    override suspend fun open() = &quot;session-1&quot;</code></div>
+<div class="row add"><span>143</span><code>+                    override suspend fun message(sessionId: String, text: String): TurnResponse {</code></div>
+<div class="row add"><span>144</span><code>+                        seen += &quot;$sessionId:$text&quot;</code></div>
+<div class="row add"><span>145</span><code>+                        return TurnResponse(&quot;уточни проект&quot;, emptyList())</code></div>
+<div class="row add"><span>146</span><code>+                    }</code></div>
+<div class="row add"><span>147</span><code>+                },</code></div>
+<div class="row add"><span>148</span><code>+                idleDays(),</code></div>
+<div class="row add"><span>149</span><code>+            )</code></div>
+<div class="row"><span>150</span><code>         }</code></div>
+<div class="row"><span>151</span><code>         val client = createClient {</code></div>
+<div class="row"><span>152</span><code>             install(ContentNegotiation) { json() }</code></div>
+<div class="row hunk"><span>153</span><code>@@ -46,12 +50,16 @@</code></div>
+<div class="row"><span>154</span><code> </code></div>
+<div class="row"><span>155</span><code>     @Test</code></div>
+<div class="row"><span>156</span><code>     fun health() = testApplication {</code></div>
+<div class="row del"><span>157</span><code>-        application { module(idleTurns()) }</code></div>
+<div class="row add"><span>158</span><code>+        application { module(idleTurns(), idleDays()) }</code></div>
+<div class="row"><span>159</span><code>         assertEquals(HttpStatusCode.OK, client.get(&quot;/api/health&quot;).status)</code></div>
+<div class="row"><span>160</span><code>     }</code></div>
+<div class="row"><span>161</span><code> }</code></div>
+<div class="row"><span>162</span><code> </code></div>
+<div class="row del"><span>163</span><code>-private fun idleTurns() = object : Turns {</code></div>
+<div class="row add"><span>164</span><code>+internal fun idleTurns() = object : Turns {</code></div>
+<div class="row"><span>165</span><code>     override suspend fun open() = &quot;x&quot;</code></div>
+<div class="row"><span>166</span><code>     override suspend fun message(sessionId: String, text: String) = TurnResponse(&quot;&quot;, emptyList())</code></div>
+<div class="row add"><span>167</span><code>+}</code></div>
+<div class="row add"><span>168</span><code>+</code></div>
+<div class="row add"><span>169</span><code>+private fun idleDays() = object : Days {</code></div>
+<div class="row add"><span>170</span><code>+    override suspend fun load(rawDate: String): DayResponse = error(&quot;не используется&quot;)</code></div>
+<div class="row"><span>171</span><code> }</code></div>
+  </div>
+</article>
+
+
+<article id="vs">
+  <header>
+    <h3>challenge/gen1-vs-gen2.diff</h3>
+    <p>Первая генерация против второй.</p>
+  </header>
+  <div class="sheet diff">
+    <div class="row meta"><span>1</span><code>diff -ru challenge/gen1/Application.kt challenge/gen2/Application.kt</code></div>
+<div class="row meta"><span>2</span><code>--- challenge/gen1/Application.kt	2026-10-24 13:43:42</code></div>
+<div class="row meta"><span>3</span><code>+++ challenge/gen2/Application.kt	2026-10-24 13:49:49</code></div>
+<div class="row hunk"><span>4</span><code>@@ -2,6 +2,7 @@</code></div>
+<div class="row"><span>5</span><code> </code></div>
+<div class="row"><span>6</span><code> import app.work.agent.Agent</code></div>
+<div class="row"><span>7</span><code> import app.work.server.activity.ExposedActivityStore</code></div>
+<div class="row add"><span>8</span><code>+import app.work.server.activity.StoredDays</code></div>
+<div class="row"><span>9</span><code> import app.work.server.activity.openDatabase</code></div>
+<div class="row"><span>10</span><code> import app.work.server.agent.OllamaModel</code></div>
+<div class="row"><span>11</span><code> import app.work.server.confluence.ConfluenceClient</code></div>
+<div class="row hunk"><span>12</span><code>@@ -26,6 +27,7 @@</code></div>
+<div class="row"><span>13</span><code>     val config = AppConfig.fromEnv(System.getenv())</code></div>
+<div class="row"><span>14</span><code>     val database = openDatabase(config)</code></div>
+<div class="row"><span>15</span><code>     val store = ExposedActivityStore(database)</code></div>
+<div class="row add"><span>16</span><code>+    val days = StoredDays(store)</code></div>
+<div class="row"><span>17</span><code>     val jira = config.jira?.let { JiraClient(it) }</code></div>
+<div class="row"><span>18</span><code>     val confluence = config.confluence?.let { ConfluenceClient(it) }</code></div>
+<div class="row"><span>19</span><code>     val mcp = embeddedServer(Netty, host = &quot;127.0.0.1&quot;, port = config.mcpPort) {</code></div>
+<div class="row hunk"><span>20</span><code>@@ -58,6 +60,6 @@</code></div>
+<div class="row"><span>21</span><code>     })</code></div>
+<div class="row"><span>22</span><code> </code></div>
+<div class="row"><span>23</span><code>     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {</code></div>
+<div class="row del"><span>24</span><code>-        module(sessions, store)</code></div>
+<div class="row add"><span>25</span><code>+        module(sessions, days)</code></div>
+<div class="row"><span>26</span><code>     }.start(wait = true)</code></div>
+<div class="row"><span>27</span><code> }</code></div>
+<div class="row meta"><span>28</span><code>diff -ru challenge/gen1/DayRoutesTest.kt challenge/gen2/DayRoutesTest.kt</code></div>
+<div class="row meta"><span>29</span><code>--- challenge/gen1/DayRoutesTest.kt	2026-10-24 13:43:42</code></div>
+<div class="row meta"><span>30</span><code>+++ challenge/gen2/DayRoutesTest.kt	2026-10-24 13:49:49</code></div>
+<div class="row hunk"><span>31</span><code>@@ -10,22 +10,21 @@</code></div>
+<div class="row"><span>32</span><code> import io.ktor.serialization.kotlinx.json.json</code></div>
+<div class="row"><span>33</span><code> import io.ktor.server.testing.testApplication</code></div>
+<div class="row"><span>34</span><code> import kotlinx.datetime.LocalDate</code></div>
+<div class="row del"><span>35</span><code>-import org.jetbrains.exposed.v1.jdbc.Database</code></div>
+<div class="row"><span>36</span><code> </code></div>
+<div class="row"><span>37</span><code> import app.work.domain.Activity</code></div>
+<div class="row"><span>38</span><code> import app.work.domain.ActivityKind</code></div>
+<div class="row"><span>39</span><code> import app.work.domain.ActivityStore</code></div>
+<div class="row"><span>40</span><code> import app.work.domain.NewActivity</code></div>
+<div class="row"><span>41</span><code> import app.work.server.activity.ExposedActivityStore</code></div>
+<div class="row del"><span>42</span><code>-import app.work.server.session.Turns</code></div>
+<div class="row add"><span>43</span><code>+import app.work.server.activity.StoredDays</code></div>
+<div class="row add"><span>44</span><code>+import app.work.server.activity.connect</code></div>
+<div class="row"><span>45</span><code> </code></div>
+<div class="row"><span>46</span><code> class DayRoutesTest {</code></div>
+<div class="row"><span>47</span><code>     @Test</code></div>
+<div class="row"><span>48</span><code>     fun returnsLogAndScheduleForTheDay() = testApplication {</code></div>
+<div class="row"><span>49</span><code>         val store = ExposedActivityStore(</code></div>
+<div class="row del"><span>50</span><code>-            Database.connect(</code></div>
+<div class="row del"><span>51</span><code>-                url = &quot;jdbc:h2:mem:day_${System.nanoTime()};MODE=PostgreSQL;DB_CLOSE_DELAY=-1&quot;,</code></div>
+<div class="row del"><span>52</span><code>-                driver = &quot;org.h2.Driver&quot;,</code></div>
+<div class="row add"><span>53</span><code>+            connect(</code></div>
+<div class="row add"><span>54</span><code>+                url = &quot;jdbc:h2:mem:days_${System.nanoTime()};MODE=PostgreSQL;DB_CLOSE_DELAY=-1&quot;,</code></div>
+<div class="row"><span>55</span><code>                 user = &quot;sa&quot;,</code></div>
+<div class="row"><span>56</span><code>                 password = &quot;&quot;,</code></div>
+<div class="row"><span>57</span><code>             ),</code></div>
+<div class="row hunk"><span>58</span><code>@@ -33,9 +32,9 @@</code></div>
+<div class="row"><span>59</span><code>         val day = LocalDate(2026, 10, 23)</code></div>
+<div class="row"><span>60</span><code>         store.add(NewActivity(&quot;ревью&quot;, ActivityKind.Log, &quot;APP-2&quot;, day))</code></div>
+<div class="row"><span>61</span><code>         store.add(NewActivity(&quot;созвон&quot;, ActivityKind.Schedule, null, day))</code></div>
+<div class="row del"><span>62</span><code>-        store.add(NewActivity(&quot;идея&quot;, ActivityKind.Backlog, null, day))</code></div>
+<div class="row add"><span>63</span><code>+        store.add(NewActivity(&quot;идея&quot;, ActivityKind.Backlog, null, null))</code></div>
+<div class="row"><span>64</span><code>         store.add(NewActivity(&quot;чужой&quot;, ActivityKind.Log, null, LocalDate(2026, 10, 24)))</code></div>
+<div class="row del"><span>65</span><code>-        application { module(idleTurns(), store) }</code></div>
+<div class="row add"><span>66</span><code>+        application { module(idleTurns(), StoredDays(store)) }</code></div>
+<div class="row"><span>67</span><code>         val client = createClient {</code></div>
+<div class="row"><span>68</span><code>             install(ContentNegotiation) { json() }</code></div>
+<div class="row"><span>69</span><code>         }</code></div>
+<div class="row hunk"><span>70</span><code>@@ -47,7 +46,9 @@</code></div>
+<div class="row"><span>71</span><code>         assertEquals(listOf(&quot;ревью&quot;), body.log.map { it.summary })</code></div>
+<div class="row"><span>72</span><code>         assertEquals(listOf(&quot;APP-2&quot;), body.log.map { it.jiraKey })</code></div>
+<div class="row"><span>73</span><code>         assertEquals(listOf(&quot;созвон&quot;), body.schedule.map { it.summary })</code></div>
+<div class="row del"><span>74</span><code>-        assertEquals(listOf(null), body.schedule.map { it.jiraKey })</code></div>
+<div class="row add"><span>75</span><code>+        assertEquals(listOf&lt;String?&gt;(null), body.schedule.map { it.jiraKey })</code></div>
+<div class="row add"><span>76</span><code>+        assertEquals(false, &quot;идея&quot; in body.log.map { it.summary })</code></div>
+<div class="row add"><span>77</span><code>+        assertEquals(false, &quot;идея&quot; in body.schedule.map { it.summary })</code></div>
+<div class="row"><span>78</span><code> </code></div>
+<div class="row"><span>79</span><code>         val empty = client.get(&quot;/api/days/2026-10-25&quot;)</code></div>
+<div class="row"><span>80</span><code>         assertEquals(HttpStatusCode.OK, empty.status)</code></div>
+<div class="row hunk"><span>81</span><code>@@ -59,7 +60,7 @@</code></div>
+<div class="row"><span>82</span><code> </code></div>
+<div class="row"><span>83</span><code>     @Test</code></div>
+<div class="row"><span>84</span><code>     fun rejectsBadDate() = testApplication {</code></div>
+<div class="row del"><span>85</span><code>-        application { module(idleTurns(), closedStore()) }</code></div>
+<div class="row add"><span>86</span><code>+        application { module(idleTurns(), StoredDays(closedStore())) }</code></div>
+<div class="row"><span>87</span><code>         val client = createClient {</code></div>
+<div class="row"><span>88</span><code>             install(ContentNegotiation) { json() }</code></div>
+<div class="row"><span>89</span><code>         }</code></div>
+<div class="row hunk"><span>90</span><code>@@ -68,11 +69,6 @@</code></div>
+<div class="row"><span>91</span><code>         assertEquals(HttpStatusCode.BadRequest, response.status)</code></div>
+<div class="row"><span>92</span><code>         assertEquals(&quot;Неверная дата&quot;, response.body&lt;ErrorBody&gt;().error)</code></div>
+<div class="row"><span>93</span><code>     }</code></div>
+<div class="row del"><span>94</span><code>-}</code></div>
+<div class="row del"><span>95</span><code>-</code></div>
+<div class="row del"><span>96</span><code>-private fun idleTurns() = object : Turns {</code></div>
+<div class="row del"><span>97</span><code>-    override suspend fun open() = &quot;x&quot;</code></div>
+<div class="row del"><span>98</span><code>-    override suspend fun message(sessionId: String, text: String) = TurnResponse(&quot;&quot;, emptyList())</code></div>
+<div class="row"><span>99</span><code> }</code></div>
+<div class="row"><span>100</span><code> </code></div>
+<div class="row"><span>101</span><code> private fun closedStore() = object : ActivityStore {</code></div>
+<div class="row meta"><span>102</span><code>Only in challenge/gen2: Days.kt</code></div>
+<div class="row meta"><span>103</span><code>diff -ru challenge/gen1/Module.kt challenge/gen2/Module.kt</code></div>
+<div class="row meta"><span>104</span><code>--- challenge/gen1/Module.kt	2026-10-24 13:43:42</code></div>
+<div class="row meta"><span>105</span><code>+++ challenge/gen2/Module.kt	2026-10-24 13:49:49</code></div>
+<div class="row hunk"><span>106</span><code>@@ -1,6 +1,6 @@</code></div>
+<div class="row"><span>107</span><code> package app.work.server</code></div>
+<div class="row"><span>108</span><code> </code></div>
+<div class="row del"><span>109</span><code>-import app.work.domain.ActivityStore</code></div>
+<div class="row add"><span>110</span><code>+import app.work.server.activity.Days</code></div>
+<div class="row"><span>111</span><code> import app.work.server.session.BlankMessage</code></div>
+<div class="row"><span>112</span><code> import app.work.server.session.SessionNotFound</code></div>
+<div class="row"><span>113</span><code> import app.work.server.session.Turns</code></div>
+<div class="row hunk"><span>114</span><code>@@ -14,10 +14,7 @@</code></div>
+<div class="row"><span>115</span><code> import io.ktor.server.routing.routing</code></div>
+<div class="row"><span>116</span><code> import kotlinx.serialization.Serializable</code></div>
+<div class="row"><span>117</span><code> </code></div>
+<div class="row del"><span>118</span><code>-fun Application.module(</code></div>
+<div class="row del"><span>119</span><code>-    sessions: Turns,</code></div>
+<div class="row del"><span>120</span><code>-    store: ActivityStore,</code></div>
+<div class="row del"><span>121</span><code>-) {</code></div>
+<div class="row add"><span>122</span><code>+fun Application.module(sessions: Turns, days: Days) {</code></div>
+<div class="row"><span>123</span><code>     install(ContentNegotiation) {</code></div>
+<div class="row"><span>124</span><code>         json()</code></div>
+<div class="row"><span>125</span><code>     }</code></div>
+<div class="row hunk"><span>126</span><code>@@ -36,9 +33,11 @@</code></div>
+<div class="row"><span>127</span><code>         }</code></div>
+<div class="row"><span>128</span><code>     }</code></div>
+<div class="row"><span>129</span><code>     routing {</code></div>
+<div class="row del"><span>130</span><code>-        api(sessions, store)</code></div>
+<div class="row add"><span>131</span><code>+        api(sessions, days)</code></div>
+<div class="row"><span>132</span><code>     }</code></div>
+<div class="row"><span>133</span><code> }</code></div>
+<div class="row add"><span>134</span><code>+</code></div>
+<div class="row add"><span>135</span><code>+class BadDate : RuntimeException()</code></div>
+<div class="row"><span>136</span><code> </code></div>
+<div class="row"><span>137</span><code> class ModelFailure(message: String) : RuntimeException(message)</code></div>
+<div class="row"><span>138</span><code> </code></div>
+<div class="row meta"><span>139</span><code>diff -ru challenge/gen1/Routes.kt challenge/gen2/Routes.kt</code></div>
+<div class="row meta"><span>140</span><code>--- challenge/gen1/Routes.kt	2026-10-24 13:43:42</code></div>
+<div class="row meta"><span>141</span><code>+++ challenge/gen2/Routes.kt	2026-10-24 13:49:49</code></div>
+<div class="row hunk"><span>142</span><code>@@ -1,30 +1,23 @@</code></div>
+<div class="row"><span>143</span><code> package app.work.server</code></div>
+<div class="row"><span>144</span><code> </code></div>
+<div class="row add"><span>145</span><code>+import app.work.server.activity.Days</code></div>
+<div class="row add"><span>146</span><code>+import app.work.server.session.Turns</code></div>
+<div class="row"><span>147</span><code> import io.ktor.server.request.receive</code></div>
+<div class="row"><span>148</span><code> import io.ktor.server.response.respond</code></div>
+<div class="row"><span>149</span><code> import io.ktor.server.routing.Route</code></div>
+<div class="row"><span>150</span><code> import io.ktor.server.routing.get</code></div>
+<div class="row"><span>151</span><code> import io.ktor.server.routing.post</code></div>
+<div class="row"><span>152</span><code> import io.ktor.server.routing.route</code></div>
+<div class="row del"><span>153</span><code>-import kotlinx.datetime.LocalDate</code></div>
+<div class="row"><span>154</span><code> import kotlinx.serialization.Serializable</code></div>
+<div class="row"><span>155</span><code> </code></div>
+<div class="row del"><span>156</span><code>-import app.work.domain.Activity</code></div>
+<div class="row del"><span>157</span><code>-import app.work.domain.ActivityKind</code></div>
+<div class="row del"><span>158</span><code>-import app.work.domain.ActivityStore</code></div>
+<div class="row del"><span>159</span><code>-import app.work.server.session.Turns</code></div>
+<div class="row del"><span>160</span><code>-</code></div>
+<div class="row del"><span>161</span><code>-fun Route.api(</code></div>
+<div class="row del"><span>162</span><code>-    sessions: Turns,</code></div>
+<div class="row del"><span>163</span><code>-    store: ActivityStore,</code></div>
+<div class="row del"><span>164</span><code>-) {</code></div>
+<div class="row add"><span>165</span><code>+fun Route.api(sessions: Turns, days: Days) {</code></div>
+<div class="row"><span>166</span><code>     route(&quot;/api&quot;) {</code></div>
+<div class="row"><span>167</span><code>         get(&quot;/health&quot;) {</code></div>
+<div class="row"><span>168</span><code>             call.respond(Health(&quot;ok&quot;))</code></div>
+<div class="row"><span>169</span><code>         }</code></div>
+<div class="row"><span>170</span><code>         get(&quot;/days/{date}&quot;) {</code></div>
+<div class="row del"><span>171</span><code>-            val date = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row del"><span>172</span><code>-            call.respond(readDay(store, date))</code></div>
+<div class="row add"><span>173</span><code>+            val raw = call.parameters[&quot;date&quot;].orEmpty()</code></div>
+<div class="row add"><span>174</span><code>+            call.respond(days.load(raw))</code></div>
+<div class="row"><span>175</span><code>         }</code></div>
+<div class="row"><span>176</span><code>         post(&quot;/sessions&quot;) {</code></div>
+<div class="row"><span>177</span><code>             call.respond(SessionCreated(sessions.open()))</code></div>
+<div class="row hunk"><span>178</span><code>@@ -36,30 +29,6 @@</code></div>
+<div class="row"><span>179</span><code>         }</code></div>
+<div class="row"><span>180</span><code>     }</code></div>
+<div class="row"><span>181</span><code> }</code></div>
+<div class="row del"><span>182</span><code>-</code></div>
+<div class="row del"><span>183</span><code>-private suspend fun readDay(store: ActivityStore, rawDate: String): DayResponse {</code></div>
+<div class="row del"><span>184</span><code>-    val date = pathDate(rawDate)</code></div>
+<div class="row del"><span>185</span><code>-    return DayResponse(</code></div>
+<div class="row del"><span>186</span><code>-        date = date.toString(),</code></div>
+<div class="row del"><span>187</span><code>-        log = store.find(ActivityKind.Log, date).map { it.toEntry() },</code></div>
+<div class="row del"><span>188</span><code>-        schedule = store.find(ActivityKind.Schedule, date).map { it.toEntry() },</code></div>
+<div class="row del"><span>189</span><code>-    )</code></div>
+<div class="row del"><span>190</span><code>-}</code></div>
+<div class="row del"><span>191</span><code>-</code></div>
+<div class="row del"><span>192</span><code>-private fun pathDate(raw: String): LocalDate = try {</code></div>
+<div class="row del"><span>193</span><code>-    LocalDate.parse(raw)</code></div>
+<div class="row del"><span>194</span><code>-} catch (_: IllegalArgumentException) {</code></div>
+<div class="row del"><span>195</span><code>-    throw BadDate()</code></div>
+<div class="row del"><span>196</span><code>-}</code></div>
+<div class="row del"><span>197</span><code>-</code></div>
+<div class="row del"><span>198</span><code>-private fun Activity.toEntry() = DayEntry(</code></div>
+<div class="row del"><span>199</span><code>-    id = id,</code></div>
+<div class="row del"><span>200</span><code>-    summary = summary,</code></div>
+<div class="row del"><span>201</span><code>-    jiraKey = jiraKey,</code></div>
+<div class="row del"><span>202</span><code>-    createdAt = createdAt.toString(),</code></div>
+<div class="row del"><span>203</span><code>-)</code></div>
+<div class="row del"><span>204</span><code>-</code></div>
+<div class="row del"><span>205</span><code>-class BadDate : RuntimeException()</code></div>
+<div class="row"><span>206</span><code> </code></div>
+<div class="row"><span>207</span><code> @Serializable</code></div>
+<div class="row"><span>208</span><code> data class Health(val status: String)</code></div>
+<div class="row meta"><span>209</span><code>diff -ru challenge/gen1/RoutesTest.kt challenge/gen2/RoutesTest.kt</code></div>
+<div class="row meta"><span>210</span><code>--- challenge/gen1/RoutesTest.kt	2026-10-24 13:43:42</code></div>
+<div class="row meta"><span>211</span><code>+++ challenge/gen2/RoutesTest.kt	2026-10-24 13:49:49</code></div>
+<div class="row hunk"><span>212</span><code>@@ -1,9 +1,6 @@</code></div>
+<div class="row"><span>213</span><code> package app.work.server</code></div>
+<div class="row"><span>214</span><code> </code></div>
+<div class="row del"><span>215</span><code>-import app.work.domain.Activity</code></div>
+<div class="row del"><span>216</span><code>-import app.work.domain.ActivityKind</code></div>
+<div class="row del"><span>217</span><code>-import app.work.domain.ActivityStore</code></div>
+<div class="row del"><span>218</span><code>-import app.work.domain.NewActivity</code></div>
+<div class="row add"><span>219</span><code>+import app.work.server.activity.Days</code></div>
+<div class="row"><span>220</span><code> import app.work.server.session.Turns</code></div>
+<div class="row"><span>221</span><code> import io.ktor.client.call.body</code></div>
+<div class="row"><span>222</span><code> import io.ktor.client.plugins.contentnegotiation.ContentNegotiation</code></div>
+<div class="row hunk"><span>223</span><code>@@ -15,7 +12,6 @@</code></div>
+<div class="row"><span>224</span><code> import io.ktor.http.contentType</code></div>
+<div class="row"><span>225</span><code> import io.ktor.serialization.kotlinx.json.json</code></div>
+<div class="row"><span>226</span><code> import io.ktor.server.testing.testApplication</code></div>
+<div class="row del"><span>227</span><code>-import kotlinx.datetime.LocalDate</code></div>
+<div class="row"><span>228</span><code> import kotlin.test.Test</code></div>
+<div class="row"><span>229</span><code> import kotlin.test.assertEquals</code></div>
+<div class="row"><span>230</span><code> </code></div>
+<div class="row hunk"><span>231</span><code>@@ -24,13 +20,16 @@</code></div>
+<div class="row"><span>232</span><code>     fun passesTextThrough() = testApplication {</code></div>
+<div class="row"><span>233</span><code>         val seen = mutableListOf&lt;String&gt;()</code></div>
+<div class="row"><span>234</span><code>         application {</code></div>
+<div class="row del"><span>235</span><code>-            module(object : Turns {</code></div>
+<div class="row del"><span>236</span><code>-                override suspend fun open() = &quot;session-1&quot;</code></div>
+<div class="row del"><span>237</span><code>-                override suspend fun message(sessionId: String, text: String): TurnResponse {</code></div>
+<div class="row del"><span>238</span><code>-                    seen += &quot;$sessionId:$text&quot;</code></div>
+<div class="row del"><span>239</span><code>-                    return TurnResponse(&quot;уточни проект&quot;, emptyList())</code></div>
+<div class="row del"><span>240</span><code>-                }</code></div>
+<div class="row del"><span>241</span><code>-            }, unusedStore())</code></div>
+<div class="row add"><span>242</span><code>+            module(</code></div>
+<div class="row add"><span>243</span><code>+                object : Turns {</code></div>
+<div class="row add"><span>244</span><code>+                    override suspend fun open() = &quot;session-1&quot;</code></div>
+<div class="row add"><span>245</span><code>+                    override suspend fun message(sessionId: String, text: String): TurnResponse {</code></div>
+<div class="row add"><span>246</span><code>+                        seen += &quot;$sessionId:$text&quot;</code></div>
+<div class="row add"><span>247</span><code>+                        return TurnResponse(&quot;уточни проект&quot;, emptyList())</code></div>
+<div class="row add"><span>248</span><code>+                    }</code></div>
+<div class="row add"><span>249</span><code>+                },</code></div>
+<div class="row add"><span>250</span><code>+                idleDays(),</code></div>
+<div class="row add"><span>251</span><code>+            )</code></div>
+<div class="row"><span>252</span><code>         }</code></div>
+<div class="row"><span>253</span><code>         val client = createClient {</code></div>
+<div class="row"><span>254</span><code>             install(ContentNegotiation) { json() }</code></div>
+<div class="row hunk"><span>255</span><code>@@ -51,18 +50,16 @@</code></div>
+<div class="row"><span>256</span><code> </code></div>
+<div class="row"><span>257</span><code>     @Test</code></div>
+<div class="row"><span>258</span><code>     fun health() = testApplication {</code></div>
+<div class="row del"><span>259</span><code>-        application { module(idleTurns(), unusedStore()) }</code></div>
+<div class="row add"><span>260</span><code>+        application { module(idleTurns(), idleDays()) }</code></div>
+<div class="row"><span>261</span><code>         assertEquals(HttpStatusCode.OK, client.get(&quot;/api/health&quot;).status)</code></div>
+<div class="row"><span>262</span><code>     }</code></div>
+<div class="row"><span>263</span><code> }</code></div>
+<div class="row"><span>264</span><code> </code></div>
+<div class="row del"><span>265</span><code>-private fun idleTurns() = object : Turns {</code></div>
+<div class="row add"><span>266</span><code>+internal fun idleTurns() = object : Turns {</code></div>
+<div class="row"><span>267</span><code>     override suspend fun open() = &quot;x&quot;</code></div>
+<div class="row"><span>268</span><code>     override suspend fun message(sessionId: String, text: String) = TurnResponse(&quot;&quot;, emptyList())</code></div>
+<div class="row"><span>269</span><code> }</code></div>
+<div class="row"><span>270</span><code> </code></div>
+<div class="row del"><span>271</span><code>-private fun unusedStore() = object : ActivityStore {</code></div>
+<div class="row del"><span>272</span><code>-    override suspend fun add(draft: NewActivity): Activity = error(&quot;не используется&quot;)</code></div>
+<div class="row del"><span>273</span><code>-</code></div>
+<div class="row del"><span>274</span><code>-    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List&lt;Activity&gt; = emptyList()</code></div>
+<div class="row add"><span>275</span><code>+private fun idleDays() = object : Days {</code></div>
+<div class="row add"><span>276</span><code>+    override suspend fun load(rawDate: String): DayResponse = error(&quot;не используется&quot;)</code></div>
+<div class="row"><span>277</span><code> }</code></div>
+  </div>
+</article>
+
+</main>
+</div>
+</body>
+</html>
