@@ -1,6 +1,7 @@
 package app.work.server
 
 import app.work.server.activity.Days
+import app.work.server.activity.Sprint
 import app.work.server.session.Turns
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -10,7 +11,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import kotlinx.serialization.Serializable
 
-fun Route.api(sessions: Turns, days: Days) {
+fun Route.api(sessions: Turns, days: Days, sprint: Sprint) {
     route("/api") {
         get("/health") {
             call.respond(Health("ok"))
@@ -18,6 +19,9 @@ fun Route.api(sessions: Turns, days: Days) {
         get("/days/{date}") {
             val raw = call.parameters["date"].orEmpty()
             call.respond(days.load(raw))
+        }
+        get("/sprint") {
+            call.respond(sprint.load())
         }
         post("/sessions") {
             call.respond(SessionCreated(sessions.open()))
@@ -60,6 +64,20 @@ data class DayResponse(
 
 @Serializable
 data class DayEntry(
+    val id: String,
+    val summary: String,
+    val issueKey: String?,
+    val link: String?,
+    val createdAt: String,
+)
+
+@Serializable
+data class SprintResponse(
+    val items: List<SprintEntry>,
+)
+
+@Serializable
+data class SprintEntry(
     val id: String,
     val summary: String,
     val issueKey: String?,

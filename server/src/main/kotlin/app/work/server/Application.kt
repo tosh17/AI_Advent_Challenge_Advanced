@@ -3,6 +3,7 @@ package app.work.server
 import app.work.agent.Agent
 import app.work.server.activity.ExposedActivityStore
 import app.work.server.activity.StoredDays
+import app.work.server.activity.StoredSprint
 import app.work.server.activity.openDatabase
 import app.work.server.agent.OllamaModel
 import app.work.server.mcp.McpToolCatalog
@@ -26,6 +27,7 @@ fun main() {
     val database = openDatabase(config)
     val store = ExposedActivityStore(database)
     val days = StoredDays(store)
+    val sprint = StoredSprint(store)
     val mcp = embeddedServer(Netty, host = "127.0.0.1", port = config.mcpPort) {
         workMcp(store)
     }.start(wait = false)
@@ -54,6 +56,6 @@ fun main() {
     })
 
     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {
-        module(sessions, days)
+        module(sessions, days, sprint)
     }.start(wait = true)
 }

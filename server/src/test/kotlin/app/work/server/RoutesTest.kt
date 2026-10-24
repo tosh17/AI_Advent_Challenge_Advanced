@@ -1,6 +1,7 @@
 package app.work.server
 
 import app.work.server.activity.Days
+import app.work.server.activity.Sprint
 import app.work.server.session.Turns
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -31,6 +32,7 @@ class RoutesTest {
                     }
                 },
                 idleDays(),
+                idleSprint(),
             )
         }
         val client = createClient {
@@ -52,13 +54,13 @@ class RoutesTest {
 
     @Test
     fun health() = testApplication {
-        application { module(idleTurns(), idleDays()) }
+        application { module(idleTurns(), idleDays(), idleSprint()) }
         assertEquals(HttpStatusCode.OK, client.get("/api/health").status)
     }
 
     @Test
     fun chatPage() = testApplication {
-        application { module(idleTurns(), idleDays()) }
+        application { module(idleTurns(), idleDays(), idleSprint()) }
         val response = client.get("/")
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue("Рабочий помощник" in response.bodyAsText())
@@ -72,4 +74,8 @@ internal fun idleTurns() = object : Turns {
 
 private fun idleDays() = object : Days {
     override suspend fun load(rawDate: String): DayResponse = error("не используется")
+}
+
+private fun idleSprint() = object : Sprint {
+    override suspend fun load(): SprintResponse = error("не используется")
 }

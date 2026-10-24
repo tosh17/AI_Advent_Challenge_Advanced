@@ -1,6 +1,7 @@
 package app.work.server
 
 import app.work.server.activity.Days
+import app.work.server.activity.Sprint
 import app.work.server.session.BlankMessage
 import app.work.server.session.SessionNotFound
 import app.work.server.session.Turns
@@ -15,7 +16,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
 
-fun Application.module(sessions: Turns, days: Days) {
+fun Application.module(sessions: Turns, days: Days, sprint: Sprint) {
     install(ContentNegotiation) {
         json()
     }
@@ -34,7 +35,7 @@ fun Application.module(sessions: Turns, days: Days) {
         }
     }
     routing {
-        api(sessions, days)
+        api(sessions, days, sprint)
         staticResources("/", "web", index = "index.html")
     }
 }
