@@ -158,6 +158,20 @@ private fun Server.activities(store: ActivityStore) {
         if (rows.isEmpty()) "С $from по $to в журнале пусто" else rows.joinToString("\n") { it.line() }
     }
     tool(
+        name = "activities_plan_range",
+        description = "План на диапазон.",
+        schema = schema(
+            required = listOf("from_date", "to_date"),
+            "from_date" to "Дата начала",
+            "to_date" to "Дата конца",
+        ),
+    ) { args ->
+        val from = args.isoDate("from_date")
+        val to = args.isoDate("to_date")
+        val rows = store.findBetween(ActivityKind.Schedule, from, to)
+        if (rows.isEmpty()) "С $from по $to ничего не запланировано" else rows.joinToString("\n") { it.line() }
+    }
+    tool(
         name = "activities_plan",
         description = "Что запланировано на день. Не журнал, не беклог и не спринт.",
         schema = schema(required = listOf("date"), "date" to "День, YYYY-MM-DD"),
