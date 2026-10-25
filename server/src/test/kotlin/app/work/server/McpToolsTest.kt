@@ -110,6 +110,29 @@ class McpToolsTest {
         assertEquals(false, "confluence_search" in names)
     }
 
+    @Test
+    fun backlogAndSprintStayOutOfTheJournal() = withStore { store, catalog ->
+        catalog.call(
+            "activities_backlog",
+            buildJsonObject {
+                put("summary", JsonPrimitive("идея"))
+            },
+        )
+        catalog.call(
+            "activities_add_to_sprint",
+            buildJsonObject {
+                put("summary", JsonPrimitive("ревью"))
+            },
+        )
+        val sprint = catalog.call("activities_list_sprint", buildJsonObject { })
+        assertTrue(sprint.contains("ревью"))
+        assertEquals(false, sprint.contains("идея"))
+        assertEquals(listOf("идея"), store.list(ActivityKind.Backlog).map { it.summary })
+        assertEquals(listOf(null), store.list(ActivityKind.Backlog).map { it.onDate })
+        assertEquals(listOf("ревью"), store.list(ActivityKind.Sprint).map { it.summary })
+        assertEquals(emptyList(), store.find(ActivityKind.Log, LocalDate(2026, 10, 26)))
+    }
+
     private fun withStore(block: suspend (ExposedActivityStore, McpToolCatalog) -> Unit) = runBlocking {
         val store = ExposedActivityStore(
             connect(
