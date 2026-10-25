@@ -20,7 +20,7 @@ class Agent(
     private val maxSteps: Int = 4,
 ) {
     suspend fun handle(history: List<ChatMessage>, userText: String): AgentReply {
-        val conversation = history.toMutableList()
+        val conversation = remember(history).toMutableList()
         conversation += ChatMessage.User(userText)
         val calls = mutableListOf<ExecutedCall>()
         val definitions = tools.definitions()
@@ -46,4 +46,19 @@ class Agent(
 
     private fun prompt(conversation: List<ChatMessage>): List<ChatMessage> =
         listOf(ChatMessage.System(systemPrompt(today()))) + conversation
+
+    private fun remember(history: List<ChatMessage>): List<ChatMessage> {
+        val userOrAssistantIndices = history
+            .mapIndexed { index, message ->
+                if (message is ChatMessage.User || message is ChatMessage.Assistant) index else -1
+            }
+            .filter { it != -1 }
+
+        return if (userOrAssistantIndices.size <= 3) {
+            history
+        } else {
+            val dropIndex = userOrAssistantIndices[userOrAssistantIndices.size - 3]
+            history.drop(dropIndex)
+        }
+    }
 }
