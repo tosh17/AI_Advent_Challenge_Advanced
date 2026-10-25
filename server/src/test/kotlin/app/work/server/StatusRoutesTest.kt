@@ -78,8 +78,19 @@ class StatusRoutesTest {
         val style = client.get("/chat.css")
         assertEquals(HttpStatusCode.OK, script.status)
         assertEquals(HttpStatusCode.OK, style.status)
-        assertEquals(true, "work-session" in script.bodyAsText())
-        assertEquals(true, "--bg" in style.bodyAsText())
+        val scriptText = script.bodyAsText()
+        val styleText = style.bodyAsText()
+        val page = client.get("/")
+        assertEquals(HttpStatusCode.OK, page.status)
+        assertEquals(true, "work-session" in scriptText)
+        assertEquals(true, "work-theme" in scriptText)
+        assertEquals(true, "--bg" in styleText)
+        assertEquals(true, "data-theme=\"rick\"" in styleText)
+        assertEquals(true, "data-theme=\"simpsons\"" in styleText)
+        val pageText = page.bodyAsText()
+        assertEquals(true, "Классический" in pageText)
+        assertEquals(true, "Рик и Морти" in pageText)
+        assertEquals(true, "Симпсоны" in pageText)
     }
 }
 
