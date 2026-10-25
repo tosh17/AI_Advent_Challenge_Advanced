@@ -11,6 +11,12 @@ import kotlin.test.assertTrue
 
 class AgentTest {
     @Test
+    fun documentLinkIsJournalNotBacklog() {
+        val prompt = systemPrompt(LocalDate(2026, 10, 23))
+        assertTrue(prompt.contains("Запись ссылок на документы должна быть в журнал, а не в беклог."))
+    }
+
+    @Test
     fun wordsDoNotSelectTools() = runTest {
         val catalog = RecordingCatalog()
         val model = ScriptedModel(
