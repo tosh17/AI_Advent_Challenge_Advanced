@@ -9,6 +9,7 @@
 | `activities_backlog` | `summary` | Пишет `ActivityKind.Backlog` без даты. Ссылку на документацию сюда не кладёт |
 | `activities_add_to_sprint` | `summary` | Пишет `ActivityKind.Sprint` без даты |
 | `activities_list_day` | `date` | Читает журнал (`ActivityKind.Log`) за день |
+| `activities_list_range` | `from_date`, `to_date` | Читает журнал за интервал дат включительно |
 | `activities_plan` | `date` | Читает план (`ActivityKind.Schedule`) за день |
 | `activities_list_sprint` | нет | Читает `ActivityKind.Sprint` |
 | `activities_find` | `query` | Ищет по уже записанному: журнал, план, беклог и спринт |

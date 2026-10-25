@@ -136,12 +136,32 @@ private fun Server.activities(store: ActivityStore) {
     }
     tool(
         name = "activities_list_day",
-        description = "Журнал за день: чем человек уже занимался. Не план, не беклог и не спринт.",
+        description = "Журнал за один день: чем человек уже занимался. Для нескольких дней вызывай activities_list_range. Не план, не беклог и не спринт.",
         schema = schema(required = listOf("date"), "date" to "День, YYYY-MM-DD"),
     ) { args ->
         val day = args.isoDate("date")
         val rows = store.find(ActivityKind.Log, day)
         if (rows.isEmpty()) "За $day в журнале пусто" else rows.joinToString("\n") { it.line() }
+    }
+    tool(
+        name = "activities_list_range",
+        description = "Журнал за интервал дат включительно. Для недели и любого отрезка длиннее одного дня вызывай этот инструмент, не activities_list_day. Не план, не беклог и не спринт.",
+        schema = schema(
+            required = listOf("from_date", "to_date"),
+            "from_date" to "Начало интервала, YYYY-MM-DD",
+            "to_date" to "Конец интервала, YYYY-MM-DD",
+        ),
+    ) { args ->
+        val from = args.isoDate("from_date")
+        val to = args.isoDate("to_date")
+        val rows = store.findBetween(ActivityKind.Log, from, to)
+        if (rows.isEmpty()) {
+            "С $from по $to в журнале пусто"
+        } else {
+            rows.joinToString("\n") { row ->
+                listOfNotNull(row.onDate?.toString(), row.line()).joinToString(" ")
+            }
+        }
     }
     tool(
         name = "activities_plan",
