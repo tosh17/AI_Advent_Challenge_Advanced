@@ -1,0 +1,193 @@
+Ты код-ассистент рабочего помощника. Температура низкая, ответ короткий и по правилам. Код не выдумывай за пределами того, что дано в сообщении. Пиши по-русски.
+
+
+# Файл .cursorrules
+
+# Рабочий помощник
+
+Один человек пишет свободно. Модель на S1 решает, что сделать, и вызывает инструменты MCP. Код смысл фразы не разбирает.
+
+## Стек
+
+Kotlin 2.4, Multiplatform (`jvm` и `js`/`nodejs`). Ktor 3.5 (Netty). MCP Kotlin SDK 0.15. Exposed 1.0, H2 по умолчанию, Postgres через `DATABASE_URL`. Ollama `http://10.10.1.101:11434`, модель `qwen2.5:3b`. kotlinx.serialization, kotlinx.datetime, kotlin.time.Clock. Логи — SLF4J/Logback. Тесты — kotlin.test и JUnit 5.
+
+Новые фреймворки, Spring, Koin и разбор текста регулярными выражениями не добавлять.
+
+## Архитектура
+
+`shared` — агент и домен, без Ktor и без базы. `server` — HTTP, Ollama, MCP, Exposed.
+
+Поток: `POST /api/sessions/{id}/messages` → `SessionBook` → `Agent`. Агент добавляет системную дату, отдаёт каталог инструментов модели и выполняет ровно те вызовы, которые вернула модель. Текст без вызовов — ответ или уточнение, код их не различает. Веб-чат в `resources/web` только вызывает этот API. Десктоп и мобильный клиент потом ходят туда же.
+
+Инструменты живут в одном MCP `POST /mcp`, регистрация в `activities`. Вид активности задаёт выбранный инструмент (`Log`, `Schedule`, `Backlog`, `Sprint`), не содержимое фразы. Номер задачи и ссылка необязательны. Запросов в Jira и Confluence нет: поиск идёт по уже записанному.
+
+## Структура
+
+```
+shared/src/commonMain/kotlin/app/work/agent
+shared/src/commonMain/kotlin/app/work/domain
+server/src/main/kotlin/app/work/server
+server/src/main/kotlin/app/work/server/activity
+server/src/main/kotlin/app/work/server/mcp
+server/src/main/kotlin/app/work/server/session
+server/src/main/kotlin/app/work/server/tool
+server/src/main/resources/web
+```
+
+## Имена
+
+Пакет `app.work`. Типы и файлы — PascalCase, функции — camelCase, инструменты MCP — snake_case. Пользовательские строки по-русски, идентификаторы по-английски. Даты в аргументах и путях — `YYYY-MM-DD` (`LocalDate`).
+
+## Паттерны
+
+Роут только принимает параметр или тело и отвечает. Он не вызывает `ActivityStore` и не разбирает дату. Сообщения идут через `Turns`, чтение дня — через такой же узкий интерфейс с одним методом `load`. Разбор даты, два вызова `find` и сборка DTO живут в реализации этого интерфейса. Запрос к базе — DSL Exposed. Аргументы инструмента проверяются (`ToolArgs`). Ошибка инструмента возвращается модели текстом. Пустое сообщение, чужая сессия, плохая дата и сбой модели — свои исключения рядом со `StatusPages` в `Module.kt`, ответ `ErrorBody`.
+
+## Как писать
+
+Агент не смотрит на слова пользователя. `Agent.handle` только дописывает реплику и исполняет вызовы модели:
+
+```kotlin
+conversation += ChatMessage.User(userText)
+val step = model.complete(prompt(conversation), definitions)
+if (step.toolCalls.isEmpty()) {
+    return AgentReply(step.text, calls.toList(), conversation.toList())
+}
+for (call in step.toolCalls) {
+    val result = tools.call(call.name, call.arguments)
+}
+```
+
+Роут тонкий. `Routes.api`:
+
+```kotlin
+post("/sessions/{id}/messages") {
+    val id = call.parameters["id"].orEmpty()
+    val body = call.receive<IncomingMessage>()
+    call.respond(sessions.message(id, body.text))
+}
+```
+
+Чтение дня — DSL, не строка SQL. `ExposedActivityStore.find`:
+
+```kotlin
+ActivityTable.selectAll()
+    .where { (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString()) }
+    .orderBy(ActivityTable.createdAt to SortOrder.ASC)
+```
+
+Вид активности фиксирует инструмент. `activities_log` всегда пишет `ActivityKind.Log`:
+
+```kotlin
+store.add(NewActivity(summary = args.summary(), kind = ActivityKind.Log, issueKey = args.issueKey(), onDate = args.isoDate("on_date"), link = args.link()))
+```
+
+Тест держит запрет. Фраза про спринт не вызывает инструменты, если модель их не запросила: `AgentTest.wordsDoNotSelectTools`.
+
+## Запрещено
+
+Разбор фразы:
+
+```kotlin
+if (text.contains("спринт") || text.contains("завтра")) addToSprint()
+```
+
+`Any` и сырой JSON в домене, роуте и агенте. `Any` допустим только в `McpToolCatalog`, на границе SDK.
+
+`println` и `System.out` в `src/main`.
+
+SQL-строка в Kotlin:
+
+```kotlin
+statement.executeQuery("SELECT * FROM activity WHERE on_date = '$date'")
+```
+
+Пустой `catch`, звёздный импорт, номера задач и адреса, зашитые в код. Ветвление по тексту пользователя. Проверка аргумента инструмента (номер, ссылка, дата) остаётся.
+
+## Шаблон файла
+
+```kotlin
+package app.work.server.activity
+
+import kotlin.time.Clock
+import kotlinx.datetime.LocalDate
+import org.jetbrains.exposed.v1.jdbc.Database
+
+class ExposedActivityStore(
+    private val database: Database,
+) : ActivityStore {
+    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity> {
+        return emptyList()
+    }
+}
+```
+
+Импорты тремя группами: `kotlin`, сторонние, `app.work`. Между группами пустая строка. Конструктор — скобки с хвостовой запятой, если аргументов больше одного. Публичная функция называет действие. DTO HTTP — `@Serializable data class` рядом с роутом.
+
+Новый read-endpoint берёт данные не из модели. Роут выглядит так:
+
+```kotlin
+get("/days/{date}") {
+    val raw = call.parameters["date"].orEmpty()
+    call.respond(days.load(raw))
+}
+```
+
+`Days.load` внутри вызывает `ActivityStore.find` отдельно для `Log` и для `Schedule`. Беклог не попадает в ответ. Плохая дата — исключение из `Module.kt`, снаружи это `400` и `ErrorBody`.
+
+Тест открывает базу через `connect()`, JDBC URL не копирует. `idleTurns` объявлен один раз. В фикстуре беклог записан с `onDate = null`, и тест проверяет, что его summary нет ни в журнале, ни в плане.
+
+
+# Файл .cursor/rules/architecture.mdc
+
+---
+description: Архитектура рабочего помощника и запрет разбирать фразу пользователя
+alwaysApply: true
+---
+
+# Архитектура
+
+Kotlin 2.4 Multiplatform (`jvm`, `js`). Ktor 3.5, MCP SDK 0.15, Exposed 1.0, Ollama на `10.10.1.101:11434`.
+
+`shared` — агент и домен. `server` — HTTP, Ollama, MCP, база. Смысл фразы решает только модель. Код исполняет вызовы MCP и не ищет слова в тексте.
+
+Веб-чат лежит в `server/src/main/resources/web` и только вызывает API. Десктоп и мобильный клиент потом ходят в тот же API.
+
+Роут делегирует узкий интерфейс и не вызывает `ActivityStore`. Вид активности задаёт инструмент: `Log`, `Schedule`, `Backlog`, `Sprint`. Номер задачи и ссылка необязательны. Даты — `YYYY-MM-DD`. Запросов в Jira и Confluence нет.
+
+Примеры, запреты и шаблон файла — в `project.mdc` и в `.cursorrules`.
+
+
+# Файл .cursor/rules/http.mdc
+
+---
+description: Тонкие роуты Ktor без решений по тексту
+globs: "server/**/*.kt"
+alwaysApply: false
+---
+
+# HTTP
+
+Роут принимает параметр или тело и вызывает один метод. Образец — `sessions.message`. `ActivityStore` из роута не вызывать.
+
+Чтение дня — интерфейс `Days` с одним `load(rawDate)`. Реализация сама зовёт `find` для `Log` и `Schedule`. DTO — `@Serializable data class` в файле роута. Беклог в этот ответ не входит.
+
+Исключение плохой даты и его ветка `StatusPages` лежат в `Module.kt` и отвечают `ErrorBody`.
+
+
+# Файл .cursor/rules/kotlin.mdc
+
+---
+description: Как писать Kotlin в рабочем помощнике
+globs: "**/*.kt"
+alwaysApply: false
+---
+
+# Kotlin
+
+Импорты: `kotlin`, затем сторонние, затем `app.work`. Без звёздочек.
+
+Имена: типы PascalCase, функции camelCase, инструменты MCP snake_case. Строки для человека по-русски.
+
+В домене, роуте и агенте нет `Any`, `println`, `System.out` и строк SQL. Запрос — DSL Exposed, как `ExposedActivityStore.find`.
+
+Неверная дата — `400` и `ErrorBody`. Рядом тест на H2.

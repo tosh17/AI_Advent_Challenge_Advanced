@@ -1,0 +1,107 @@
+```kotlin
+// server/src/main/kotlin/app/work/server/activity/Days.kt
+package app.work.server.activity
+
+import org.jetbrains.exposed.v1.jdbc.Database
+import kotlinx.datetime.LocalDate
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+import app.work.shared.ActivityStore
+
+interface Days {
+    suspend fun load(date: String): DayResponse
+}
+
+class ExposedDaysStore(
+    private val database: Database,
+) : Days {
+    override suspend fun load(date: String): DayResponse {
+        val localDate = LocalDate.parse(date)
+            .orThrow(IllegalArgumentException("Invalid date format"))
+        
+        val logs = ActivityStore.find(ActivityKind.Log, localDate)
+        val schedules = ActivityStore.find(ActivityKind.Schedule, localDate)
+
+        return DayResponse(logs = logs, schedules = schedules)
+    }
+}
+```
+
+```kotlin
+// server/src/main/kotlin/app/work/server/api/Routes.kt
+package app.work.server.api
+
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.routing.*
+import kotlinx.serialization.Serializable
+import app.work.server.activity.Days
+import app.work.server.exception.StatusPages
+
+@Serializable
+data class DayResponse(
+    val logs: List<Activity>,
+    val schedules: List<Activity>
+)
+
+fun Application.installDays() {
+    routing {
+        get("/days/{date}") {
+            val raw = call.parameters["date"].orEmpty()
+            try {
+                val days = DaysImpl(database) // Assuming DaysImpl is wired in DI or passed
+                call.respond(days.load(raw))
+            } catch (e: IllegalArgumentException) {
+                StatusPages.badDate(e.message ?: "Bad date")
+            }
+        }
+    }
+}
+
+// Or inline implementation if no DI:
+fun Application.Routes.days(date: String): DayResponse {
+    val raw = call.parameters["date"].orEmpty()
+    // Logic to load days...
+}
+```
+
+```kotlin
+// server/src/test/kotlin/app/work/server/activity/DaysTest.kt
+package app.work.server.activity
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import org.jetbrains.exposed.v1.connect
+import org.jetbrains.exposed.v1.Database
+import kotlinx.datetime.LocalDate
+import app.work.domain.ActivityKind
+import app.work.shared.ActivityStore
+
+class DaysTest {
+    private val database = Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1")
+    
+    @Test
+    fun testLoadDay() {
+        // Setup data...
+        val response = days.load("2023-10-27")
+        assertEquals(0, response.logs.size)
+        assertEquals(0, response.schedules.size)
+    }
+
+    @Test
+    fun testBadDate() {
+        try {
+            days.load("invalid")
+            error("Should throw")
+        } catch (e: IllegalArgumentException) {
+            // Expected
+        }
+    }
+}
+```
+
+Изменённые файлы:
+- `server/src/main/kotlin/app/work/server/activity/Days.kt`
+- `server/src/main/kotlin/app/work/server/api/Routes.kt`
+- `server/src/test/kotlin/app/work/server/activity/DaysTest.kt`

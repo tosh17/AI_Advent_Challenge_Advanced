@@ -1,0 +1,17 @@
+{
+  "name": "day1",
+  "seconds": 101.998,
+  "http": 200,
+  "model": "qwen-local",
+  "finish": "stop",
+  "usage": {
+    "prompt_tokens": 2327,
+    "prompt_tokens_details": {
+      "cached_tokens": 1731
+    },
+    "completion_tokens": 4581,
+    "total_tokens": 6908
+  },
+  "content": "```kotlin\n// server/src/main/kotlin/app/work/server/activity/Days.kt\npackage app.work.server.activity\n\nimport org.jetbrains.exposed.v1.jdbc.Database\nimport kotlinx.datetime.LocalDate\nimport app.work.domain.Activity\nimport app.work.domain.ActivityKind\nimport app.work.shared.ActivityStore\n\ninterface Days {\n    suspend fun load(date: String): DayResponse\n}\n\nclass ExposedDaysStore(\n    private val database: Database,\n) : Days {\n    override suspend fun load(date: String): DayResponse {\n        val localDate = LocalDate.parse(date)\n            .orThrow(IllegalArgumentException(\"Invalid date format\"))\n        \n        val logs = ActivityStore.find(ActivityKind.Log, localDate)\n        val schedules = ActivityStore.find(ActivityKind.Schedule, localDate)\n\n        return DayResponse(logs = logs, schedules = schedules)\n    }\n}\n```\n\n```kotlin\n// server/src/main/kotlin/app/work/server/api/Routes.kt\npackage app.work.server.api\n\nimport io.ktor.http.*\nimport io.ktor.serialization.kotlinx.json.*\nimport io.ktor.server.application.*\nimport io.ktor.server.routing.*\nimport kotlinx.serialization.Serializable\nimport app.work.server.activity.Days\nimport app.work.server.exception.StatusPages\n\n@Serializable\ndata class DayResponse(\n    val logs: List<Activity>,\n    val schedules: List<Activity>\n)\n\nfun Application.installDays() {\n    routing {\n        get(\"/days/{date}\") {\n            val raw = call.parameters[\"date\"].orEmpty()\n            try {\n                val days = DaysImpl(database) // Assuming DaysImpl is wired in DI or passed\n                call.respond(days.load(raw))\n            } catch (e: IllegalArgumentException) {\n                StatusPages.badDate(e.message ?: \"Bad date\")\n            }\n        }\n    }\n}\n\n// Or inline implementation if no DI:\nfun Application.Routes.days(date: String): DayResponse {\n    val raw = call.parameters[\"date\"].orEmpty()\n    // Logic to load days...\n}\n```\n\n```kotlin\n// server/src/test/kotlin/app/work/server/activity/DaysTest.kt\npackage app.work.server.activity\n\nimport kotlin.test.Test\nimport kotlin.test.assertEquals\nimport org.jetbrains.exposed.v1.connect\nimport org.jetbrains.exposed.v1.Database\nimport kotlinx.datetime.LocalDate\nimport app.work.domain.ActivityKind\nimport app.work.shared.ActivityStore\n\nclass DaysTest {\n    private val database = Database.connect(\"jdbc:h2:mem:test;DB_CLOSE_DELAY=-1\")\n    \n    @Test\n    fun testLoadDay() {\n        // Setup data...\n        val response = days.load(\"2023-10-27\")\n        assertEquals(0, response.logs.size)\n        assertEquals(0, response.schedules.size)\n    }\n\n    @Test\n    fun testBadDate() {\n        try {\n            days.load(\"invalid\")\n            error(\"Should throw\")\n        } catch (e: IllegalArgumentException) {\n            // Expected\n        }\n    }\n}\n```\n\nИзменённые файлы:\n- `server/src/main/kotlin/app/work/server/activity/Days.kt`\n- `server/src/main/kotlin/app/work/server/api/Routes.kt`\n- `server/src/test/kotlin/app/work/server/activity/DaysTest.kt`",
+  "reasoning_chars": 15161
+}

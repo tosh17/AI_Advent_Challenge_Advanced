@@ -1,0 +1,50 @@
+[
+  {
+    "name": "chat",
+    "seconds": 6.635,
+    "http": 200,
+    "model": "qwen-local",
+    "finish": "stop",
+    "usage": {
+      "prompt_tokens": 2243,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens": 242,
+      "total_tokens": 2485
+    },
+    "reasoning_chars": 856
+  },
+  {
+    "name": "research",
+    "seconds": 55.935,
+    "http": 200,
+    "model": "qwen-local",
+    "finish": "length",
+    "usage": {
+      "prompt_tokens": 3105,
+      "prompt_tokens_details": {
+        "cached_tokens": 1731
+      },
+      "completion_tokens": 2500,
+      "total_tokens": 5605
+    },
+    "reasoning_chars": 9019
+  },
+  {
+    "name": "day1",
+    "seconds": 101.998,
+    "http": 200,
+    "model": "qwen-local",
+    "finish": "stop",
+    "usage": {
+      "prompt_tokens": 2327,
+      "prompt_tokens_details": {
+        "cached_tokens": 1731
+      },
+      "completion_tokens": 4581,
+      "total_tokens": 6908
+    },
+    "reasoning_chars": 15161
+  }
+]

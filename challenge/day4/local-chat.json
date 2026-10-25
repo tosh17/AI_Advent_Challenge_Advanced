@@ -1,0 +1,17 @@
+{
+  "name": "chat",
+  "seconds": 6.635,
+  "http": 200,
+  "model": "qwen-local",
+  "finish": "stop",
+  "usage": {
+    "prompt_tokens": 2243,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens": 242,
+    "total_tokens": 2485
+  },
+  "content": "ок",
+  "reasoning_chars": 856
+}

@@ -1,0 +1,17 @@
+{
+  "seconds": 35.724,
+  "http": 200,
+  "max_tokens": 30000,
+  "model": "qwen-local",
+  "finish": "stop",
+  "usage": {
+    "prompt_tokens": 5570,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens": 1480,
+    "total_tokens": 7050
+  },
+  "content": "# Анализ HTTP-эндпоинтов и покрытия тестами\n\n## 📁 Файлы\n\n| Файл | Описание |\n|------|----------|\n| `server/src/main/kotlin/app/work/server/Routes.kt` | Определение роутов API |\n| `server/src/main/kotlin/app/work/server/Module.kt` | Сборка модуля, установка роутов и статус-страниц |\n| `server/src/main/kotlin/app/work/server/mcp/WorkMcp.kt` | MCP сервер с инструментами |\n| `server/src/test/kotlin/app/work/server/DayRoutesTest.kt` | Тесты для `/days/{date}` |\n| `server/src/test/kotlin/app/work/server/RoutesTest.kt` | Тесты для сессий и веб-страницы |\n| `server/src/test/kotlin/app/work/server/StatusRoutesTest.kt` | Тесты ошибок (400, 404, 502) |\n| `server/src/test/kotlin/app/work/server/McpToolsTest.kt` | Тесты MCP инструментов |\n\n## 🔗 Связи\n\n```\nModule.kt → api(sessions, days, sprint) → Routes.kt\nRoutes.kt → роуты /api/* и статические ресурсы /web\nWorkMcp.kt → MCP путь /mcp с инструментами ActivityKind.*\nStatusPages в Module.kt → перехват исключений BlankMessage, BadDate, SessionNotFound, ModelFailure\n```\n\n## 📋 Эндпоинты и покрытие тестами\n\n| Эндпоинт | Метод | Файл теста | Статус |\n|----------|-------|------------|--------|\n| `/api/health` | GET | Нет | ❌ Не покрыт |\n| `/api/days/{date}` | GET | `DayRoutesTest.kt` (returnsLogAndScheduleForTheDay, rejectsBadDate) | ✅ Покрыт |\n| `/api/sprint` | GET | Нет | ❌ Не покрыт |\n| `/api/sessions` | POST | `RoutesTest.kt` (passesTextThrough) | ✅ Покрыт |\n| `/api/sessions/{id}/messages` | POST | `RoutesTest.kt` (passesTextThrough, chatPage) + `StatusRoutesTest.kt` | ✅ Покрыт |\n| `/mcp` | MCP | `McpToolsTest.kt` (journalGoesThroughMcp) | ⚠️ Инструменты покрыты, регистрация эндпоинта нет |\n\n## 📌 Выводы\n\n1. **Эндпоинты без тестов:**\n   - `/api/health` — нет теста для проверки статуса сервера\n   - `/api/sprint` — нет теста для получения списка спринта\n\n2. **MCP эндпоинт `/mcp`:**\n   - Инструменты внутри покрыты (`McpToolsTest.kt`)\n   - Регистрация самого MCP-сервера не тестируется отдельно\n\n3. **Ошибки и статус-коды:**\n   - `StatusRoutesTest.kt` покрывает исключения (400, 404, 502)\n   - Тесты ошибок привязаны к конкретным эндпоинтам через роуты\n\n4. **Веб-ресурсы:**\n   - Статические файлы в `/web` тестируются через `RoutesTest.kt` (chatPage)",
+  "reasoning_chars": 2686
+}

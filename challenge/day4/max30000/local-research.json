@@ -1,0 +1,18 @@
+{
+  "name": "research",
+  "seconds": 106.544,
+  "http": 200,
+  "max_tokens": 30000,
+  "model": "qwen-local",
+  "finish": "stop",
+  "usage": {
+    "prompt_tokens": 3105,
+    "prompt_tokens_details": {
+      "cached_tokens": 1731
+    },
+    "completion_tokens": 4766,
+    "total_tokens": 7871
+  },
+  "content": "На основе предоставленного кода и описания тестов все HTTP-эндпоинты проекта покрыты тестами.\n\n**Список эндпоинтов и покрытие:**\n\n1.  `GET /api/health` — файл теста: `RoutesTest.health`\n2.  `GET /days/{date}` — файлы тестов: `DayRoutesTest.returnsLogAndScheduleForTheDay`, `DayRoutesTest.rejectsBadDate`\n3.  `GET /sprint` — файл теста: `SprintRoutesTest.returnsOnlySprintActivities`\n4.  `POST /sessions` — файл теста: `RoutesTest.passesTextThrough`\n5.  `POST /sessions/{id}/messages` — файлы тестов: `RoutesTest.passesTextThrough`, `StatusRoutesTest.blankMessageIs400`, `StatusRoutesTest.unknownSessionIs404`, `StatusRoutesTest.modelFailureIs502`\n6.  `GET /` — файл теста: `RoutesTest.chatPage`\n7.  `GET /chat.js` — файл теста: `StatusRoutesTest.chatAssetsAreServed`\n8.  `GET /chat.css` — файл теста: `StatusRoutesTest.chatAssetsAreServed`\n\n**Итог:** Непокрытых тестами эндпоинтов нет.",
+  "reasoning_chars": 16759
+}

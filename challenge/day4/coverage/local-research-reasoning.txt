@@ -1,0 +1,48 @@
+The user is asking me to analyze the codebase and identify:
+1. What HTTP endpoints exist
+2. Which endpoints are not covered by tests
+
+I need to read the provided files (Routes.kt, Module.kt, WorkMcp.kt) and the test files mentioned, then provide a structured answer with:
+- Files
+- Connections
+- Conclusions
+
+Let me analyze what I can see from the provided code:
+
+**From Routes.kt:**
+HTTP endpoints in `/api`:
+1. `GET /health` - Health check
+2. `GET /days/{date}` - Get day activities (log and schedule)
+3. `GET /sprint` - Get sprint items
+4. `POST /sessions` - Create new session
+5. `POST /sessions/{id}/messages` - Add message to session
+
+**From Module.kt:**
+- MCP endpoint at `/mcp` (from WorkMcp.kt)
+- Static resources for web UI
+
+**From WorkMcp.kt:**
+- MCP tools are registered, not HTTP endpoints per se
+- MCP path is `/mcp`
+
+**Test coverage from the file list:**
+1. `ConfigTest.kt` - defaultsPointAtS1 (config tests)
+2. `DayRoutesTest.kt` - returnsLogAndScheduleForTheDay, rejectsBadDate (covers GET /days/{date})
+3. `McpToolsTest.kt` - journalGoesThroughMcp (MCP tools)
+4. `RoutesTest.kt` - passesTextThrough, chatPage (session endpoints and web UI)
+5. `SourceRulesTest.kt` - mainSourcesKeepTheHardRules (rules validation)
+6. `StatusRoutesTest.kt` - blankMessageIs400, unknownSessionIs404, modelFailureIs502 (error handling)
+7. `ActivitySearchTest.kt` - findsByIssueKeyAndListsOnlySprint (search functionality)
+
+
+8. `ActivityStoreTest.kt` - keepsLogPlanAndBacklogApart (store tests)
+9. `SessionBookTest.kt` - rejectsBlankAndUnknownSession, keepsTheReplyAndThePreviousTurn (session logic)
+10. `ToolArgsTest.kt` - linkKeepsUppercaseHttpsAndTrimmedEdges, linkRejectsAddressWithoutScheme, linkIsOptional (tool arguments)
+
+I need to map which endpoints have test coverage and which don't. The `/health` endpoint appears untested in the provided list. The `/sessions/{id}/messages` endpoint is covered by RoutesTest.kt's passesTextThrough test. The `/sprint` endpoint lacks specific test coverage. MCP tools are tested through McpToolsTest.kt, but I should verify if all tool endpoints have corresponding tests.
+
+Looking at the test file names and their functions, I can see that DayRoutesTest covers GET /days/{date}, StatusRoutesTest handles error cases for sessions, and RoutesTest covers POST /sessions and POST /sessions/{id}/messages. The `/health` endpoint doesn't appear to have a dedicated test file.
+
+For MCP endpoints at `/mcp`, McpToolsTest.kt tests the tools but not necessarily the endpoint registration itself. I should note that the MCP path is tested through tool functionality rather than as a separate HTTP endpoint test.
+
+Let me organize this clearly for the user.

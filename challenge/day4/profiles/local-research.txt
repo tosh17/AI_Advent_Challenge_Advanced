@@ -1,0 +1,73 @@
+## Файлы
+
+| Файл | Путь |
+|------|------|
+| ToolArgs.kt | `server/src/main/kotlin/app/work/server/tool/ToolArgs.kt` |
+| Sprint.kt | `server/src/main/kotlin/app/work/server/activity/Sprint.kt` |
+| SprintRoutesTest.kt | `shared/src/test/kotlin/app/work/server/SprintRoutesTest.kt` |
+| ToolArgsTest.kt | `shared/src/test/kotlin/app/work/server/tool/ToolArgsTest.kt` |
+
+## Связи
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  GET /api/sprint → Sprint.load() → store.list(Log)          │
+│                                                               │
+│  POST /mcp (tool link) → ToolArgs.link()                     │
+│                                                               │
+│  ActivityStore.list(kind) → List<Activity>                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Выводы
+
+### 1. `ToolArgsTest.linkKeepsUppercaseHttpsAndTrimmedEdges` падает
+
+**Причина:** Проверка ссылки в `link()` чувствительна к регистру:
+
+```kotlin
+if (!value.startsWith("https://") && !value.startsWith("http://")) {
+    throw ToolInputError("Ссылка должна начинаться с http:// или https://")
+}
+```
+
+**Что видит код:**
+- `startsWith("https://")` не совпадает с `"HTTPS://"` (верхний регистр)
+- Тест передаёт `HTTPS://example.com/doc` — проверка падает на `ToolInputError`
+- Ожидалось бы: нормализовать регистр или проверить оба варианта
+
+**Что в правилах:**
+- В `.cursorrules` указано: "Пользовательские строки по-русски, идентификаторы по-английски"
+- Но не сказано про нормализацию URL — это баг в реализации
+
+### 2. `SprintRoutesTest.returnsOnlySprintActivities` падает
+
+**Причина:** `StoredSprint.load()` возвращает все `Log`, а не только спринт:
+
+```kotlin
+override suspend fun load(): SprintResponse {
+    return SprintResponse(
+        items = store.list(ActivityKind.Log).map { it.toEntry() },
+    )
+}
+```
+
+**Что видит код:**
+- Тест пишет в спринт «ревью» и журнал «созвон»
+- `store.list(ActivityKind.Log)` возвращает **все** записи вида Log
+- Нет фильтрации по дате или типу активности
+- В ответе GET /api/sprint появляются оба события
+
+**Что в архитектуре:**
+- Вид активности задаёт инструмент (`Log`, `Schedule`, `Backlog`, `Sprint`)
+- Но `store.list(kind)` не фильтрует по контексту спринта
+- Должна быть фильтрация по дате или метке спринта
+
+### Итог
+
+| Тест | Проблема | Где |
+|------|----------|-----|
+| linkKeepsUppercase... | Регистр URL в `link()` | ToolArgs.kt:47-50 |
+| returnsOnlySprintActivities | Нет фильтрации Log по спринту | Sprint.kt:13-16 |
+
+**Вывод:** Оба теста показывают несоответствие между архитектурой (вид активности = инструмент) и реализацией. Код не фильтрует по контексту, а проверяет URL без нормализации регистра.

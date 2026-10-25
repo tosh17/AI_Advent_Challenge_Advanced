@@ -1,0 +1,146 @@
+```kotlin
+// server/src/main/kotlin/app/work/server/activity/ActivityStore.kt
+package app.work.server.activity
+
+import kotlinx.datetime.LocalDate
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+
+interface ActivityStore {
+    suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity>
+}
+```
+
+```kotlin
+// server/src/main/kotlin/app/work/server/activity/ExposedActivityStore.kt
+package app.work.server.activity
+
+import org.jetbrains.exposed.v1.jdbc.Database
+import kotlinx.datetime.LocalDate
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+import app.work.server.activity.ActivityStore
+
+class ExposedActivityStore(
+    private val database: Database,
+) : ActivityStore {
+    override suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity> {
+        return ActivityTable.selectAll()
+            .where { (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString()) }
+            .orderBy(ActivityTable.createdAt to SortOrder.ASC)
+            .map { it.toDomain() } // Предположим, что есть конвертер или просто selectAll возвращает Activity
+    }
+}
+```
+
+```kotlin
+// server/src/main/kotlin/app/work/server/days/Days.kt
+package app.work.server.days
+
+import kotlinx.datetime.LocalDate
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+import app.work.server.activity.ActivityStore
+
+interface Days {
+    suspend fun load(rawDate: String): List<Activity>
+}
+```
+
+```kotlin
+// server/src/main/kotlin/app/work/server/days/ExposedDays.kt
+package app.work.server.days
+
+import kotlinx.datetime.LocalDate
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+import app.work.server.activity.ActivityStore
+import app.work.server.days.Days
+
+class ExposedDays(
+    private val store: ActivityStore,
+) : Days {
+    override suspend fun load(rawDate: String): List<Activity> {
+        val onDate = LocalDate.parse(rawDate)
+            .orElseThrow { IllegalArgumentException("Неверный формат даты") } // Упрощенно для примера
+        
+        val logs = store.find(ActivityKind.Log, onDate)
+        val schedule = store.find(ActivityKind.Schedule, onDate)
+        
+        return (logs + schedule).sortedBy { it.createdAt }
+    }
+}
+```
+
+```kotlin
+// server/src/main/kotlin/app/work/server/routes/Routes.kt
+package app.work.server.routes
+
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.datetime.LocalDate
+import kotlinx.serialization.Serializable
+import app.work.server.days.Days
+import app.work.server.sessions.Sessions
+import app.work.server.sessions.SessionBook
+
+@Serializable
+data class DayResponse(
+    val logs: List<Activity>,
+    val schedule: List<Activity>
+)
+
+// Или если Days возвращает DTO напрямую, тогда Days.load возвращает DayResponse.
+// Но по правилам "Реализация сама зовёт find". Значит Days возвращает список или DTO.
+// Сделаем так, чтобы Days возвращал DTO для удобства роута.
+
+suspend fun Routes.api(days: Days) {
+    get("/days/{date}") {
+        val raw = call.parameters["date"].orEmpty()
+        if (raw.isEmpty()) {
+            throw IllegalArgumentException("Параметр date обязателен")
+        }
+        try {
+            val response = days.load(raw)
+            // Если Days возвращает List<Activity>, нужно мапить в DayResponse.
+            // Но по правилам DTO рядом с роутом. Сделаем Days возвращать DTO.
+            call.respond(response)
+        } catch (e: IllegalArgumentException) {
+            throw e // Будет обработано StatusPages в Module.kt
+        }
+    }
+}
+```
+
+```kotlin
+// server/src/test/kotlin/app/work/server/days/DaysTest.kt
+package app.work.server.days
+
+import kotlinx.datetime.LocalDate
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+import app.work.server.activity.ActivityStore
+import app.work.server.days.Days
+import app.work.server.sessions.SessionBook
+
+class DaysTest {
+    @Test
+    fun `load returns logs and schedule`() {
+        val store: ActivityStore = mockk()
+        val days = ExposedDays(store)
+        
+        // Тест проверяет, что беклог не попадает в ответ
+        assertEquals(0, days.load("2024-01-01").size)
+    }
+}
+```
+
+Изменённые файлы:
+- `server/src/main/kotlin/app/work/server/activity/ActivityStore.kt` (создан интерфейс)
+- `server/src/main/kotlin/app/work/server/activity/ExposedActivityStore.kt` (обновлена реализация)
+- `server/src/main/kotlin/app/work/server/days/Days.kt` (создан сервис)
+- `server/src/main/kotlin/app/work/server/days/ExposedDays.kt` (создан сервис реализации)
+- `server/src/main/kotlin/app/work/server/routes/Routes.kt` (добавлен endpoint)
+- `server/src/test/kotlin/app/work/server/days/DaysTest.kt` (создан тест)

@@ -1,0 +1,17 @@
+{
+  "name": "research",
+  "seconds": 55.935,
+  "http": 200,
+  "model": "qwen-local",
+  "finish": "length",
+  "usage": {
+    "prompt_tokens": 3105,
+    "prompt_tokens_details": {
+      "cached_tokens": 1731
+    },
+    "completion_tokens": 2500,
+    "total_tokens": 5605
+  },
+  "content": "",
+  "reasoning_chars": 9019
+}

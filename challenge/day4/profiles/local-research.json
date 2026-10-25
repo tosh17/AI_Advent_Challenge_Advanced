@@ -1,0 +1,18 @@
+{
+  "name": "research",
+  "seconds": 31.11,
+  "http": 200,
+  "max_tokens": 30000,
+  "model": "qwen-local",
+  "finish": "stop",
+  "usage": {
+    "prompt_tokens": 3265,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens": 1306,
+    "total_tokens": 4571
+  },
+  "content": "## Файлы\n\n| Файл | Путь |\n|------|------|\n| ToolArgs.kt | `server/src/main/kotlin/app/work/server/tool/ToolArgs.kt` |\n| Sprint.kt | `server/src/main/kotlin/app/work/server/activity/Sprint.kt` |\n| SprintRoutesTest.kt | `shared/src/test/kotlin/app/work/server/SprintRoutesTest.kt` |\n| ToolArgsTest.kt | `shared/src/test/kotlin/app/work/server/tool/ToolArgsTest.kt` |\n\n## Связи\n\n```\n┌─────────────────────────────────────────────────────────────┐\n│  GET /api/sprint → Sprint.load() → store.list(Log)          │\n│                                                               │\n│  POST /mcp (tool link) → ToolArgs.link()                     │\n│                                                               │\n│  ActivityStore.list(kind) → List<Activity>                   │\n└─────────────────────────────────────────────────────────────┘\n```\n\n## Выводы\n\n### 1. `ToolArgsTest.linkKeepsUppercaseHttpsAndTrimmedEdges` падает\n\n**Причина:** Проверка ссылки в `link()` чувствительна к регистру:\n\n```kotlin\nif (!value.startsWith(\"https://\") && !value.startsWith(\"http://\")) {\n    throw ToolInputError(\"Ссылка должна начинаться с http:// или https://\")\n}\n```\n\n**Что видит код:**\n- `startsWith(\"https://\")` не совпадает с `\"HTTPS://\"` (верхний регистр)\n- Тест передаёт `HTTPS://example.com/doc` — проверка падает на `ToolInputError`\n- Ожидалось бы: нормализовать регистр или проверить оба варианта\n\n**Что в правилах:**\n- В `.cursorrules` указано: \"Пользовательские строки по-русски, идентификаторы по-английски\"\n- Но не сказано про нормализацию URL — это баг в реализации\n\n### 2. `SprintRoutesTest.returnsOnlySprintActivities` падает\n\n**Причина:** `StoredSprint.load()` возвращает все `Log`, а не только спринт:\n\n```kotlin\noverride suspend fun load(): SprintResponse {\n    return SprintResponse(\n        items = store.list(ActivityKind.Log).map { it.toEntry() },\n    )\n}\n```\n\n**Что видит код:**\n- Тест пишет в спринт «ревью» и журнал «созвон»\n- `store.list(ActivityKind.Log)` возвращает **все** записи вида Log\n- Нет фильтрации по дате или типу активности\n- В ответе GET /api/sprint появляются оба события\n\n**Что в архитектуре:**\n- Вид активности задаёт инструмент (`Log`, `Schedule`, `Backlog`, `Sprint`)\n- Но `store.list(kind)` не фильтрует по контексту спринта\n- Должна быть фильтрация по дате или метке спринта\n\n### Итог\n\n| Тест | Проблема | Где |\n|------|----------|-----|\n| linkKeepsUppercase... | Регистр URL в `link()` | ToolArgs.kt:47-50 |\n| returnsOnlySprintActivities | Нет фильтрации Log по спринту | Sprint.kt:13-16 |\n\n**Вывод:** Оба теста показывают несоответствие между архитектурой (вид активности = инструмент) и реализацией. Код не фильтрует по контексту, а проверяет URL без нормализации регистра.",
+  "reasoning_chars": 2288
+}

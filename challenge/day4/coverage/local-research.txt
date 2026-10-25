@@ -1,0 +1,50 @@
+# Анализ HTTP-эндпоинтов и покрытия тестами
+
+## 📁 Файлы
+
+| Файл | Описание |
+|------|----------|
+| `server/src/main/kotlin/app/work/server/Routes.kt` | Определение роутов API |
+| `server/src/main/kotlin/app/work/server/Module.kt` | Сборка модуля, установка роутов и статус-страниц |
+| `server/src/main/kotlin/app/work/server/mcp/WorkMcp.kt` | MCP сервер с инструментами |
+| `server/src/test/kotlin/app/work/server/DayRoutesTest.kt` | Тесты для `/days/{date}` |
+| `server/src/test/kotlin/app/work/server/RoutesTest.kt` | Тесты для сессий и веб-страницы |
+| `server/src/test/kotlin/app/work/server/StatusRoutesTest.kt` | Тесты ошибок (400, 404, 502) |
+| `server/src/test/kotlin/app/work/server/McpToolsTest.kt` | Тесты MCP инструментов |
+
+## 🔗 Связи
+
+```
+Module.kt → api(sessions, days, sprint) → Routes.kt
+Routes.kt → роуты /api/* и статические ресурсы /web
+WorkMcp.kt → MCP путь /mcp с инструментами ActivityKind.*
+StatusPages в Module.kt → перехват исключений BlankMessage, BadDate, SessionNotFound, ModelFailure
+```
+
+## 📋 Эндпоинты и покрытие тестами
+
+| Эндпоинт | Метод | Файл теста | Статус |
+|----------|-------|------------|--------|
+| `/api/health` | GET | Нет | ❌ Не покрыт |
+| `/api/days/{date}` | GET | `DayRoutesTest.kt` (returnsLogAndScheduleForTheDay, rejectsBadDate) | ✅ Покрыт |
+| `/api/sprint` | GET | Нет | ❌ Не покрыт |
+| `/api/sessions` | POST | `RoutesTest.kt` (passesTextThrough) | ✅ Покрыт |
+| `/api/sessions/{id}/messages` | POST | `RoutesTest.kt` (passesTextThrough, chatPage) + `StatusRoutesTest.kt` | ✅ Покрыт |
+| `/mcp` | MCP | `McpToolsTest.kt` (journalGoesThroughMcp) | ⚠️ Инструменты покрыты, регистрация эндпоинта нет |
+
+## 📌 Выводы
+
+1. **Эндпоинты без тестов:**
+   - `/api/health` — нет теста для проверки статуса сервера
+   - `/api/sprint` — нет теста для получения списка спринта
+
+2. **MCP эндпоинт `/mcp`:**
+   - Инструменты внутри покрыты (`McpToolsTest.kt`)
+   - Регистрация самого MCP-сервера не тестируется отдельно
+
+3. **Ошибки и статус-коды:**
+   - `StatusRoutesTest.kt` покрывает исключения (400, 404, 502)
+   - Тесты ошибок привязаны к конкретным эндпоинтам через роуты
+
+4. **Веб-ресурсы:**
+   - Статические файлы в `/web` тестируются через `RoutesTest.kt` (chatPage)

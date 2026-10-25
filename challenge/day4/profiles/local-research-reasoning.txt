@@ -1,0 +1,36 @@
+The user is asking me to analyze why two tests are failing in the repository. I need to read the relevant code files and understand the architecture without making any changes.
+
+Let me trace through what I can see:
+
+1. **ToolArgsTest.linkKeepsUppercaseHttpsAndTrimmedEdges** - This test fails because `link()` function checks if the link starts with "http://" or "https://", but the test is passing "HTTPS://example.com/doc" (uppercase HTTPS). The current code uses `startsWith("https://")` which is case-sensitive.
+
+2. **SprintRoutesTest.returnsOnlySprintActivities** - This test writes to sprint "review" and journal "call", then calls GET /api/sprint. It expects only sprint activities but gets both. Looking at the Sprint.kt code, `StoredSprint.load()` calls `store.list(ActivityKind.Log)` which returns ALL log activities, not just sprint ones.
+
+Let me analyze what I can see from the provided code:
+
+**ToolArgs.kt:**
+- The `link()` function checks `!value.startsWith("https://") && !value.startsWith("http://")`
+- This is case-sensitive, so "HTTPS://" won't match "https://"
+- The test expects uppercase HTTPS to be trimmed and normalized
+
+**Sprint.kt:**
+- `StoredSprint.load()` calls `store.list(ActivityKind.Log)` 
+- This returns ALL activities of kind Log, not filtered by sprint
+- The test writes to both sprint and journal, but the endpoint returns all logs
+
+The issues are:
+1. **Case sensitivity in link validation** - Should handle "HTTPS://" same as "https://"
+2. **Sprint endpoint filtering** - Currently returns all Log activities, but should filter by sprint date or some other criteria
+
+
+3. I need to check what `store.list()` actually does and whether there's a way to filter by sprint
+
+Looking at the architecture rules:
+- Tools live in MCP POST /mcp
+- Activities have kinds: Log, Schedule, Backlog, Sprint
+- The view of activity determines the tool (Log, Schedule, Backlog, Sprint)
+- Number and link are optional
+
+For the sprint test failure, I need to understand if there's supposed to be filtering by date or some other criteria. The current implementation just returns all Log activities.
+
+I should also check what `store.list()` does - it might not exist in the provided code, which means I'm working with incomplete information about the ActivityStore interface.

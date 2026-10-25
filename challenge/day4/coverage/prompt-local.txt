@@ -1,0 +1,415 @@
+---
+name: research
+description: Исследует кодовую базу рабочего помощника и отвечает структурой, без правок. Use when the user asks how something works, which endpoints exist, or what is not covered by tests.
+---
+
+Ты отвечаешь на вопрос по этому репозиторию. Код не меняешь.
+
+Должен:
+
+1. Прочитай `.cursor/rules` и `.cursorrules`, затем файлы, на которые опирается вопрос.
+2. Иди по вызовам: роут, интерфейс, реализация, тест. Не останавливайся на имени файла.
+3. Отделяй то, что увидел в коде, от догадки.
+4. В ответе три блока: файлы, связи, выводы.
+
+Не должен:
+
+1. Не меняй файлы, не добавляй тесты, не коммить.
+2. Не предлагай патч вместо ответа.
+3. Не разбирай вопрос регулярными выражениями и не подменяй чтение кода поиском одного слова.
+4. Не выдумывай эндпоинты, инструменты и таблицы, которых нет в дереве.
+
+
+Какие HTTP-эндпоинты есть и какие из них не покрыты тестами?
+В конце перечисли эндпоинты. Для каждого укажи файл теста или напиши, что теста нет. Код не меняй.
+
+Routes.kt:
+
+package app.work.server
+
+import app.work.server.activity.Days
+import app.work.server.activity.Sprint
+import app.work.server.session.Turns
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import kotlinx.serialization.Serializable
+
+fun Route.api(sessions: Turns, days: Days, sprint: Sprint) {
+    route("/api") {
+        get("/health") {
+            call.respond(Health("ok"))
+        }
+        get("/days/{date}") {
+            val raw = call.parameters["date"].orEmpty()
+            call.respond(days.load(raw))
+        }
+        get("/sprint") {
+            call.respond(sprint.load())
+        }
+        post("/sessions") {
+            call.respond(SessionCreated(sessions.open()))
+        }
+        post("/sessions/{id}/messages") {
+            val id = call.parameters["id"].orEmpty()
+            val body = call.receive<IncomingMessage>()
+            call.respond(sessions.message(id, body.text))
+        }
+    }
+}
+
+@Serializable
+data class Health(val status: String)
+
+@Serializable
+data class SessionCreated(val id: String)
+
+@Serializable
+data class IncomingMessage(val text: String)
+
+@Serializable
+data class TurnResponse(
+    val reply: String,
+    val calls: List<CallResponse>,
+)
+
+@Serializable
+data class CallResponse(
+    val tool: String,
+    val result: String,
+)
+
+@Serializable
+data class DayResponse(
+    val date: String,
+    val log: List<DayEntry>,
+    val schedule: List<DayEntry>,
+)
+
+@Serializable
+data class DayEntry(
+    val id: String,
+    val summary: String,
+    val issueKey: String?,
+    val link: String?,
+    val createdAt: String,
+)
+
+@Serializable
+data class SprintResponse(
+    val items: List<SprintEntry>,
+)
+
+@Serializable
+data class SprintEntry(
+    val id: String,
+    val summary: String,
+    val issueKey: String?,
+    val link: String?,
+    val createdAt: String,
+)
+
+
+Module.kt:
+
+package app.work.server
+
+import app.work.server.activity.Days
+import app.work.server.activity.Sprint
+import app.work.server.session.BlankMessage
+import app.work.server.session.SessionNotFound
+import app.work.server.session.Turns
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.http.content.staticResources
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respond
+import io.ktor.server.routing.routing
+import kotlinx.serialization.Serializable
+
+fun Application.module(sessions: Turns, days: Days, sprint: Sprint) {
+    install(ContentNegotiation) {
+        json()
+    }
+    install(StatusPages) {
+        exception<BlankMessage> { call, _ ->
+            call.respond(HttpStatusCode.BadRequest, ErrorBody("Пустое сообщение"))
+        }
+        exception<BadDate> { call, _ ->
+            call.respond(HttpStatusCode.BadRequest, ErrorBody("Неверная дата"))
+        }
+        exception<SessionNotFound> { call, _ ->
+            call.respond(HttpStatusCode.NotFound, ErrorBody("Сессия не найдена"))
+        }
+        exception<ModelFailure> { call, error ->
+            call.respond(HttpStatusCode.BadGateway, ErrorBody(error.message ?: "Модель недоступна"))
+        }
+    }
+    routing {
+        api(sessions, days, sprint)
+        staticResources("/", "web", index = "index.html")
+    }
+}
+
+class BadDate : RuntimeException()
+
+class ModelFailure(message: String) : RuntimeException(message)
+
+@Serializable
+data class ErrorBody(val error: String)
+
+
+WorkMcp.kt:
+
+package app.work.server.mcp
+
+import io.ktor.server.application.Application
+import io.modelcontextprotocol.kotlin.sdk.server.Server
+import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
+import io.modelcontextprotocol.kotlin.sdk.server.mcpStatelessStreamableHttp
+import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
+import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
+import io.modelcontextprotocol.kotlin.sdk.types.error
+import io.modelcontextprotocol.kotlin.sdk.types.success
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.slf4j.LoggerFactory
+
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+import app.work.domain.ActivityStore
+import app.work.domain.NewActivity
+import app.work.server.tool.ToolInputError
+import app.work.server.tool.isoDate
+import app.work.server.tool.issueKey
+import app.work.server.tool.link
+import app.work.server.tool.summary
+import app.work.server.tool.text
+
+private val logger = LoggerFactory.getLogger("app.work.server.mcp")
+
+fun Application.workMcp(store: ActivityStore) {
+    mcpStatelessStreamableHttp(path = "/mcp") {
+        workServer(store)
+    }
+}
+
+fun workServer(store: ActivityStore): Server {
+    val server = Server(
+        serverInfo = Implementation(name = "work-assistant", version = "0.1.0"),
+        options = ServerOptions(
+            capabilities = ServerCapabilities(
+                tools = ServerCapabilities.Tools(listChanged = false),
+            ),
+        ),
+    )
+    server.activities(store)
+    return server
+}
+
+private fun Server.activities(store: ActivityStore) {
+    val refs = arrayOf(
+        "issue_key" to "Номер задачи, если человек его назвал. Иначе не передавай",
+        "link" to "Ссылка http или https, если человек её дал. Иначе не передавай",
+    )
+    tool(
+        name = "activities_log",
+        description = "Записать в журнал, чем человек занимался в указанный день. Не план, не беклог и не спринт. Номер и ссылка необязательны.",
+        schema = schema(
+            required = listOf("summary", "on_date"),
+            "summary" to "Суть своими словами, без выдуманных деталей",
+            "on_date" to "День журнала, YYYY-MM-DD",
+            *refs,
+        ),
+    ) { args ->
+        val saved = store.add(
+            NewActivity(
+                summary = args.summary(),
+                kind = ActivityKind.Log,
+                issueKey = args.issueKey(),
+                onDate = args.isoDate("on_date"),
+                link = args.link(),
+            ),
+        )
+        "Записано в журнал ${saved.onDate}: ${saved.line()}"
+    }
+    tool(
+        name = "activities_schedule",
+        description = "Запланировать активность на день. Это не журнал, не беклог и не спринт. Номер и ссылка необязательны.",
+        schema = schema(
+            required = listOf("summary", "on_date"),
+            "summary" to "Что запланировать",
+            "on_date" to "День плана, YYYY-MM-DD",
+            *refs,
+        ),
+    ) { args ->
+        val saved = store.add(
+            NewActivity(
+                summary = args.summary(),
+                kind = ActivityKind.Schedule,
+                issueKey = args.issueKey(),
+                onDate = args.isoDate("on_date"),
+                link = args.link(),
+            ),
+        )
+        "Запланировано на ${saved.onDate}: ${saved.line()}"
+    }
+    tool(
+        name = "activities_backlog",
+        description = "Положить активность в беклог без даты. В спринт не кладёт. Номер и ссылка необязательны.",
+        schema = schema(
+            required = listOf("summary"),
+            "summary" to "Что отложить в беклог",
+            *refs,
+        ),
+    ) { args ->
+        val saved = store.add(
+            NewActivity(
+                summary = args.summary(),
+                kind = ActivityKind.Backlog,
+                issueKey = args.issueKey(),
+                onDate = null,
+                link = args.link(),
+            ),
+        )
+        "В беклоге: ${saved.line()}"
+    }
+    tool(
+        name = "activities_add_to_sprint",
+        description = "Отметить активность в текущем спринте локально. Это не план на день. Номер и ссылка необязательны.",
+        schema = schema(
+            required = listOf("summary"),
+            "summary" to "Что добавить в спринт",
+            *refs,
+        ),
+    ) { args ->
+        val saved = store.add(
+            NewActivity(
+                summary = args.summary(),
+                kind = ActivityKind.Sprint,
+                issueKey = args.issueKey(),
+                onDate = null,
+                link = args.link(),
+            ),
+        )
+        "В текущем спринте: ${saved.line()}"
+    }
+    tool(
+        name = "activities_list_day",
+        description = "Журнал за день: чем человек уже занимался. Не план, не беклог и не спринт.",
+        schema = schema(required = listOf("date"), "date" to "День, YYYY-MM-DD"),
+    ) { args ->
+        val day = args.isoDate("date")
+        val rows = store.find(ActivityKind.Log, day)
+        if (rows.isEmpty()) "За $day в журнале пусто" else rows.joinToString("\n") { it.line() }
+    }
+    tool(
+        name = "activities_plan",
+        description = "Что запланировано на день. Не журнал, не беклог и не спринт.",
+        schema = schema(required = listOf("date"), "date" to "День, YYYY-MM-DD"),
+    ) { args ->
+        val day = args.isoDate("date")
+        val rows = store.find(ActivityKind.Schedule, day)
+        if (rows.isEmpty()) "На $day ничего не запланировано" else rows.joinToString("\n") { it.line() }
+    }
+    tool(
+        name = "activities_list_sprint",
+        description = "Что отмечено в текущем спринте локально.",
+        schema = schema(required = emptyList()),
+    ) { _ ->
+        val rows = store.list(ActivityKind.Sprint)
+        if (rows.isEmpty()) "В текущем спринте пусто" else rows.joinToString("\n") { it.line() }
+    }
+    tool(
+        name = "activities_find",
+        description = "Найти уже записанное по словам, номеру задачи или ссылке. Ищет журнал, план, беклог и спринт. Внешних систем нет.",
+        schema = schema(required = listOf("query"), "query" to "Что искать среди уже записанного"),
+    ) { args ->
+        val query = args.text("query")
+        val rows = store.search(query)
+        if (rows.isEmpty()) "Ничего не записано по этому запросу" else rows.joinToString("\n") { row ->
+            listOfNotNull(row.kind.name, row.onDate?.toString(), row.line()).joinToString(" ")
+        }
+    }
+}
+
+private fun Activity.line(): String = listOfNotNull(issueKey, link, summary).joinToString(" ")
+
+private fun Server.tool(
+    name: String,
+    description: String,
+    schema: ToolSchema,
+    block: suspend (JsonObject) -> String,
+) {
+    addTool(name = name, description = description, inputSchema = schema) { request ->
+        try {
+            CallToolResult.success(block(request.arguments ?: JsonObject(emptyMap())))
+        } catch (error: ToolInputError) {
+            CallToolResult.error(error.message ?: "неверные аргументы")
+        } catch (error: Exception) {
+            logger.warn("tool {} failed", name, error)
+            CallToolResult.error(error.message ?: "ошибка инструмента")
+        }
+    }
+}
+
+private fun schema(required: List<String>, vararg fields: Pair<String, String>): ToolSchema = ToolSchema(
+    properties = buildJsonObject {
+        fields.forEach { (field, description) ->
+            put(field, buildJsonObject {
+                put("type", "string")
+                put("description", description)
+            })
+        }
+    },
+    required = required,
+)
+
+
+Файлы тестов и функции в них:
+
+server/src/test/kotlin/app/work/server/ConfigTest.kt
+  - defaultsPointAtS1
+
+server/src/test/kotlin/app/work/server/DayRoutesTest.kt
+  - returnsLogAndScheduleForTheDay
+  - rejectsBadDate
+
+server/src/test/kotlin/app/work/server/McpToolsTest.kt
+  - journalGoesThroughMcp
+
+server/src/test/kotlin/app/work/server/RoutesTest.kt
+  - passesTextThrough
+  - chatPage
+
+server/src/test/kotlin/app/work/server/SourceRulesTest.kt
+  - mainSourcesKeepTheHardRules
+
+server/src/test/kotlin/app/work/server/StatusRoutesTest.kt
+  - blankMessageIs400
+  - unknownSessionIs404
+  - modelFailureIs502
+
+server/src/test/kotlin/app/work/server/activity/ActivitySearchTest.kt
+  - findsByIssueKeyAndListsOnlySprint
+
+server/src/test/kotlin/app/work/server/activity/ActivityStoreTest.kt
+  - keepsLogPlanAndBacklogApart
+
+server/src/test/kotlin/app/work/server/session/SessionBookTest.kt
+  - rejectsBlankAndUnknownSession
+  - keepsTheReplyAndThePreviousTurn
+
+server/src/test/kotlin/app/work/server/tool/ToolArgsTest.kt
+  - linkKeepsUppercaseHttpsAndTrimmedEdges
+  - linkRejectsAddressWithoutScheme
+  - linkIsOptional

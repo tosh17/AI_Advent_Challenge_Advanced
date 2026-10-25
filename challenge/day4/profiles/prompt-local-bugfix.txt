@@ -1,0 +1,125 @@
+---
+name: bug-fix
+description: Чинит баг рабочего помощника. Сам находит причину, правит код, проверяет что остальное живо. Use when the user reports a bug, a failing test, or broken behavior.
+---
+
+Ты чинишь баг в этом репозитории. Причину ищешь сам.
+
+Должен:
+
+1. Прочитай `.cursor/rules` и `.cursorrules`.
+2. Найди место в коде по симптому. Открой связанные файлы, а не один первый попавшийся.
+3. Запусти тесты, которые покрывают это место, и посмотри их вывод.
+4. Почини причину. Не замазывай симптом.
+5. Проверь, что старые тесты на соседнее поведение проходят. Если проверки на этот баг не было, добавь её.
+6. В ответе три блока: что нашёл, что починил, что проверил.
+
+Не должен:
+
+1. Не игнорируй падающий тест и не выключай его.
+2. Не разбирай свободный текст пользователя через `contains` и регулярные выражения.
+3. Не вызывай `ActivityStore` из роута и не пиши SQL строкой.
+4. Не возвращай запросы в Jira и Confluence.
+5. Не меняй правила, скиллы и другие профили.
+6. Не коммить и не пушь.
+
+
+Почини эти два падения. Тесты не выключай. В ответе покажи исправленные функции целиком и три блока: что нашёл, что починил, что проверил.
+
+Падают два теста. Прогон: 4 теста, 2 упали, 20,39 с.
+
+1. ToolArgsTest.linkKeepsUppercaseHttpsAndTrimmedEdges
+   app.work.server.tool.ToolInputError: Ссылка должна начинаться с http:// или https://
+   Место: ToolArgsTest.kt:15, аргумент HTTPS://example.com/doc
+   Тот же тест ещё проверяет пробелы по краям и обычные http:// и https://.
+
+2. SprintRoutesTest.returnsOnlySprintActivities
+   expected: <[ревью]> but was: <[созвон]>
+   Тест пишет в спринт «ревью» и в журнал «созвон», затем вызывает GET /api/sprint.
+
+Текущий ToolArgs.kt:
+
+package app.work.server.tool
+
+import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
+class ToolInputError(message: String) : IllegalArgumentException(message)
+
+fun JsonObject.text(name: String): String {
+    val value = this[name] ?: throw ToolInputError("Нужно поле $name")
+    if (value is JsonNull) throw ToolInputError("Нужно поле $name")
+    val text = value.jsonPrimitive.content
+    if (text.isBlank()) throw ToolInputError("Пустое поле $name")
+    return text
+}
+
+fun JsonObject.optionalText(name: String): String? {
+    val value = this[name] ?: return null
+    if (value is JsonNull) return null
+    return value.jsonPrimitive.content.takeIf { it.isNotBlank() }
+}
+
+fun JsonObject.isoDate(name: String): LocalDate {
+    val raw = text(name)
+    return try {
+        LocalDate.parse(raw)
+    } catch (_: IllegalArgumentException) {
+        throw ToolInputError("Поле $name должно быть датой YYYY-MM-DD")
+    }
+}
+
+fun JsonObject.summary(): String {
+    val value = text("summary")
+    if (value.length > 2_000) throw ToolInputError("Слишком длинное описание")
+    return value.trim()
+}
+
+fun JsonObject.issueKey(): String? {
+    val value = optionalText("issue_key") ?: return null
+    if (value.length > 40) throw ToolInputError("Слишком длинный номер задачи")
+    if (value.any { it.isWhitespace() }) throw ToolInputError("В номере задачи не должно быть пробелов")
+    return value
+}
+
+fun JsonObject.link(): String? {
+    val value = optionalText("link") ?: return null
+    if (value.length > 2_000) throw ToolInputError("Слишком длинная ссылка")
+    if (!value.startsWith("https://") && !value.startsWith("http://")) {
+        throw ToolInputError("Ссылка должна начинаться с http:// или https://")
+    }
+    return value
+}
+
+
+Текущий Sprint.kt:
+
+package app.work.server.activity
+
+import app.work.domain.Activity
+import app.work.domain.ActivityKind
+import app.work.domain.ActivityStore
+import app.work.server.SprintEntry
+import app.work.server.SprintResponse
+
+interface Sprint {
+    suspend fun load(): SprintResponse
+}
+
+class StoredSprint(private val store: ActivityStore) : Sprint {
+    override suspend fun load(): SprintResponse {
+        return SprintResponse(
+            items = store.list(ActivityKind.Log).map { it.toEntry() },
+        )
+    }
+}
+
+private fun Activity.toEntry() = SprintEntry(
+    id = id,
+    summary = summary,
+    issueKey = issueKey,
+    link = link,
+    createdAt = createdAt.toString(),
+)

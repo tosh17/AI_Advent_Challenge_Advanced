@@ -1,0 +1,251 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   **Role:** Code assistant for a work helper (low temperature, short answers, follow rules).
+    *   **Task:** List existing HTTP endpoints and indicate which ones are not covered by tests based on the provided code snippet and test list.
+    *   **Constraints:** Do not invent code outside the given message. Write in Russian. Follow `.cursorrules` (Kotlin 2.4, Multiplatform, specific naming, etc.).
+    *   **Input Data:**
+        *   Code snippet: `server/src/main/kotlin/app/work/server/Module.kt` (implied structure based on imports and functions).
+        *   Test list provided in the prompt.
+    *   **Goal:** Map endpoints from code to tests, identify missing test coverage.
+
+2.  **Extract Endpoints from Code:**
+    Looking at the `api` function in the provided snippet:
+    *   `GET /api/health` (via `get("/health")`)
+    *   `GET /days/{date}` (via `get("/days/{date}")`)
+    *   `GET /sprint` (via `get("/sprint")`)
+    *   `POST /sessions` (via `post("/sessions")`)
+    *   `POST /sessions/{id}/messages` (via `post("/sessions/{id}/messages")`)
+
+    Looking at the test list provided in the prompt:
+    *   `RoutesTest.health` -> `GET /api/health`
+    *   `RoutesTest.passesTextThrough` -> `POST /api/sessions`, `POST /api/sessions/{id}/messages`
+    *   `RoutesTest.chatPage` -> `GET /` (Note: This is not in the code snippet provided, but mentioned in tests. The prompt asks "Which HTTP endpoints exist and which are not covered by tests?". I need to check if `/` exists in the code or if it's implied. The code snippet shows `fun Route.api(...)`. Usually, there's a main module mounting this. The test list mentions `GET /`. If the code snippet doesn't show `/`, but the test exists, is it covered? The prompt asks "Which HTTP endpoints exist". Based *only* on the provided code snippet, `/` is not visible in the `api` function. However, the test list says `RoutesTest.chatPage — GET /`. I must report based on the provided info.
+    *   `DayRoutesTest.returnsLogAndScheduleForTheDay` -> `GET /api/days/2026-10-23`
+    *   `DayRoutesTest.rejectsBadDate` -> `GET /api/days/2026-13-01` (Same endpoint, different test case)
+    *   `SprintRoutesTest.returnsOnlySprintActivities` -> `GET /api/sprint`
+    *   `StatusRoutesTest.blankMessageIs400` -> `POST /sessions/{id}/messages` (Error handling)
+    *   `StatusRoutesTest.unknownSessionIs404` -> `POST /sessions/{id}/messages` (Error handling)
+    *   `StatusRoutesTest.modelFailureIs502` -> `POST /sessions/{id}/messages` (Error handling)
+    *   `StatusRoutesTest.chatAssetsAreServed` -> `GET /chat.js`, `GET /chat.css` (Static assets, not in the `api` function snippet but mentioned in tests).
+
+    Wait, I need to be careful. The prompt says "Code do not invent outside of what is given".
+    The code snippet provided shows the `api` routing block.
+    It does *not* show the static asset routes (`/chat.js`, `/chat.css`) or the root route (`GET /`).
+    However, the test list explicitly mentions tests for them (`RoutesTest.chatPage`, `StatusRoutesTest.chatAssetsAreServed`).
+    The question is: "Which HTTP endpoints exist and which of them are not covered by tests?"
+
+    If I strictly follow "Code do not invent outside of what is given", I should only list endpoints visible in the provided code snippet *or* infer from the test list if they are mentioned as existing.
+    Actually, the prompt asks based on the context (the project state). The test list implies these endpoints exist.
+    Let's look at the mapping:
+
+    1.  `GET /api/health` -> Covered (`RoutesTest.health`)
+    2.  `GET /days/{date}` -> Covered (`DayRoutesTest...`)
+    3.  `GET /sprint` -> Covered (`SprintRoutesTest...`)
+    4.  `POST /sessions` -> Covered (`RoutesTest.passesTextThrough`)
+    5.  `POST /sessions/{id}/messages` -> Covered (`RoutesTest.passesTextThrough`, `StatusRoutesTest...`)
+    6.  `GET /` (Chat page) -> Test exists (`RoutesTest.chatPage`). Does the code show it? No, but the test implies it. The instruction says "Code do not invent outside of what is given". But I am analyzing the *state* described by the text + code. If a test exists for an endpoint, does that mean the endpoint exists? Yes, usually.
+    7.  `GET /chat.js`, `GET /chat.css` -> Test exists (`StatusRoutesTest.chatAssetsAreServed`). Do they exist in the code snippet? No. But they are mentioned as existing assets served by the server.
+
+    However, the instruction "Code do not invent outside of what is given" usually means "Don't write new code". It doesn't necessarily mean "Ignore information provided in the text about existing things".
+    But wait, looking closely at the prompt: "В конце перечисли эндпоинты. Для каждого укажи файл теста или напиши, что теста нет." (At the end list endpoints. For each indicate test file or write that there is no test).
+
+    Let's check coverage based on the provided text:
+    *   `GET /api/health`: Test `RoutesTest.health`.
+    *   `GET /days/{date}`: Tests `DayRoutesTest.returnsLogAndScheduleForTheDay`, `DayRoutesTest.rejectsBadDate`.
+    *   `GET /sprint`: Test `SprintRoutesTest.returnsOnlySprintActivities`.
+    *   `POST /sessions`: Test `RoutesTest.passesTextThrough`.
+    *   `POST /sessions/{id}/messages`: Tests `RoutesTest.passesTextThrough`, `StatusRoutesTest.blankMessageIs400`, `StatusRoutesTest.unknownSessionIs404`, `StatusRoutesTest.modelFailureIs502`.
+    *   `GET /` (Chat page): Test `RoutesTest.chatPage`.
+    *   `GET /chat.js`: Test `StatusRoutesTest.chatAssetsAreServed`.
+    *   `GET /chat.css`: Test `StatusRoutesTest.chatAssetsAreServed`.
+
+    Are there any endpoints mentioned in the code that lack tests?
+    The code snippet shows:
+    - `/api/health`
+    - `/days/{date}`
+    - `/sprint`
+    - `/sessions`
+    - `/sessions/{id}/messages`
+
+    All of these have corresponding tests listed.
+    What about `GET /` and static assets? They are mentioned in the test list but not in the code snippet. However, since the question asks "Which HTTP endpoints exist", I should probably include them if the text implies they exist (via tests). But strictly speaking, based *only* on the code snippet provided, `/` and assets aren't there.
+    However, the prompt provides a list of tests at the bottom: "Тесты и что они вызывают". This implies these are the known endpoints in the system state.
+    So I should list all endpoints mentioned in the test descriptions + code.
+
+    Wait, is there any endpoint in the code that has NO test?
+    Code:
+    1. `/api/health` -> Test `RoutesTest.health`.
+    2. `/days/{date}` -> Tests `DayRoutesTest.*`.
+    3. `/sprint` -> Test `SprintRoutesTest.*`.
+    4. `/sessions` -> Test `RoutesTest.passesTextThrough`.
+    5. `/sessions/{id}/messages` -> Tests `RoutesTest.passesTextThrough`, `StatusRoutesTest.*`.
+
+    It seems all API endpoints in the snippet are covered.
+    What about the static assets? They are mentioned in tests (`GET /chat.js`, `GET /chat.css`). Are they considered "HTTP endpoints"? Yes. Do they have tests? Yes (`StatusRoutesTest.chatAssetsAreServed`).
+    What about `GET /`? Test `RoutesTest.chatPage`.
+
+    So, based on the provided text (Code + Test List), all mentioned endpoints seem to be covered.
+    Is there any endpoint *not* covered?
+    Maybe the prompt implies I should check if the code snippet matches the tests perfectly.
+    The code snippet defines `api` function.
+    The test list mentions `GET /`. The code snippet does not show `get("/")`.
+    If I strictly follow "Code do not invent outside of what is given", I might say `/` doesn't exist in the provided code, but the test implies it.
+    However, usually, these tasks want me to identify gaps.
+    Let's look at the instruction: "В конце перечисли эндпоинты. Для каждого укажи файл теста или напиши, что теста нет." (At the end list endpoints. For each indicate test file or write that there is no test).
+
+    I will list the endpoints found in the code snippet and the static assets mentioned in tests as existing endpoints.
+    If an endpoint exists (implied by test) but isn't in the code snippet, I should probably mention it if the text says "Tests...".
+    Actually, the safest interpretation: List endpoints visible in the code + endpoints implied by the test list provided in the prompt description.
+    Since all listed tests map to an endpoint mentioned either in code or test description, there are no uncovered endpoints *based on the provided information*.
+    Wait, `StatusRoutesTest.chatAssetsAreServed` covers `/chat.js` and `/chat.css`.
+    `RoutesTest.chatPage` covers `/`.
+
+    So:
+    1. GET /api/health -> RoutesTest.health
+    2. GET /days/{date} -> DayRoutesTest.returnsLogAndScheduleForTheDay, DayRoutesTest.rejectsBadDate
+    3. GET /sprint -> SprintRoutesTest.returnsOnlySprintActivities
+    4. POST /sessions -> RoutesTest.passesTextThrough
+    5. POST /sessions/{id}/messages -> RoutesTest.passesTextThrough, StatusRoutesTest.blankMessageIs400, StatusRoutesTest.unknownSessionIs404, StatusRoutesTest.modelFailureIs502
+    6. GET / -> RoutesTest.chatPage
+    7. GET /chat.js -> StatusRoutesTest.chatAssetsAreServed
+    8. GET /chat.css -> StatusRoutesTest.chatAssetsAreServed
+
+    Are there any endpoints in the code that are NOT tested?
+    The code snippet shows exactly these routes inside `route("/api")`.
+    Plus static assets (usually configured in Ktor, not shown in snippet but mentioned in tests).
+    So all seem covered.
+
+    Wait, check the instruction again: "Код не выдумывай за пределами того, что дано в сообщении." (Do not invent code outside of what is given in the message).
+    This means I shouldn't assume routes exist that aren't mentioned. But the test list *is* part of the message. So I can use it to confirm existence.
+    However, if a route exists in the code but has no test in the list -> Not covered.
+    If a route is only in tests (like `/`) -> Does it exist? The prompt says "Tests and what they call". It implies these are the known endpoints.
+    I will list all unique endpoints mentioned in the text (Code + Test descriptions).
+
+    Let's refine the list:
+    1. `GET /api/health` - Covered (`RoutesTest.health`)
+    2. `GET /days/{date}` - Covered (`DayRoutesTest.*`)
+    3. `GET /sprint` - Covered (`SprintRoutesTest.returnsOnlySprintActivities`)
+    4. `POST /sessions` - Covered (`RoutesTest.passesTextThrough`)
+    5. `POST /sessions/{id}/messages` - Covered (`RoutesTest.passesTextThrough`, `StatusRoutesTest.*`)
+    6. `GET /` - Covered (`RoutesTest.chatPage`)
+    7. `GET /chat.js` - Covered (`StatusRoutesTest.chatAssetsAreServed`)
+    8. `GET /chat.css` - Covered (`StatusRoutesTest.chatAssetsAreServed`)
+
+    Is there any endpoint missing a test?
+    Based on the provided text, no. All endpoints mentioned have at least one test case listed.
+    Wait, `POST /sessions/{id}/messages` has multiple tests.
+    `GET /days/{date}` has two tests (success and bad date).
+
+    I need to format this clearly.
+    Language: Russian.
+    Short answer.
+    Low temperature style (concise).
+
+    Structure:
+    List endpoints.
+    For each, test file/class name.
+    If no test -> "теста нет".
+
+    Wait, one detail: `StatusRoutesTest.chatAssetsAreServed` covers both `.js` and `.css`. I can list them together or separately. Separately is clearer for "each endpoint".
+    Also, the prompt asks "Какие HTTP-эндпоинты есть" (Which HTTP endpoints exist).
+    Based on the code snippet + test list provided in the prompt.
+    Code snippet has: `/api/health`, `/days/{date}`, `/sprint`, `/sessions`, `/sessions/{id}/messages`.
+    Test list adds: `/`, `/chat.js`, `/chat.css`.
+    I will include all of them as "existing" because the test list confirms their existence in the system context.
+
+    Wait, is there any nuance? "Код не выдумывай за пределами того, что дано в сообщении."
+    If I say `/` exists, am I inventing code? The test list says `RoutesTest.chatPage — GET /`. This implies it exists in the project context. I will include it.
+
+    Final check on constraints:
+    - Russian language.
+    - Short answer.
+    - Follow rules (no markdown heavy stuff if not needed, but list is needed).
+    - No invented code.
+
+    Plan:
+    1. List endpoints found in `api` function + static assets from test descriptions.
+    2. Map to tests provided in the text.
+    3. State coverage status (all covered based on provided info).
+
+    Wait, looking at the instruction "В конце перечисли эндпоинты." (At the end list endpoints).
+    Okay, I will write a brief intro and then the list.
+
+    Endpoints:
+    1. GET /api/health -> RoutesTest.health
+    2. GET /days/{date} -> DayRoutesTest.returnsLogAndScheduleForTheDay, DayRoutesTest.rejectsBadDate
+    3. GET /sprint -> SprintRoutesTest.returnsOnlySprintActivities
+    4. POST /sessions -> RoutesTest.passesTextThrough
+    5. POST /sessions/{id}/messages -> RoutesTest.passesTextThrough, StatusRoutesTest.blankMessageIs400, StatusRoutesTest.unknownSessionIs404, StatusRoutesTest.modelFailureIs502
+    6. GET / -> RoutesTest.chatPage
+    7. GET /chat.js -> StatusRoutesTest.chatAssetsAreServed
+    8. GET /chat.css -> StatusRoutesTest.chatAssetsAreServed
+
+    Are there any endpoints in the code that are NOT tested?
+    Code: `/api/health`, `/days/{date}`, `/sprint`, `/sessions`, `/sessions/{id}/messages`.
+    All have tests.
+    Static assets: Mentioned in tests, so they exist and are tested.
+
+    Conclusion: All listed endpoints are covered by the provided test list.
+    I will present this clearly.
+
+    Wait, one more check: "Код не выдумывай за пределами того, что дано в сообщении."
+    Does this mean I shouldn't list `/` if it's not in the code snippet?
+    The prompt says "Tests and what they call". It presents a list of tests.
+    If I ignore `/`, I might be ignoring valid info from the text.
+    But strictly, the code snippet is `server/src/main/kotlin/app/work/server/Module.kt` (implied).
+    The test list describes the project state.
+    I will include all endpoints mentioned in the context of the project (Code + Test descriptions).
+
+    Wait, I should check if there are any endpoints in the code that *don't* have a test in the provided list.
+    Code:
+    - `/api/health` -> `RoutesTest.health` (Yes)
+    - `/days/{date}` -> `DayRoutesTest.*` (Yes)
+    - `/sprint` -> `SprintRoutesTest.*` (Yes)
+    - `/sessions` -> `RoutesTest.passesTextThrough` (Yes)
+    - `/sessions/{id}/messages` -> `RoutesTest.passesTextThrough`, `StatusRoutesTest.*` (Yes)
+
+    So no gaps in the provided info.
+    I will write that all endpoints from the code and assets are covered by the listed tests.
+
+    Wait, the instruction says "В конце перечисли эндпоинты." (At the end list endpoints).
+    Okay.
+
+    Draft:
+    На основе предоставленного кода и списка тестов все HTTP-эндпоинты покрыты тестами.
+
+    Список:
+    1. GET /api/health — RoutesTest.health
+    2. GET /days/{date} — DayRoutesTest.returnsLogAndScheduleForTheDay, DayRoutesTest.rejectsBadDate
+    3. GET /sprint — SprintRoutesTest.returnsOnlySprintActivities
+    4. POST /sessions — RoutesTest.passesTextThrough
+    5. POST /sessions/{id}/messages — RoutesTest.passesTextThrough, StatusRoutesTest.blankMessageIs400, StatusRoutesTest.unknownSessionIs404, StatusRoutesTest.modelFailureIs502
+    6. GET / — RoutesTest.chatPage
+    7. GET /chat.js — StatusRoutesTest.chatAssetsAreServed
+    8. GET /chat.css — StatusRoutesTest.chatAssetsAreServed
+
+    Wait, I need to check if `GET /` and assets are considered "HTTP endpoints" in the context of the question. Yes.
+    Is there any endpoint *not* covered? No.
+    So I will state that all are covered.
+
+    Wait, one constraint: "Код не выдумывай за пределами того, что дано в сообщении."
+    If I list `/`, am I inventing? The test list says `RoutesTest.chatPage — GET /`. This is information given in the message. So it's valid.
+    Okay.
+
+    Final check on formatting: Short, Russian, low temp style (direct).
+    No markdown code blocks for the list unless necessary, but a list is better.
+    I will use a simple list format.
+
+    Wait, looking at the instruction "В конце перечисли эндпоинты."
+    Okay, I'll put the list at the end.
+
+    One more thing: The prompt asks "Какие HTTP-эндпоинты есть и какие из них не покрыты тестами?" (Which endpoints exist and which are not covered by tests?).
+    Answer should address both parts.
+    Since all seem covered, I will say "Все перечисленные эндпоинты покрыты".
+
+    Wait, is there any endpoint in the code that doesn't have a test?
+    Code: `get("/health")`, `get("/days/{date}")`, `get("/sprint")`, `post("/sessions")`, `post("/sessions/{id}/messages")`.
+    Tests cover all of these.
+    So, no uncovered endpoints in the provided context.
+
+    Let's write it.

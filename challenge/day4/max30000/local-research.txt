@@ -1,0 +1,14 @@
+На основе предоставленного кода и описания тестов все HTTP-эндпоинты проекта покрыты тестами.
+
+**Список эндпоинтов и покрытие:**
+
+1.  `GET /api/health` — файл теста: `RoutesTest.health`
+2.  `GET /days/{date}` — файлы тестов: `DayRoutesTest.returnsLogAndScheduleForTheDay`, `DayRoutesTest.rejectsBadDate`
+3.  `GET /sprint` — файл теста: `SprintRoutesTest.returnsOnlySprintActivities`
+4.  `POST /sessions` — файл теста: `RoutesTest.passesTextThrough`
+5.  `POST /sessions/{id}/messages` — файлы тестов: `RoutesTest.passesTextThrough`, `StatusRoutesTest.blankMessageIs400`, `StatusRoutesTest.unknownSessionIs404`, `StatusRoutesTest.modelFailureIs502`
+6.  `GET /` — файл теста: `RoutesTest.chatPage`
+7.  `GET /chat.js` — файл теста: `StatusRoutesTest.chatAssetsAreServed`
+8.  `GET /chat.css` — файл теста: `StatusRoutesTest.chatAssetsAreServed`
+
+**Итог:** Непокрытых тестами эндпоинтов нет.

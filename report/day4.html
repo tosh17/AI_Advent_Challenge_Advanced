@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>День 4. Локальная модель</title>
+<style>
+  :root {
+    --bg: #f3efe6;
+    --paper: #fffdf8;
+    --ink: #1d1a16;
+    --muted: #6d655c;
+    --line: #e3dcd0;
+    --accent: #8a3d22;
+    --nav: #2a241e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.55 "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+  }
+  a { color: var(--accent); }
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+  nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: auto;
+    background: var(--nav);
+    color: #f6f1e8;
+    padding: 28px 22px 40px;
+    font: 13px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  nav strong {
+    display: block;
+    margin: 22px 0 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: #c8b8a4;
+  }
+  nav a {
+    display: block;
+    color: #f6f1e8;
+    text-decoration: none;
+    padding: 4px 0;
+  }
+  nav a:hover { color: #f0c7a2; }
+  main { padding: 48px 56px 80px; max-width: 980px; }
+  h1 { font-size: 42px; line-height: 1.1; font-weight: 600; margin: 0 0 12px; }
+  h2 { font-size: 28px; margin: 56px 0 16px; scroll-margin-top: 24px; }
+  h3 { font: 600 18px/1.3 ui-sans-serif, system-ui, sans-serif; margin: 28px 0 8px; }
+  .lead { font-size: 20px; max-width: 42rem; }
+  .meta { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    font: 15px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  th, td { border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; padding: 10px 12px; }
+  th { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  p code, li code, td code {
+    font-size: 0.9em;
+    background: #efe8dc;
+    padding: 0 0.25em;
+  }
+  pre {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+  .stack { list-style: none; margin: 12px 0 0; padding: 0; counter-reset: step; }
+  .stack li {
+    position: relative;
+    margin: 0;
+    padding: 12px 14px 12px 58px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+  }
+  .stack li:first-child { border-radius: 12px 12px 0 0; }
+  .stack li:last-child { border-bottom: 1px solid var(--line); border-radius: 0 0 12px 12px; }
+  .stack li::before {
+    content: counter(step);
+    counter-increment: step;
+    position: absolute;
+    left: 14px;
+    top: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--nav);
+    color: #f6f1e8;
+    font: 600 13px/28px ui-sans-serif, system-ui, sans-serif;
+    text-align: center;
+  }
+  .stack b { display: block; font: 600 14px/1.3 ui-sans-serif, system-ui, sans-serif; }
+  .stack span { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  .prose { max-width: 46rem; }
+  .ok { color: #14532d; font-weight: 600; }
+  .bad { color: #9f1239; font-weight: 600; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: relative; height: auto; }
+    main { padding: 28px 18px 60px; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <strong>День 4</strong>
+  <a href="#itog">Итог</a>
+  <a href="#usloviya">Условия</a>
+  <a href="#tablica">Таблица</a>
+  <a href="#chat">Короткий чат</a>
+  <a href="#research">Research</a>
+  <a href="#day1">Ручка дня</a>
+  <a href="#logi">Логи</a>
+  <strong>Профили</strong>
+  <a href="#oshibki">Две ошибки</a>
+  <a href="#sravnenie">Сравнение</a>
+  <a href="#pokrytie">Покрытие</a>
+</nav>
+<main>
+  <p class="meta">Ветка day4 · от day3 2a6e12d · 25 октября 2026 · повтор с max_tokens 30000</p>
+  <h1>День 4. Локальная модель</h1>
+  <p class="lead">Одна локальная модель <code>tosh_local</code> и Grok на трёх одинаковых заданиях. Потолок ответа — 30000 токенов. Автодополнение Tab остаётся на модели Cursor и в таблицу не входит.</p>
+
+  <h2 id="itog">Итог</h2>
+  <div class="prose">
+    <p>С потолком 30000 все три ответа локальной модели дописались, finish <code>stop</code>. Ни один не потратил бюджет: чат взял 235 токенов, Research 4766, ручка 9015. Короткий чат снова ответил «ок» за 10,1 с. Research за 106,5 с назвал тесты у маршрутов из <code>Routes.kt</code>, но срезал префикс <code>/api</code> и пропустил <code>POST /mcp</code>. Ручка за 202,4 с сгенерирована в файл и в репозиторий не вносилась: дата через <code>orElseThrow</code>, журнал и план слиты в один список, тест зовёт <code>mockk</code>.</p>
+    <p>Grok на тех же формулировках опирался на дерево ветки. Ручка <code>GET /api/days/{date}</code> уже есть, у маршрутов тесты есть, включая <code>POST /mcp</code>. Продукт по-прежнему ходит в Ollama на S1.</p>
+  </div>
+
+  <h2 id="usloviya">Условия</h2>
+  <div class="prose">
+    <p>Запрос уходил на <code>https://tosh17.duckdns.org:8787/v1/chat/completions</code>. В теле модели стояло имя <code>tosh_local</code>. В ответе сервер подписал модель <code>qwen-local</code>. Температура <code>0.2</code>. Флаг <code>enable_thinking</code> был выключен, рассуждение в ответе всё равно осталось. <code>max_tokens</code> на всех трёх заданиях — 30000. Промпты и system те же, что в первом проходе. Ключ в логи не записывался.</p>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Задание</th><th>Промпт, токены</th><th>Ответ, токены</th><th>finish</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Короткий чат</td><td>2243</td><td>235</td><td>stop</td></tr>
+      <tr><td>Research</td><td>3105</td><td>4766</td><td>stop</td></tr>
+      <tr><td>Ручка <code>GET /api/days/{date}</code></td><td>2327</td><td>9015</td><td>stop</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="tablica">Таблица</h2>
+  <table>
+    <thead>
+      <tr><th>Задание</th><th>Модель</th><th>Заход</th><th>Качество</th><th>Время</th><th>Где сломалось</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Короткий чат</td>
+        <td><code>tosh_local</code></td>
+        <td class="ok">HTTP 200, finish stop</td>
+        <td>Слово «ок»</td>
+        <td>10,082 с</td>
+        <td>235 токенов из 30000: 796 знаков ушло в рассуждение</td>
+      </tr>
+      <tr>
+        <td>Короткий чат</td>
+        <td>Grok</td>
+        <td class="ok">Да</td>
+        <td>Слово «ок»</td>
+        <td>5,406 с</td>
+        <td>Повтор в этом чате, файл <code>grok-rerun/chat.txt</code></td>
+      </tr>
+      <tr>
+        <td>Research</td>
+        <td><code>tosh_local</code></td>
+        <td class="ok">HTTP 200, finish stop</td>
+        <td>885 символов, тесты у ручек из <code>Routes.kt</code> названы</td>
+        <td>106,544 с</td>
+        <td>Пути без <code>/api</code>. <code>POST /mcp</code> в списке нет, хотя он был в промпте</td>
+      </tr>
+      <tr>
+        <td>Research</td>
+        <td>Grok</td>
+        <td class="ok">Да</td>
+        <td>Полные пути и <code>POST /mcp</code></td>
+        <td>9,670 с</td>
+        <td>Повтор в этом чате, файл <code>grok-rerun/research.md</code></td>
+      </tr>
+      <tr>
+        <td>Ручка дня</td>
+        <td><code>tosh_local</code></td>
+        <td class="ok">HTTP 200, finish stop</td>
+        <td>Шесть файлов в ответе, код в дерево не ставился</td>
+        <td>202,421 с</td>
+        <td><code>orElseThrow</code>, один список вместо журнала и плана, <code>mockk</code>, дата в роуте</td>
+      </tr>
+      <tr>
+        <td>Ручка дня</td>
+        <td>Grok</td>
+        <td class="ok">Уже в ветке</td>
+        <td><code>StoredDays</code>, тонкий роут, <code>DayRoutesTest</code></td>
+        <td>13,724 с</td>
+        <td>Повтор в этом чате. Ручка уже была в ветке, файл <code>grok-rerun/day1.md</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="prose">
+    <p>Время Grok в таблице — повторный проход 25 октября. Секундомер включён в момент старта задания и выключен, когда файл ответа записан. В него входит чтение дерева. Локальные цифры в тех же строках оставлены с HTTP-прогона, его заново не запускал. Сводка: <code>challenge/day4/grok-rerun/timings.json</code>.</p>
+  </div>
+
+  <h2 id="chat">Короткий чат</h2>
+  <div class="prose">
+    <p>Промпт: «Ответь одним словом: ок». Локальный ответ — <code>ок</code>, 10,082 с. Повтор Grok — то же слово, 5,406 с, <a href="../challenge/day4/grok-rerun/chat.txt"><code>grok-rerun/chat.txt</code></a>.</p>
+  </div>
+
+  <h2 id="research">Research</h2>
+  <div class="prose">
+    <p>Вопрос: какие HTTP-эндпоинты есть и какие из них не покрыты тестами. Текст ответа — <a href="../challenge/day4/max30000/local-research.txt"><code>max30000/local-research.txt</code></a>, 885 символов, 106,544 с, finish <code>stop</code>. Модель написала, что непокрытых ручек нет, и назвала тесты для health, дня, спринта, сессии, сообщения, страницы и <code>chat.js</code> / <code>chat.css</code>.</p>
+    <p>Пути в ответе короче, чем в промпте: <code>GET /days/{date}</code>, <code>GET /sprint</code>, <code>POST /sessions</code>. В <code>Routes.kt</code> они лежат внутри <code>route("/api")</code>. <code>POST /mcp</code> был в том же промпте строкой про <code>McpToolsTest</code> и в список не попал. Повтор Grok занял 9,670 с, пути полные: <a href="../challenge/day4/grok-rerun/research.md"><code>grok-rerun/research.md</code></a>.</p>
+  </div>
+
+  <h2 id="day1">Ручка дня</h2>
+  <div class="prose">
+    <p>Промпт просил одну реализацию <code>GET /api/days/{date}</code>: журнал и план за день, без беклога, с тестом. Локальная модель дописала ответ, finish <code>stop</code>, 202,421 с, 4736 символов текста, 30885 знаков рассуждения, 9015 токенов. Код остался в <a href="../challenge/day4/max30000/local-day1.txt"><code>max30000/local-day1.txt</code></a> и в проект не копировался.</p>
+    <p>Фрагмент, с которого ответ расходится с деревом:</p>
+  </div>
+  <pre>val onDate = LocalDate.parse(rawDate)
+    .orElseThrow { IllegalArgumentException("Неверный формат даты") }
+
+val logs = store.find(ActivityKind.Log, onDate)
+val schedule = store.find(ActivityKind.Schedule, onDate)
+
+return (logs + schedule).sortedBy { it.createdAt }</pre>
+  <div class="prose">
+    <p><code>LocalDate.parse</code> бросает исключение и не возвращает значение с <code>orElseThrow</code>. Журнал и план складываются в один список, а в API это два поля, <code>log</code> и <code>schedule</code>. Пакет назван <code>app.work.server.days</code>, в дереве сервис лежит в <code>app.work.server.activity</code>. Роут сам проверяет пустую дату и ловит <code>IllegalArgumentException</code>. Тест вызывает <code>mockk</code>, которого в проекте нет, и проверяет <code>size</code> у ответа. В конце перечислены шесть файлов, включая новый интерфейс <code>ActivityStore</code> только с методом <code>find</code>.</p>
+    <p>Повтор Grok занял 13,724 с. Ручка уже в ветке: <code>StoredDays.load</code> зовёт <code>find</code> отдельно для <code>Log</code> и <code>Schedule</code>, роут только отдаёт <code>days.load(raw)</code>, плохая дата — <code>BadDate</code> и ответ <code>400</code>. Запись прохода: <a href="../challenge/day4/grok-rerun/day1.md"><code>grok-rerun/day1.md</code></a>.</p>
+  </div>
+
+  <h2 id="logi">Логи</h2>
+  <table>
+    <thead>
+      <tr><th>Файл</th><th>Что зафиксировано</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>max30000/local-chat.json</code></td><td>10,082 с, finish stop, «ок», 235 токенов</td></tr>
+      <tr><td><code>max30000/local-research.json</code></td><td>106,544 с, finish stop, 885 символов, 4766 токенов</td></tr>
+      <tr><td><code>max30000/local-day1.json</code></td><td>202,421 с, finish stop, 4736 символов, 9015 токенов</td></tr>
+      <tr><td><code>grok-rerun/timings.json</code></td><td>Повтор Grok: чат 5,406 с, Research 9,670 с, ручка 13,724 с</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="oshibki">Две ошибки</h2>
+  <div class="prose">
+    <p>Grok с поиском и починкой справился. Локальная модель обе причины назвала, починку до конца не довела: после её правки один тест остался красным.</p>
+    <p>В дерево на время прогона положены две поломки, потом файлы возвращены. <code>JsonObject.link</code> не обрезал края и сравнивал схему с учётом регистра. <code>StoredSprint.load</code> читал журнал <code>Log</code>, а не спринт. Копии: <code>challenge/day4/profiles/buggy</code>.</p>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Тест</th><th>Красный прогон, 20,39 с</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ToolArgsTest.linkKeepsUppercaseHttpsAndTrimmedEdges</code></td><td><code>ToolInputError</code>: ссылка должна начинаться с http:// или https://. Строка 15, <code>HTTPS://example.com/doc</code></td></tr>
+      <tr><td><code>SprintRoutesTest.returnsOnlySprintActivities</code></td><td>ожидалось <code>[ревью]</code>, пришло <code>[созвон]</code></td></tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>В тех же классах ещё два теста прошли. Лог: <a href="../challenge/day4/profiles/grok-tests-red.txt"><code>grok-tests-red.txt</code></a>.</p>
+  </div>
+
+  <h2 id="sravnenie">Сравнение</h2>
+  <h3>Кто справился</h3>
+  <table>
+    <thead>
+      <tr><th>Шаг</th><th>Grok</th><th>Локальная</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Поиск</td>
+        <td class="ok">Да</td>
+        <td>Частично. Обе причины названы, детали съехали</td>
+      </tr>
+      <tr>
+        <td>Починка</td>
+        <td class="ok">Да. 4 теста зелёные</td>
+        <td class="bad">Нет. Спринт починился, тест ссылки остался красным</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Сколько заняло</h3>
+  <div class="prose">
+    <p>У Grok нет отдельного HTTP-запроса: ответы писались в этом чате. Время ниже снято секундомером тестов и часами файлов, с 09:48:48 до 09:50:09. У локальной модели время снято с самого запроса.</p>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Шаг</th><th>Grok</th><th>Локальная</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Красные тесты до починки</td>
+        <td>20,4 с</td>
+        <td>те же падения, отдельный прогон не повторяли</td>
+      </tr>
+      <tr>
+        <td>Ответ поиска</td>
+        <td>38 с, файл в 09:49:46</td>
+        <td>31,1 с</td>
+      </tr>
+      <tr>
+        <td>Ответ починки</td>
+        <td>17 с на запись, файл в 09:50:09</td>
+        <td>45,0 с</td>
+      </tr>
+      <tr>
+        <td>Тесты после починки</td>
+        <td>8,5 с, зелёные</td>
+        <td>6,9 с, один тест красный</td>
+      </tr>
+      <tr>
+        <td>Весь проход</td>
+        <td>1 мин 21 с по часам, с 09:48:48 до 09:50:09</td>
+        <td>1 мин 23 с: 31,1 + 45,0 + 6,9</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>У Grok строки пересекаются: ответ поиска записан, пока уже шли зелёные тесты. 1 мин 21 с — интервал от старта красного прогона до файла починки, не сумма строк.</p>
+  </div>
+
+  <h3>Чем ответы отличаются</h3>
+  <div class="prose">
+    <p>Оба увидели одно и то же: схема ссылки сравнивается с учётом регистра, а спринт читает журнал. Дальше расхождение.</p>
+    <p>Grok в поиске добавил пробелы по краям ссылки. Локальная про пробелы промолчала, указала тесты в <code>shared/src/test</code> и написала, что в ответ спринта попали оба события. Тест показал только <code>[созвон]</code>.</p>
+    <p>Grok в починке вернул обрезку пробелов и сравнение схемы без учёта регистра. Локальная вернула только сравнение без учёта регистра. Пробел в начале <code> HTTPS://example.com/doc </code> по-прежнему отвергается, падение на строке 16 теста. В ответе локальной модели написано, что тесты она прогнала и они прошли. Запроса к тестам от неё не было.</p>
+    <p>Тексты: <a href="../challenge/day4/profiles/grok-research.md"><code>grok-research.md</code></a>, <a href="../challenge/day4/profiles/grok-bugfix.md"><code>grok-bugfix.md</code></a>, <a href="../challenge/day4/profiles/local-research.txt"><code>local-research.txt</code></a>, <a href="../challenge/day4/profiles/local-bugfix.txt"><code>local-bugfix.txt</code></a>. Прогоны: <a href="../challenge/day4/profiles/grok-tests-green.txt"><code>grok-tests-green.txt</code></a>, <a href="../challenge/day4/profiles/local-tests.txt"><code>local-tests.txt</code></a>.</p>
+  </div>
+
+  <h2 id="pokrytie">Покрытие</h2>
+  <div class="prose">
+    <p>Общее состояние — тесты ветки <code>day4</code>. Из него убраны три проверки, оба ответа сняты с этого дерева, потом файлы возвращены. Сейчас снова на месте <code>RoutesTest.health</code>, <code>SprintRoutesTest.returnsOnlySprintActivities</code> и <code>StatusRoutesTest.chatAssetsAreServed</code>.</p>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Что убрали</th><th>Какая ручка осталась без теста</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>RoutesTest.health</code></td><td><code>GET /api/health</code></td></tr>
+      <tr><td>файл <code>SprintRoutesTest.kt</code></td><td><code>GET /api/sprint</code></td></tr>
+      <tr><td><code>StatusRoutesTest.chatAssetsAreServed</code></td><td><code>GET /chat.js</code> и <code>GET /chat.css</code></td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead>
+      <tr><th></th><th>Grok</th><th>Локальная</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Время</td>
+        <td>9,245 с</td>
+        <td>35,724 с, finish stop</td>
+      </tr>
+      <tr>
+        <td>Справился</td>
+        <td class="ok">Да. Названы все три дыры</td>
+        <td class="bad">Две из трёх. <code>chat.js</code> и <code>chat.css</code> названы покрытыми</td>
+      </tr>
+      <tr>
+        <td>Отличие</td>
+        <td>Health, спринт и статика чата без теста. День, сессия, сообщение и <code>POST /mcp</code> с тестом</td>
+        <td>Health и спринт без теста. Статику отнёс к <code>RoutesTest.chatPage</code>, хотя тот проверяет только <code>GET /</code></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>Записи: <a href="../challenge/day4/coverage/grok-research.md"><code>coverage/grok-research.md</code></a>, <a href="../challenge/day4/coverage/local-research.txt"><code>coverage/local-research.txt</code></a>. Снимок тестов до правки: <code>coverage/baseline</code>.</p>
+  </div>
+
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   User input: "Ответь одним словом: ок" (Answer in one word: ok).
+    *   System instructions: I am a code assistant for a work helper. Low temperature, short answers, follow rules. Do not invent code outside given message. Write in Russian.
+    *   Constraint: Answer in one word.
+
+2.  **Determine the Response:**
+    *   The user explicitly asked for "ок" (ok).
+    *   My instructions say to be a code assistant, but this is a simple acknowledgment command.
+    *   The constraint is "one word".
+    *   Language: Russian.
+
+3.  **Formulate Output:**
+    *   Word: "ок".
+
+4.  **Final Check:**
+    *   Does it violate any rules? No.
+    *   Is it short? Yes.
+    *   Is it in Russian? Yes.
+    *   Is it one word? Yes.
+
+5.  **Output:** ок.cw

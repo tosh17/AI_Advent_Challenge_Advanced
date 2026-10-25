@@ -1,0 +1,36 @@
+[
+  {
+    "name": "research",
+    "seconds": 31.11,
+    "http": 200,
+    "model": "qwen-local",
+    "finish": "stop",
+    "usage": {
+      "prompt_tokens": 3265,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens": 1306,
+      "total_tokens": 4571
+    },
+    "reasoning_chars": 2288,
+    "max_tokens": 30000
+  },
+  {
+    "name": "bugfix",
+    "seconds": 44.99,
+    "http": 200,
+    "model": "qwen-local",
+    "finish": "stop",
+    "usage": {
+      "prompt_tokens": 3358,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens": 1934,
+      "total_tokens": 5292
+    },
+    "reasoning_chars": 2950,
+    "max_tokens": 30000
+  }
+]
