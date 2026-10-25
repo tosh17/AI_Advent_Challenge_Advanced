@@ -24,6 +24,16 @@ class ActivityStoreTest {
         store.add(NewActivity("созвон", ActivityKind.Schedule, null, day))
         store.add(NewActivity("идея", ActivityKind.Backlog, null, null, "https://example.test/mock"))
 
+        store.add(NewActivity("вчера", ActivityKind.Log, "TESS-02", LocalDate(2026, 10, 22)))
+
+        assertEquals(
+            listOf("ревью", "вчера"),
+            store.findBetween(ActivityKind.Log, LocalDate(2026, 10, 22), LocalDate(2026, 10, 24)).map { it.summary },
+        )
+        assertEquals(
+            emptyList(),
+            store.findBetween(ActivityKind.Log, LocalDate(2026, 10, 24), LocalDate(2026, 10, 22)),
+        )
         assertEquals(listOf("ревью"), store.find(ActivityKind.Log, day).map { it.summary })
         assertEquals(listOf("созвон"), store.find(ActivityKind.Schedule, day).map { it.summary })
         assertEquals(emptyList(), store.find(ActivityKind.Log, LocalDate(2026, 10, 24)))

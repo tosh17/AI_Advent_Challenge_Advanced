@@ -90,6 +90,45 @@ class McpToolsTest {
     }
 
     @Test
+    fun journalRangeKeepsOtherDaysAndThePlanOut() = withStore { store, catalog ->
+        catalog.call(
+            "activities_log",
+            buildJsonObject {
+                put("summary", JsonPrimitive("TESS-02"))
+                put("on_date", JsonPrimitive("2026-10-22"))
+            },
+        )
+        catalog.call(
+            "activities_log",
+            buildJsonObject {
+                put("summary", JsonPrimitive("TESS-03"))
+                put("on_date", JsonPrimitive("2026-10-23"))
+            },
+        )
+        catalog.call(
+            "activities_schedule",
+            buildJsonObject {
+                put("summary", JsonPrimitive("созвон"))
+                put("on_date", JsonPrimitive("2026-10-23"))
+            },
+        )
+        val week = catalog.call(
+            "activities_list_range",
+            buildJsonObject {
+                put("from_date", JsonPrimitive("2026-10-19"))
+                put("to_date", JsonPrimitive("2026-10-25"))
+            },
+        )
+        assertTrue(week.contains("TESS-02"))
+        assertTrue(week.contains("TESS-03"))
+        assertEquals(false, week.contains("созвон"))
+        assertEquals(
+            listOf("TESS-02", "TESS-03"),
+            store.findBetween(ActivityKind.Log, LocalDate(2026, 10, 19), LocalDate(2026, 10, 25)).map { it.summary },
+        )
+    }
+
+    @Test
     fun planStaysOutOfTheJournal() = withStore { store, catalog ->
         catalog.call(
             "activities_schedule",

@@ -12,6 +12,8 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -83,6 +85,18 @@ class ExposedActivityStore(private val database: Database) : ActivityStore {
         ActivityTable.selectAll()
             .where {
                 (ActivityTable.kind eq kind.name) and (ActivityTable.onDate eq onDate.toString())
+            }
+            .orderBy(ActivityTable.createdAt to SortOrder.ASC)
+            .map { it.toActivity() }
+    }
+
+    override suspend fun findBetween(kind: ActivityKind, from: LocalDate, to: LocalDate): List<Activity> = db {
+        if (to < from) return@db emptyList()
+        ActivityTable.selectAll()
+            .where {
+                (ActivityTable.kind eq kind.name) and
+                    (ActivityTable.onDate greaterEq from.toString()) and
+                    (ActivityTable.onDate lessEq to.toString())
             }
             .orderBy(ActivityTable.createdAt to SortOrder.ASC)
             .map { it.toActivity() }
