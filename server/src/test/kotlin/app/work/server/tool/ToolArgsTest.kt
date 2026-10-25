@@ -34,6 +34,21 @@ class ToolArgsTest {
     }
 
     @Test
+    fun issueKeyTrimsEdgesAndRejectsInnerSpace() {
+        assertEquals("APP-1", buildJsonObject { put("issue_key", JsonPrimitive(" APP-1 ")) }.issueKey())
+        val inner = assertFailsWith<ToolInputError> {
+            buildJsonObject { put("issue_key", JsonPrimitive("APP 1")) }.issueKey()
+        }
+        assertEquals("В номере задачи не должно быть пробелов", inner.message)
+        val tooLong = assertFailsWith<ToolInputError> {
+            buildJsonObject { put("issue_key", JsonPrimitive("A".repeat(41))) }.issueKey()
+        }
+        assertEquals("Слишком длинный номер задачи", tooLong.message)
+        assertNull(buildJsonObject { put("issue_key", JsonPrimitive("  ")) }.issueKey())
+        assertNull(buildJsonObject { }.issueKey())
+    }
+
+    @Test
     fun isoDateTrimsEdgesAndRejectsWords() {
         assertEquals(
             LocalDate(2026, 10, 25),
