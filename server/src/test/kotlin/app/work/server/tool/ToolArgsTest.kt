@@ -21,6 +21,18 @@ class ToolArgsTest {
     }
 
     @Test
+    fun linkRejectsWhitespaceInside() {
+        val space = assertFailsWith<ToolInputError> {
+            linkOf("https://ex ample.com").link()
+        }
+        assertEquals("В ссылке не должно быть пробелов", space.message)
+        val line = assertFailsWith<ToolInputError> {
+            linkOf("https://example.com/a\nb").link()
+        }
+        assertEquals("В ссылке не должно быть пробелов", line.message)
+    }
+
+    @Test
     fun linkRejectsAddressWithoutScheme() {
         val error = assertFailsWith<ToolInputError> {
             linkOf("example.com/doc").link()
