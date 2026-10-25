@@ -47,6 +47,33 @@ header p {
   font-size: 14px;
 }
 
+#sprint {
+  margin: 8px 4px 0;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+#sprint h2 {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+#sprint p,
+#sprint ul {
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+#sprint ul { list-style: none; }
+
+#sprint li + li { margin-top: 4px; }
+
 #log {
   list-style: none;
   margin: 0;

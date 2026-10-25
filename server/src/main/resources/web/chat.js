@@ -15,6 +15,9 @@ const hint = document.querySelector("#hint");
 const form = document.querySelector("#composer");
 const text = document.querySelector("#text");
 const send = document.querySelector("#send");
+const sprintBody = document.querySelector("#sprint-body");
+
+loadSprint();
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -117,6 +120,30 @@ function calls(items) {
     list.append(item);
   }
   return list;
+}
+
+async function loadSprint() {
+  if (!sprintBody) return;
+  try {
+    const response = await fetch("/api/sprint");
+    if (!response.ok) throw new Error(await errorText(response));
+    const data = await response.json();
+    const items = data.items || [];
+    if (!items.length) {
+      sprintBody.textContent = "В текущем спринте пусто";
+      return;
+    }
+    sprintBody.replaceChildren();
+    const list = document.createElement("ul");
+    for (const item of items) {
+      const row = document.createElement("li");
+      row.textContent = item.summary;
+      list.append(row);
+    }
+    sprintBody.append(list);
+  } catch (error) {
+    sprintBody.textContent = error instanceof Error ? error.message : "Не получилось прочитать спринт";
+  }
 }
 
 function setBusy(busy) {

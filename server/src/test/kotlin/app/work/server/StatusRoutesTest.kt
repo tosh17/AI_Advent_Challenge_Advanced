@@ -78,10 +78,16 @@ class StatusRoutesTest {
         application { module(idleTurns(), idleDays(), idleSprint(), idleBacklog(), idleSearch()) }
         val script = client.get("/chat.js")
         val style = client.get("/chat.css")
+        val page = client.get("/")
         assertEquals(HttpStatusCode.OK, script.status)
         assertEquals(HttpStatusCode.OK, style.status)
-        assertEquals(true, "work-session" in script.bodyAsText())
+        assertEquals(HttpStatusCode.OK, page.status)
+        val scriptText = script.bodyAsText()
+        assertEquals(true, "work-session" in scriptText)
+        assertEquals(true, "/api/sprint" in scriptText)
+        assertEquals(true, "В текущем спринте пусто" in scriptText)
         assertEquals(true, "--bg" in style.bodyAsText())
+        assertEquals(true, "Текущий спринт" in page.bodyAsText())
     }
 }
 
