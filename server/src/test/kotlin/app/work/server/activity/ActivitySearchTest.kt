@@ -27,6 +27,8 @@ class ActivitySearchTest {
         assertEquals(listOf("ревью"), store.search("app-9").map { it.summary })
         assertEquals(listOf("https://example.test/review"), store.search("REVIEW").map { it.link })
         assertEquals(emptyList(), store.search("нет такого"))
+        assertEquals(emptyList(), store.search(""))
+        assertEquals(emptyList(), store.search("   "))
         assertEquals(emptyList(), store.list(ActivityKind.Backlog))
     }
 }

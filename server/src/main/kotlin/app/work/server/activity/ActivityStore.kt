@@ -95,16 +95,19 @@ class ExposedActivityStore(private val database: Database) : ActivityStore {
             .map { it.toActivity() }
     }
 
-    override suspend fun search(query: String): List<Activity> = db {
+    override suspend fun search(query: String): List<Activity> {
         val needle = query.trim().lowercase()
-        ActivityTable.selectAll()
-            .orderBy(ActivityTable.createdAt to SortOrder.ASC)
-            .map { it.toActivity() }
-            .filter { activity ->
-                activity.summary.lowercase().contains(needle) ||
-                    activity.issueKey?.lowercase()?.contains(needle) == true ||
-                    activity.link?.lowercase()?.contains(needle) == true
-            }
+        if (needle.isEmpty()) return emptyList()
+        return db {
+            ActivityTable.selectAll()
+                .orderBy(ActivityTable.createdAt to SortOrder.ASC)
+                .map { it.toActivity() }
+                .filter { activity ->
+                    activity.summary.lowercase().contains(needle) ||
+                        activity.issueKey?.lowercase()?.contains(needle) == true ||
+                        activity.link?.lowercase()?.contains(needle) == true
+                }
+        }
     }
 
     private suspend fun <T> db(block: () -> T): T = withContext(Dispatchers.IO) {
