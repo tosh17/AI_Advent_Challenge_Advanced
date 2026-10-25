@@ -64,4 +64,21 @@ class ActivityStoreTest {
         assertEquals(first.id, second.id)
         assertEquals(listOf("ревью", "без номера"), store.list(ActivityKind.Sprint).map { it.summary })
     }
+
+    @Test
+    fun planRangeIsNotTheSprint() = runTest {
+        val store = ExposedActivityStore(
+            Database.connect(
+                url = "jdbc:h2:mem:plan_${System.nanoTime()};MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+                driver = "org.h2.Driver",
+                user = "sa",
+                password = "",
+            ),
+        )
+        store.add(NewActivity("текстовки", ActivityKind.Schedule, null, LocalDate(2026, 10, 26)))
+        store.add(NewActivity("TESS-01", ActivityKind.Sprint, "TESS-01", null))
+        val plan = store.findBetween(ActivityKind.Schedule, LocalDate(2026, 10, 26), LocalDate(2026, 11, 1))
+        assertEquals(listOf("текстовки"), plan.map { it.summary })
+        assertEquals(listOf("TESS-01"), store.list(ActivityKind.Sprint).map { it.summary })
+    }
 }

@@ -14,6 +14,7 @@ class AgentTest {
     fun documentLinkIsJournalNotBacklog() {
         val prompt = systemPrompt(LocalDate(2026, 10, 23))
         assertTrue(prompt.contains("Запись ссылок на документы должна быть в журнал, а не в беклог."))
+        assertTrue(prompt.contains("Вопрос про план на несколько дней закрывай планом за интервал, не списком спринта."))
     }
 
     @Test
