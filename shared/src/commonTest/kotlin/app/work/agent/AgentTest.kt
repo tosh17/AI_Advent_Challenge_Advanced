@@ -17,6 +17,33 @@ class AgentTest {
     }
 
     @Test
+    fun keepsTheLastThreeDialogueMessages() = runTest {
+        val history = listOf(
+            ChatMessage.User("один"),
+            ChatMessage.Tool("old", "activities_list_day", "старое"),
+            ChatMessage.Assistant("ответ один", emptyList()),
+            ChatMessage.User("два"),
+            ChatMessage.Assistant("ответ два", emptyList()),
+            ChatMessage.User("три"),
+            ChatMessage.Assistant("ответ три", emptyList()),
+            ChatMessage.User("четыре"),
+            ChatMessage.Assistant("ответ четыре", emptyList()),
+        )
+        val model = ScriptedModel(listOf(ModelStep("понял", emptyList())))
+        agent(model, RecordingCatalog()).handle(history, "уточни")
+        val prompt = model.seen.single()
+        assertEquals(
+            listOf("четыре", "уточни"),
+            prompt.filterIsInstance<ChatMessage.User>().map { it.text },
+        )
+        assertEquals(
+            listOf("ответ три", "ответ четыре"),
+            prompt.filterIsInstance<ChatMessage.Assistant>().map { it.text },
+        )
+        assertEquals(false, prompt.filterIsInstance<ChatMessage.Tool>().any { it.text == "старое" })
+    }
+
+    @Test
     fun wordsDoNotSelectTools() = runTest {
         val catalog = RecordingCatalog()
         val model = ScriptedModel(
