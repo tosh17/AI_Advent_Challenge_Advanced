@@ -48,6 +48,7 @@ fun JsonObject.issueKey(): String? {
 fun JsonObject.link(): String? {
     val value = optionalText("link")?.trim() ?: return null
     if (value.length > 2_000) throw ToolInputError("Слишком длинная ссылка")
+    if (value.any { it.isWhitespace() }) throw ToolInputError("В ссылке не должно быть пробелов")
     if (!value.startsWith("https://", ignoreCase = true) && !value.startsWith("http://", ignoreCase = true)) {
         throw ToolInputError("Ссылка должна начинаться с http:// или https://")
     }
