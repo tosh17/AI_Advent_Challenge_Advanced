@@ -30,4 +30,21 @@ class ActivityStoreTest {
         assertEquals(listOf("https://example.test/mock"), store.search("mock").map { it.link })
         assertEquals(listOf(null), store.search("mock").map { it.issueKey })
     }
+
+    @Test
+    fun journalRangeKeepsThePlanOut() = runTest {
+        val store = ExposedActivityStore(
+            Database.connect(
+                url = "jdbc:h2:mem:range_${System.nanoTime()};MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+                driver = "org.h2.Driver",
+                user = "sa",
+                password = "",
+            ),
+        )
+        store.add(NewActivity("вчера", ActivityKind.Log, null, LocalDate(2026, 10, 22)))
+        store.add(NewActivity("ревью", ActivityKind.Log, null, LocalDate(2026, 10, 23)))
+        store.add(NewActivity("созвон", ActivityKind.Schedule, null, LocalDate(2026, 10, 23)))
+        val result = store.findBetween(ActivityKind.Log, LocalDate(2026, 10, 22), LocalDate(2026, 10, 24))
+        assertEquals(listOf("вчера", "ревью"), result.map { it.summary })
+    }
 }

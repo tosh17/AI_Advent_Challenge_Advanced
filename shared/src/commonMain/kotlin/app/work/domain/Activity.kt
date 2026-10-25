@@ -33,6 +33,8 @@ interface ActivityStore {
 
     suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity>
 
+    suspend fun findBetween(kind: ActivityKind, from: LocalDate, to: LocalDate): List<Activity>
+
     suspend fun list(kind: ActivityKind): List<Activity>
 
     suspend fun search(query: String): List<Activity>
