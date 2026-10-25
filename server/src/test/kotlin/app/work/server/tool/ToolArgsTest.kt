@@ -32,6 +32,28 @@ class ToolArgsTest {
         assertNull(buildJsonObject { }.link())
     }
 
+    @Test
+    fun summaryTrimsBeforeLengthCheck() {
+        val trimmed = buildJsonObject {
+            put("summary", JsonPrimitive(" " + "я".repeat(2_000)))
+        }
+        assertEquals("я".repeat(2_000), trimmed.summary())
+
+        val tooLong = assertFailsWith<ToolInputError> {
+            buildJsonObject {
+                put("summary", JsonPrimitive("я".repeat(2_001)))
+            }.summary()
+        }
+        assertEquals("Слишком длинное описание", tooLong.message)
+
+        val blank = assertFailsWith<ToolInputError> {
+            buildJsonObject {
+                put("summary", JsonPrimitive("   "))
+            }.summary()
+        }
+        assertEquals("Пустое поле summary", blank.message)
+    }
+
     private fun linkOf(link: String) = buildJsonObject {
         put("link", JsonPrimitive(link))
     }
