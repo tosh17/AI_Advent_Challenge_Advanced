@@ -49,6 +49,28 @@ class AgentTest {
         assertTrue(model.seen.first().filterIsInstance<ChatMessage.System>().single().text.contains("2026-10-24"))
     }
 
+    @Test
+    fun stopsWhenStepsRunOut() = runTest {
+        val catalog = RecordingCatalog()
+        val call = ToolCall("1", "activities_add_to_sprint", json("summary" to "ревью"))
+        val model = ScriptedModel(
+            listOf(
+                ModelStep("", listOf(call)),
+                ModelStep("этот ответ не используется", emptyList()),
+            ),
+        )
+        val reply = Agent(
+            model = model,
+            tools = catalog,
+            today = { LocalDate(2026, 10, 24) },
+            maxSteps = 1,
+        ).handle(emptyList(), "в спринт")
+
+        assertEquals("Не хватило шагов, чтобы закончить.", reply.text)
+        assertEquals(1, model.seen.size)
+        assertEquals(listOf("activities_add_to_sprint"), reply.calls.map { it.name })
+    }
+
     private fun agent(model: LanguageModel, catalog: ToolCatalog) = Agent(
         model = model,
         tools = catalog,
