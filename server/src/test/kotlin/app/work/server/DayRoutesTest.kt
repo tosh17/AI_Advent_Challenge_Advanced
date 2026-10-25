@@ -34,6 +34,7 @@ class DayRoutesTest {
         store.add(NewActivity("ревью", ActivityKind.Log, "APP-2", day, "https://example.test/review"))
         store.add(NewActivity("созвон", ActivityKind.Schedule, null, day))
         store.add(NewActivity("идея", ActivityKind.Backlog, null, null))
+        store.add(NewActivity("спринт", ActivityKind.Sprint, null, null))
         store.add(NewActivity("чужой", ActivityKind.Log, null, LocalDate(2026, 10, 24)))
         application { module(idleTurns(), StoredDays(store), StoredSprint(store)) }
         val client = createClient {
@@ -52,6 +53,8 @@ class DayRoutesTest {
         assertEquals(listOf<String?>(null), body.schedule.map { it.link })
         assertEquals(false, "идея" in body.log.map { it.summary })
         assertEquals(false, "идея" in body.schedule.map { it.summary })
+        assertEquals(false, "спринт" in body.log.map { it.summary })
+        assertEquals(false, "спринт" in body.schedule.map { it.summary })
 
         val empty = client.get("/api/days/2026-10-25")
         assertEquals(HttpStatusCode.OK, empty.status)
