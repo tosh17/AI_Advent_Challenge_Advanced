@@ -31,9 +31,10 @@ fun JsonObject.isoDate(name: String): LocalDate {
 }
 
 fun JsonObject.summary(): String {
-    val value = text("summary")
+    val value = text("summary").trim()
+    if (value.isEmpty()) throw ToolInputError("Пустое поле summary")
     if (value.length > 2_000) throw ToolInputError("Слишком длинное описание")
-    return value.trim()
+    return value
 }
 
 fun JsonObject.issueKey(): String? {
