@@ -54,7 +54,7 @@ private fun Server.activities(store: ActivityStore) {
     )
     tool(
         name = "activities_log",
-        description = "Записать в журнал, чем человек занимался в указанный день. Не план, не беклог и не спринт. Номер и ссылка необязательны.",
+        description = "Записать в журнал, чем человек занимался в указанный день. Сюда же пиши ссылку на документ или страницу. Не план, не беклог и не спринт. Номер и ссылка необязательны.",
         schema = schema(
             required = listOf("summary", "on_date"),
             "summary" to "Суть своими словами, без выдуманных деталей",
@@ -96,7 +96,7 @@ private fun Server.activities(store: ActivityStore) {
     }
     tool(
         name = "activities_backlog",
-        description = "Положить активность в беклог без даты. В спринт не кладёт. Номер и ссылка необязательны.",
+        description = "Положить активность в беклог без даты. Ссылку на документацию сюда не клади, для неё есть журнал. В спринт не кладёт. Номер и ссылка необязательны.",
         schema = schema(
             required = listOf("summary"),
             "summary" to "Что отложить в беклог",
