@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class AgentTest {
@@ -54,6 +55,35 @@ class AgentTest {
         assertEquals("Поставил APP-4 в спринт и на завтра.", reply.text)
         assertEquals(listOf("activities_add_to_sprint", "activities_schedule"), reply.calls.map { it.name })
         assertTrue(model.seen.first().filterIsInstance<ChatMessage.System>().single().text.contains("2026-10-24"))
+    }
+
+    @Test
+    fun keepsTheLastThreeDialogueMessages() = runTest {
+        val history = listOf(
+            ChatMessage.User("один"),
+            ChatMessage.Tool("old", "activities_list_day", "старое"),
+            ChatMessage.Assistant("ответ один", emptyList()),
+            ChatMessage.User("два"),
+            ChatMessage.Assistant("ответ два", emptyList()),
+            ChatMessage.User("три"),
+            ChatMessage.Assistant("ответ три", emptyList()),
+            ChatMessage.User("четыре"),
+            ChatMessage.Assistant("ответ четыре", emptyList()),
+        )
+        val model = ScriptedModel(listOf(ModelStep("понял", emptyList())))
+        agent(model, RecordingCatalog()).handle(history, "уточни")
+
+        val prompt = model.seen.single()
+        assertEquals(
+            listOf("четыре", "уточни"),
+            prompt.filterIsInstance<ChatMessage.User>().map { it.text },
+        )
+        assertEquals(
+            listOf("ответ три", "ответ четыре"),
+            prompt.filterIsInstance<ChatMessage.Assistant>().map { it.text },
+        )
+        assertEquals(false, prompt.filterIsInstance<ChatMessage.Tool>().any { it.text == "старое" })
+        assertIs<ChatMessage.System>(prompt.first())
     }
 
     @Test
