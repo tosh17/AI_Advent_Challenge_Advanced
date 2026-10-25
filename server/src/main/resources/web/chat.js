@@ -1,10 +1,12 @@
 const sessionKey = "work-session";
+const themeKey = "work-theme";
 const labels = {
   activities_log: "Журнал",
   activities_schedule: "План",
   activities_backlog: "Беклог",
   activities_add_to_sprint: "Спринт",
   activities_list_day: "Журнал за день",
+  activities_list_range: "Журнал за период",
   activities_plan: "План на день",
   activities_list_sprint: "Текущий спринт",
   activities_find: "Поиск",
@@ -16,6 +18,10 @@ const form = document.querySelector("#composer");
 const text = document.querySelector("#text");
 const send = document.querySelector("#send");
 const sprintBody = document.querySelector("#sprint-body");
+const theme = document.querySelector("#theme");
+
+applyTheme(localStorage.getItem(themeKey) || "classic");
+theme?.addEventListener("change", () => applyTheme(theme.value));
 
 loadSprint();
 
@@ -144,6 +150,17 @@ async function loadSprint() {
   } catch (error) {
     sprintBody.textContent = error instanceof Error ? error.message : "Не получилось прочитать спринт";
   }
+}
+
+function applyTheme(name) {
+  const chosen = name === "rick" || name === "simpsons" ? name : "classic";
+  if (chosen === "classic") {
+    delete document.body.dataset.theme;
+  } else {
+    document.body.dataset.theme = chosen;
+  }
+  if (theme) theme.value = chosen;
+  localStorage.setItem(themeKey, chosen);
 }
 
 function setBusy(busy) {
