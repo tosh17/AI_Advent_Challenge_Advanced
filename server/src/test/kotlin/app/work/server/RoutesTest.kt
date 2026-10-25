@@ -1,5 +1,6 @@
 package app.work.server
 
+import app.work.server.activity.Backlog
 import app.work.server.activity.Days
 import app.work.server.activity.Sprint
 import app.work.server.session.Turns
@@ -33,6 +34,7 @@ class RoutesTest {
                 },
                 idleDays(),
                 idleSprint(),
+                idleBacklog(),
             )
         }
         val client = createClient {
@@ -54,13 +56,13 @@ class RoutesTest {
 
     @Test
     fun health() = testApplication {
-        application { module(idleTurns(), idleDays(), idleSprint()) }
+        application { module(idleTurns(), idleDays(), idleSprint(), idleBacklog()) }
         assertEquals(HttpStatusCode.OK, client.get("/api/health").status)
     }
 
     @Test
     fun chatPage() = testApplication {
-        application { module(idleTurns(), idleDays(), idleSprint()) }
+        application { module(idleTurns(), idleDays(), idleSprint(), idleBacklog()) }
         val response = client.get("/")
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue("Рабочий помощник" in response.bodyAsText())
@@ -78,4 +80,8 @@ private fun idleDays() = object : Days {
 
 private fun idleSprint() = object : Sprint {
     override suspend fun load(): SprintResponse = error("не используется")
+}
+
+private fun idleBacklog() = object : Backlog {
+    override suspend fun load(): BacklogResponse = error("не используется")
 }

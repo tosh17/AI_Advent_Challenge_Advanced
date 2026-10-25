@@ -23,6 +23,7 @@ import app.work.agent.LanguageModel
 import app.work.agent.ModelStep
 import app.work.agent.ToolCatalog
 import app.work.agent.ToolDefinition
+import app.work.server.activity.Backlog
 import app.work.server.activity.Days
 import app.work.server.activity.Sprint
 import app.work.server.session.SessionBook
@@ -31,7 +32,7 @@ class StatusRoutesTest {
     @Test
     fun blankMessageIs400() = testApplication {
         val book = talkingBook(ModelStep("ок", emptyList()))
-        application { module(book, idleDays(), idleSprint()) }
+        application { module(book, idleDays(), idleSprint(), idleBacklog()) }
         val client = jsonClient()
         val id = client.post("/api/sessions").body<SessionCreated>().id
 
@@ -45,7 +46,7 @@ class StatusRoutesTest {
 
     @Test
     fun unknownSessionIs404() = testApplication {
-        application { module(talkingBook(ModelStep("ок", emptyList())), idleDays(), idleSprint()) }
+        application { module(talkingBook(ModelStep("ок", emptyList())), idleDays(), idleSprint(), idleBacklog()) }
         val client = jsonClient()
 
         val response = client.post("/api/sessions/чужая/messages") {
@@ -59,7 +60,7 @@ class StatusRoutesTest {
     @Test
     fun modelFailureIs502() = testApplication {
         val book = talkingBook { _ -> throw ModelFailure("нет модели") }
-        application { module(book, idleDays(), idleSprint()) }
+        application { module(book, idleDays(), idleSprint(), idleBacklog()) }
         val client = jsonClient()
         val id = client.post("/api/sessions").body<SessionCreated>().id
 
@@ -73,7 +74,7 @@ class StatusRoutesTest {
 
     @Test
     fun chatAssetsAreServed() = testApplication {
-        application { module(idleTurns(), idleDays(), idleSprint()) }
+        application { module(idleTurns(), idleDays(), idleSprint(), idleBacklog()) }
         val script = client.get("/chat.js")
         val style = client.get("/chat.css")
         assertEquals(HttpStatusCode.OK, script.status)
@@ -109,4 +110,8 @@ private fun idleDays() = object : Days {
 
 private fun idleSprint() = object : Sprint {
     override suspend fun load(): SprintResponse = error("не используется")
+}
+
+private fun idleBacklog() = object : Backlog {
+    override suspend fun load(): BacklogResponse = error("не используется")
 }
