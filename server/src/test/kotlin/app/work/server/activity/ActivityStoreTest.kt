@@ -47,4 +47,21 @@ class ActivityStoreTest {
         val result = store.findBetween(ActivityKind.Log, LocalDate(2026, 10, 22), LocalDate(2026, 10, 24))
         assertEquals(listOf("вчера", "ревью"), result.map { it.summary })
     }
+
+    @Test
+    fun sameSprintIssueKeyIsStoredOnce() = runTest {
+        val store = ExposedActivityStore(
+            Database.connect(
+                url = "jdbc:h2:mem:sprint_${System.nanoTime()};MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+                driver = "org.h2.Driver",
+                user = "sa",
+                password = "",
+            ),
+        )
+        val first = store.add(NewActivity("ревью", ActivityKind.Sprint, "TESS-01", null))
+        val second = store.add(NewActivity("Выполнено вчера", ActivityKind.Sprint, "TESS-01", null))
+        store.add(NewActivity("без номера", ActivityKind.Sprint, null, null))
+        assertEquals(first.id, second.id)
+        assertEquals(listOf("ревью", "без номера"), store.list(ActivityKind.Sprint).map { it.summary })
+    }
 }
