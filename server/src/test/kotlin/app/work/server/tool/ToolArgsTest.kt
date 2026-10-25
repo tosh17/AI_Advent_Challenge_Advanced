@@ -6,6 +6,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -96,6 +97,20 @@ class ToolArgsTest {
             }.summary()
         }
         assertEquals("Пустое поле summary", blank.message)
+    }
+
+    @Test
+    fun blankIssueKeyLongKeyAndBadDate() {
+        assertNull(buildJsonObject { put("issue_key", JsonNull) }.issueKey())
+        assertNull(buildJsonObject { put("issue_key", JsonPrimitive("")) }.issueKey())
+        val tooLong = assertFailsWith<ToolInputError> {
+            buildJsonObject { put("issue_key", JsonPrimitive("B".repeat(41))) }.issueKey()
+        }
+        assertEquals("Слишком длинный номер задачи", tooLong.message)
+        val badDate = assertFailsWith<ToolInputError> {
+            buildJsonObject { put("on_date", JsonPrimitive("завтра")) }.isoDate("on_date")
+        }
+        assertEquals("Поле on_date должно быть датой YYYY-MM-DD", badDate.message)
     }
 
     private fun linkOf(link: String) = buildJsonObject {
