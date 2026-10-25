@@ -40,4 +40,25 @@ class ActivityStoreTest {
         assertEquals(listOf("https://example.test/mock"), store.search("mock").map { it.link })
         assertEquals(listOf(null), store.search("mock").map { it.issueKey })
     }
+
+    @Test
+    fun sameSprintIssueKeyIsStoredOnce() = runTest {
+        val store = ExposedActivityStore(
+            Database.connect(
+                url = "jdbc:h2:mem:sprint_${System.nanoTime()};MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+                driver = "org.h2.Driver",
+                user = "sa",
+                password = "",
+            ),
+        )
+        val day = LocalDate(2026, 10, 23)
+        val first = store.add(NewActivity("ревью", ActivityKind.Sprint, "TESS-01", null))
+        val second = store.add(NewActivity("Выполнено вчера", ActivityKind.Sprint, "TESS-01", null))
+        store.add(NewActivity("без номера", ActivityKind.Sprint, null, null))
+        store.add(NewActivity("журнал", ActivityKind.Log, "TESS-01", day))
+
+        assertEquals(first.id, second.id)
+        assertEquals(listOf("ревью", "без номера"), store.list(ActivityKind.Sprint).map { it.summary })
+        assertEquals(listOf("журнал"), store.find(ActivityKind.Log, day).map { it.summary })
+    }
 }

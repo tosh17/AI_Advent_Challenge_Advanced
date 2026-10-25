@@ -59,6 +59,17 @@ class ExposedActivityStore(private val database: Database) : ActivityStore {
     override suspend fun add(draft: NewActivity): Activity = db {
         require(draft.summary.isNotBlank())
         require(draft.summary.length <= 2_000)
+        if (draft.kind == ActivityKind.Sprint && !draft.issueKey.isNullOrBlank()) {
+            val existing = ActivityTable.selectAll()
+                .where {
+                    (ActivityTable.kind eq ActivityKind.Sprint.name) and
+                        (ActivityTable.issueKey eq draft.issueKey)
+                }
+                .orderBy(ActivityTable.createdAt to SortOrder.ASC)
+                .map { it.toActivity() }
+                .firstOrNull()
+            if (existing != null) return@db existing
+        }
         val id = UUID.randomUUID().toString()
         val createdAt = Clock.System.now()
         ActivityTable.insert {
