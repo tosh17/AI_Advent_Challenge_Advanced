@@ -2,6 +2,7 @@ package app.work.server
 
 import app.work.server.activity.Backlog
 import app.work.server.activity.Days
+import app.work.server.activity.Search
 import app.work.server.activity.Sprint
 import app.work.server.session.Turns
 import io.ktor.server.request.receive
@@ -12,7 +13,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import kotlinx.serialization.Serializable
 
-fun Route.api(sessions: Turns, days: Days, sprint: Sprint, backlog: Backlog) {
+fun Route.api(sessions: Turns, days: Days, sprint: Sprint, backlog: Backlog, search: Search) {
     route("/api") {
         get("/health") {
             call.respond(Health("ok"))
@@ -26,6 +27,10 @@ fun Route.api(sessions: Turns, days: Days, sprint: Sprint, backlog: Backlog) {
         }
         get("/backlog") {
             call.respond(backlog.load())
+        }
+        get("/search") {
+            val raw = call.request.queryParameters["q"].orEmpty()
+            call.respond(search.load(raw))
         }
         post("/sessions") {
             call.respond(SessionCreated(sessions.open()))
@@ -101,4 +106,18 @@ data class BacklogEntry(
     val issueKey: String?,
     val link: String?,
     val createdAt: String,
+)
+
+@Serializable
+data class SearchResponse(
+    val items: List<SearchHit>,
+)
+
+@Serializable
+data class SearchHit(
+    val kind: String,
+    val summary: String,
+    val issueKey: String?,
+    val link: String?,
+    val onDate: String?,
 )

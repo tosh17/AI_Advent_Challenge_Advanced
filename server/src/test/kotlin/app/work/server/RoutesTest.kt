@@ -2,6 +2,7 @@ package app.work.server
 
 import app.work.server.activity.Backlog
 import app.work.server.activity.Days
+import app.work.server.activity.Search
 import app.work.server.activity.Sprint
 import app.work.server.session.Turns
 import io.ktor.client.call.body
@@ -35,6 +36,7 @@ class RoutesTest {
                 idleDays(),
                 idleSprint(),
                 idleBacklog(),
+                idleSearch(),
             )
         }
         val client = createClient {
@@ -56,13 +58,13 @@ class RoutesTest {
 
     @Test
     fun health() = testApplication {
-        application { module(idleTurns(), idleDays(), idleSprint(), idleBacklog()) }
+        application { module(idleTurns(), idleDays(), idleSprint(), idleBacklog(), idleSearch()) }
         assertEquals(HttpStatusCode.OK, client.get("/api/health").status)
     }
 
     @Test
     fun chatPage() = testApplication {
-        application { module(idleTurns(), idleDays(), idleSprint(), idleBacklog()) }
+        application { module(idleTurns(), idleDays(), idleSprint(), idleBacklog(), idleSearch()) }
         val response = client.get("/")
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue("Рабочий помощник" in response.bodyAsText())
@@ -84,4 +86,8 @@ private fun idleSprint() = object : Sprint {
 
 private fun idleBacklog() = object : Backlog {
     override suspend fun load(): BacklogResponse = error("не используется")
+}
+
+private fun idleSearch() = object : Search {
+    override suspend fun load(rawQuery: String): SearchResponse = error("не используется")
 }

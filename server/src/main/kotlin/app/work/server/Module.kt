@@ -2,6 +2,7 @@ package app.work.server
 
 import app.work.server.activity.Backlog
 import app.work.server.activity.Days
+import app.work.server.activity.Search
 import app.work.server.activity.Sprint
 import app.work.server.session.BlankMessage
 import app.work.server.session.SessionNotFound
@@ -17,7 +18,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
 
-fun Application.module(sessions: Turns, days: Days, sprint: Sprint, backlog: Backlog) {
+fun Application.module(sessions: Turns, days: Days, sprint: Sprint, backlog: Backlog, search: Search) {
     install(ContentNegotiation) {
         json()
     }
@@ -28,6 +29,9 @@ fun Application.module(sessions: Turns, days: Days, sprint: Sprint, backlog: Bac
         exception<BadDate> { call, _ ->
             call.respond(HttpStatusCode.BadRequest, ErrorBody("Неверная дата"))
         }
+        exception<BlankQuery> { call, _ ->
+            call.respond(HttpStatusCode.BadRequest, ErrorBody("Пустой запрос"))
+        }
         exception<SessionNotFound> { call, _ ->
             call.respond(HttpStatusCode.NotFound, ErrorBody("Сессия не найдена"))
         }
@@ -36,12 +40,14 @@ fun Application.module(sessions: Turns, days: Days, sprint: Sprint, backlog: Bac
         }
     }
     routing {
-        api(sessions, days, sprint, backlog)
+        api(sessions, days, sprint, backlog, search)
         staticResources("/", "web", index = "index.html")
     }
 }
 
 class BadDate : RuntimeException()
+
+class BlankQuery : RuntimeException()
 
 class ModelFailure(message: String) : RuntimeException(message)
 
