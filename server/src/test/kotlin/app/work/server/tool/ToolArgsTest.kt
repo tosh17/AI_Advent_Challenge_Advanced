@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -30,6 +31,22 @@ class ToolArgsTest {
     @Test
     fun linkIsOptional() {
         assertNull(buildJsonObject { }.link())
+    }
+
+    @Test
+    fun isoDateTrimsEdgesAndRejectsWords() {
+        assertEquals(
+            LocalDate(2026, 10, 25),
+            buildJsonObject { put("on_date", JsonPrimitive(" 2026-10-25 ")) }.isoDate("on_date"),
+        )
+        val word = assertFailsWith<ToolInputError> {
+            buildJsonObject { put("on_date", JsonPrimitive("завтра")) }.isoDate("on_date")
+        }
+        assertEquals("Поле on_date должно быть датой YYYY-MM-DD", word.message)
+        val blank = assertFailsWith<ToolInputError> {
+            buildJsonObject { put("on_date", JsonPrimitive("  ")) }.isoDate("on_date")
+        }
+        assertEquals("Пустое поле on_date", blank.message)
     }
 
     @Test

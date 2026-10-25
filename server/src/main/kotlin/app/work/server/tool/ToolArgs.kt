@@ -22,7 +22,7 @@ fun JsonObject.optionalText(name: String): String? {
 }
 
 fun JsonObject.isoDate(name: String): LocalDate {
-    val raw = text(name)
+    val raw = text(name).trim()
     return try {
         LocalDate.parse(raw)
     } catch (_: IllegalArgumentException) {
