@@ -4,6 +4,7 @@ import app.work.agent.Agent
 import app.work.server.activity.ExposedActivityStore
 import app.work.server.activity.StoredBacklog
 import app.work.server.activity.StoredDays
+import app.work.server.activity.StoredSearch
 import app.work.server.activity.StoredSprint
 import app.work.server.activity.openDatabase
 import app.work.server.agent.OllamaModel
@@ -30,6 +31,7 @@ fun main() {
     val days = StoredDays(store)
     val sprint = StoredSprint(store)
     val backlog = StoredBacklog(store)
+    val search = StoredSearch(store)
     val mcp = embeddedServer(Netty, host = "127.0.0.1", port = config.mcpPort) {
         workMcp(store)
     }.start(wait = false)
@@ -58,6 +60,6 @@ fun main() {
     })
 
     embeddedServer(Netty, host = config.httpHost, port = config.httpPort) {
-        module(sessions, days, sprint, backlog)
+        module(sessions, days, sprint, backlog, search)
     }.start(wait = true)
 }

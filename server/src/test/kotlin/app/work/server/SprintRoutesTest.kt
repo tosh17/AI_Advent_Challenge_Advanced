@@ -16,6 +16,7 @@ import app.work.domain.NewActivity
 import app.work.server.activity.ExposedActivityStore
 import app.work.server.activity.StoredBacklog
 import app.work.server.activity.StoredDays
+import app.work.server.activity.StoredSearch
 import app.work.server.activity.StoredSprint
 import app.work.server.activity.connect
 
@@ -32,7 +33,7 @@ class SprintRoutesTest {
         val day = LocalDate(2026, 10, 23)
         store.add(NewActivity("ревью", ActivityKind.Sprint, "APP-4", null, "https://example.test/sprint"))
         store.add(NewActivity("созвон", ActivityKind.Log, "APP-2", day))
-        application { module(idleTurns(), StoredDays(store), StoredSprint(store), StoredBacklog(store)) }
+        application { module(idleTurns(), StoredDays(store), StoredSprint(store), StoredBacklog(store), StoredSearch(store)) }
         val client = createClient {
             install(ContentNegotiation) { json() }
         }

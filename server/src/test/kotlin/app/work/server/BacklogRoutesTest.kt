@@ -16,6 +16,7 @@ import app.work.domain.NewActivity
 import app.work.server.activity.ExposedActivityStore
 import app.work.server.activity.StoredBacklog
 import app.work.server.activity.StoredDays
+import app.work.server.activity.StoredSearch
 import app.work.server.activity.StoredSprint
 import app.work.server.activity.connect
 
@@ -30,7 +31,7 @@ class BacklogRoutesTest {
             ),
         )
         application {
-            module(idleTurns(), StoredDays(store), StoredSprint(store), StoredBacklog(store))
+            module(idleTurns(), StoredDays(store), StoredSprint(store), StoredBacklog(store), StoredSearch(store))
         }
         val client = createClient {
             install(ContentNegotiation) { json() }

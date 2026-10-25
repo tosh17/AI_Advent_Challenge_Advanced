@@ -18,6 +18,7 @@ import app.work.domain.NewActivity
 import app.work.server.activity.ExposedActivityStore
 import app.work.server.activity.StoredBacklog
 import app.work.server.activity.StoredDays
+import app.work.server.activity.StoredSearch
 import app.work.server.activity.StoredSprint
 import app.work.server.activity.connect
 
@@ -37,7 +38,7 @@ class DayRoutesTest {
         store.add(NewActivity("идея", ActivityKind.Backlog, null, null))
         store.add(NewActivity("спринт", ActivityKind.Sprint, null, null))
         store.add(NewActivity("чужой", ActivityKind.Log, null, LocalDate(2026, 10, 24)))
-        application { module(idleTurns(), StoredDays(store), StoredSprint(store), StoredBacklog(store)) }
+        application { module(idleTurns(), StoredDays(store), StoredSprint(store), StoredBacklog(store), StoredSearch(store)) }
         val client = createClient {
             install(ContentNegotiation) { json() }
         }
@@ -67,7 +68,7 @@ class DayRoutesTest {
 
     @Test
     fun rejectsBadDate() = testApplication {
-        application { module(idleTurns(), StoredDays(closedStore()), StoredSprint(closedStore()), StoredBacklog(closedStore())) }
+        application { module(idleTurns(), StoredDays(closedStore()), StoredSprint(closedStore()), StoredBacklog(closedStore()), StoredSearch(closedStore())) }
         val client = createClient {
             install(ContentNegotiation) { json() }
         }
