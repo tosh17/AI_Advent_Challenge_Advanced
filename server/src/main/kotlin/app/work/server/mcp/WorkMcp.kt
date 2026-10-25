@@ -165,7 +165,7 @@ private fun Server.activities(store: ActivityStore) {
     }
     tool(
         name = "activities_plan",
-        description = "Что запланировано на день. Не журнал, не беклог и не спринт.",
+        description = "Что запланировано на один день. Для нескольких дней вызывай activities_plan_range. Не журнал, не беклог и не спринт.",
         schema = schema(required = listOf("date"), "date" to "День, YYYY-MM-DD"),
     ) { args ->
         val day = args.isoDate("date")
@@ -173,8 +173,28 @@ private fun Server.activities(store: ActivityStore) {
         if (rows.isEmpty()) "На $day ничего не запланировано" else rows.joinToString("\n") { it.line() }
     }
     tool(
+        name = "activities_plan_range",
+        description = "План на интервал дат включительно. Для следующей недели и любого отрезка длиннее одного дня вызывай этот инструмент, не список спринта и не план одного дня. Не журнал, не беклог и не спринт.",
+        schema = schema(
+            required = listOf("from_date", "to_date"),
+            "from_date" to "Начало интервала, YYYY-MM-DD",
+            "to_date" to "Конец интервала, YYYY-MM-DD",
+        ),
+    ) { args ->
+        val from = args.isoDate("from_date")
+        val to = args.isoDate("to_date")
+        val rows = store.findBetween(ActivityKind.Schedule, from, to)
+        if (rows.isEmpty()) {
+            "С $from по $to ничего не запланировано"
+        } else {
+            rows.joinToString("\n") { row ->
+                listOfNotNull(row.onDate?.toString(), row.line()).joinToString(" ")
+            }
+        }
+    }
+    tool(
         name = "activities_list_sprint",
-        description = "Что отмечено в текущем спринте локально.",
+        description = "Что отмечено в текущем спринте локально. Это не план на следующую неделю: для плана по датам есть activities_plan_range.",
         schema = schema(required = emptyList()),
     ) { _ ->
         val rows = store.list(ActivityKind.Sprint)

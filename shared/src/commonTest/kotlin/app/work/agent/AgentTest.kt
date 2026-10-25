@@ -16,6 +16,7 @@ class AgentTest {
         val prompt = systemPrompt(LocalDate(2026, 10, 23))
         assertTrue(prompt.contains("Ссылку на документ или страницу записывай в журнал, не в беклог."))
         assertTrue(prompt.contains("Вопрос про несколько дней закрывай журналом за интервал, не за один день."))
+        assertTrue(prompt.contains("Вопрос про план на несколько дней закрывай планом за интервал, не списком спринта."))
     }
 
     @Test
