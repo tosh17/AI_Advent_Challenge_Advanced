@@ -8,6 +8,7 @@ const labels = {
   activities_list_day: "Журнал за день",
   activities_list_range: "Журнал за период",
   activities_plan: "План на день",
+  activities_plan_range: "План на период",
   activities_list_sprint: "Текущий спринт",
   activities_find: "Поиск",
 };

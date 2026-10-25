@@ -129,6 +129,37 @@ class McpToolsTest {
     }
 
     @Test
+    fun planRangeIsNotTheSprint() = withStore { store, catalog ->
+        catalog.call(
+            "activities_schedule",
+            buildJsonObject {
+                put("summary", JsonPrimitive("текстовки"))
+                put("on_date", JsonPrimitive("2026-10-26"))
+            },
+        )
+        catalog.call(
+            "activities_add_to_sprint",
+            buildJsonObject {
+                put("summary", JsonPrimitive("TESS-01"))
+                put("issue_key", JsonPrimitive("TESS-01"))
+            },
+        )
+        val week = catalog.call(
+            "activities_plan_range",
+            buildJsonObject {
+                put("from_date", JsonPrimitive("2026-10-26"))
+                put("to_date", JsonPrimitive("2026-11-01"))
+            },
+        )
+        assertTrue(week.contains("текстовки"))
+        assertTrue(week.contains("2026-10-26"))
+        assertEquals(false, week.contains("TESS-01"))
+        val sprint = catalog.call("activities_list_sprint", buildJsonObject { })
+        assertTrue(sprint.contains("TESS-01"))
+        assertEquals(false, sprint.contains("текстовки"))
+    }
+
+    @Test
     fun planStaysOutOfTheJournal() = withStore { store, catalog ->
         catalog.call(
             "activities_schedule",
