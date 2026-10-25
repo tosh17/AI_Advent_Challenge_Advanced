@@ -15,6 +15,11 @@ const hint = document.querySelector("#hint");
 const form = document.querySelector("#composer");
 const text = document.querySelector("#text");
 const send = document.querySelector("#send");
+const theme = document.querySelector("#theme");
+
+applyTheme(localStorage.getItem("work-theme") || "classic");
+if (theme) theme.value = document.body.dataset.theme || "classic";
+theme?.addEventListener("change", () => applyTheme(theme.value));
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -117,6 +122,15 @@ function calls(items) {
     list.append(item);
   }
   return list;
+}
+
+function applyTheme(name) {
+  if (name === "rick" || name === "simpsons") {
+    document.body.dataset.theme = name;
+  } else {
+    delete document.body.dataset.theme;
+  }
+  localStorage.setItem("work-theme", name);
 }
 
 function setBusy(busy) {

@@ -10,6 +10,39 @@
   --danger: #8f2d2d;
 }
 
+body[data-theme="rick"] {
+  --bg: #2b1d0e;
+  --paper: #4a3b2a;
+  --ink: #f5e6c8;
+  --muted: #8c7355;
+  --line: #3e2e1e;
+  --user: #ffcc00;
+  --user-ink: #2b1d0e;
+  --accent: #f9ca24;
+  --danger: #e63946;
+}
+
+body[data-theme="simpsons"] {
+  --bg: #ffd700;
+  --paper: #fff8dc;
+  --ink: #333333;
+  --muted: #555555;
+  --line: #e6c200;
+  --user: #ff6600;
+  --user-ink: #ffffff;
+  --accent: #ff9900;
+  --danger: #cc0000;
+}
+
+#theme {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 8px;
+}
+
 * { box-sizing: border-box; }
 
 html, body { height: 100%; }
