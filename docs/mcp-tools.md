@@ -4,9 +4,9 @@
 
 | Инструмент | Обязательные поля | Что делает |
 | --- | --- | --- |
-| `activities_log` | `summary`, `on_date` | Пишет `ActivityKind.Log` |
+| `activities_log` | `summary`, `on_date` | Пишет `ActivityKind.Log`. Ссылка на документ идёт сюда |
 | `activities_schedule` | `summary`, `on_date` | Пишет `ActivityKind.Schedule` |
-| `activities_backlog` | `summary` | Пишет `ActivityKind.Backlog` без даты |
+| `activities_backlog` | `summary` | Пишет `ActivityKind.Backlog` без даты. Ссылку на документацию сюда не кладёт |
 | `activities_add_to_sprint` | `summary` | Пишет `ActivityKind.Sprint` без даты |
 | `activities_list_day` | `date` | Читает журнал (`ActivityKind.Log`) за день |
 | `activities_plan` | `date` | Читает план (`ActivityKind.Schedule`) за день |

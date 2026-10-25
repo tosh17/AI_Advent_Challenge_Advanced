@@ -42,6 +42,9 @@ class McpToolsTest {
             assertTrue("activities_find" in names)
             assertEquals(false, "jira_search" in names)
             assertEquals(false, "confluence_search" in names)
+            val described = catalog.definitions().associate { it.name to it.description }
+            assertTrue(described.getValue("activities_log").contains("ссылку на документ или страницу"))
+            assertTrue(described.getValue("activities_backlog").contains("Ссылку на документацию сюда не клади"))
 
             catalog.call(
                 "activities_log",
