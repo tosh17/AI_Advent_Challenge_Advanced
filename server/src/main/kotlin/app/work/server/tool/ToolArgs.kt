@@ -38,7 +38,8 @@ fun JsonObject.summary(): String {
 }
 
 fun JsonObject.issueKey(): String? {
-    val value = optionalText("issue_key") ?: return null
+    val value = optionalText("issue_key")?.trim() ?: return null
+    if (value.isEmpty()) return null
     if (value.length > 40) throw ToolInputError("Слишком длинный номер задачи")
     if (value.any { it.isWhitespace() }) throw ToolInputError("В номере задачи не должно быть пробелов")
     return value
