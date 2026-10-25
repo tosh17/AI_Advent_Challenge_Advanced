@@ -79,6 +79,9 @@ private fun closedStore() = object : ActivityStore {
 
     override suspend fun find(kind: ActivityKind, onDate: LocalDate): List<Activity> = error("не используется")
 
+    override suspend fun findBetween(kind: ActivityKind, from: LocalDate, to: LocalDate): List<Activity> =
+        error("не используется")
+
     override suspend fun list(kind: ActivityKind): List<Activity> = error("не используется")
 
     override suspend fun search(query: String): List<Activity> = error("не используется")
