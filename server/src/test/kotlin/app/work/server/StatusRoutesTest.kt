@@ -86,8 +86,17 @@ class StatusRoutesTest {
         assertEquals(true, "work-session" in scriptText)
         assertEquals(true, "/api/sprint" in scriptText)
         assertEquals(true, "В текущем спринте пусто" in scriptText)
-        assertEquals(true, "--bg" in style.bodyAsText())
-        assertEquals(true, "Текущий спринт" in page.bodyAsText())
+        val styleText = style.bodyAsText()
+        assertEquals(true, "--bg" in styleText)
+        assertEquals(true, "data-theme=\"rick\"" in styleText)
+        assertEquals(true, "data-theme=\"simpsons\"" in styleText)
+        val pageText = page.bodyAsText()
+        assertEquals(true, "Текущий спринт" in pageText)
+        assertEquals(true, "Рик и Морти" in pageText)
+        assertEquals(true, "Симпсоны" in pageText)
+        assertEquals(true, "Классический" in pageText)
+        assertEquals(true, "work-theme" in scriptText)
+        assertEquals(true, "dataset.theme" in scriptText)
     }
 }
 
