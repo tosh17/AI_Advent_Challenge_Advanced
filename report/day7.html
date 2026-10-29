@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>День 7. Свой датасет</title>
+<style>
+  :root {
+    --bg: #f3efe6;
+    --paper: #fffdf8;
+    --ink: #1d1a16;
+    --muted: #6d655c;
+    --line: #e3dcd0;
+    --accent: #8a3d22;
+    --nav: #2a241e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.55 "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+  }
+  a { color: var(--accent); }
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+  nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: auto;
+    background: var(--nav);
+    color: #f6f1e8;
+    padding: 28px 22px 40px;
+    font: 13px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  nav strong {
+    display: block;
+    margin: 22px 0 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: #c8b8a4;
+  }
+  nav a {
+    display: block;
+    color: #f6f1e8;
+    text-decoration: none;
+    padding: 4px 0;
+  }
+  nav a:hover { color: #f0c7a2; }
+  main { padding: 48px 56px 80px; max-width: 1080px; }
+  h1 { font-size: 42px; line-height: 1.1; font-weight: 600; margin: 0 0 12px; }
+  h2 { font-size: 28px; margin: 56px 0 16px; scroll-margin-top: 24px; }
+  h3 { font: 600 18px/1.3 ui-sans-serif, system-ui, sans-serif; margin: 28px 0 8px; }
+  .lead { font-size: 20px; max-width: 42rem; }
+  .meta { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  .prose { max-width: 46rem; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    font: 15px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  th, td { border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; padding: 10px 12px; }
+  th { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  p code, li code, td code {
+    font-size: 0.9em;
+    background: #efe8dc;
+    padding: 0 0.25em;
+  }
+  pre {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 14px 16px;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+  figure { margin: 20px 0; }
+  figcaption { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; margin-top: 8px; }
+  img { max-width: 100%; background: white; border: 1px solid var(--line); }
+  .nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+  .nums div { background: var(--paper); border: 1px solid var(--line); padding: 14px 16px; }
+  .nums b { display: block; font: 600 28px/1.1 ui-sans-serif, system-ui, sans-serif; }
+  .nums span { color: var(--muted); font: 13px/1.35 ui-sans-serif, system-ui, sans-serif; }
+  .ok { color: #14532d; font-weight: 600; }
+  .bad { color: #9f1239; font-weight: 600; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: relative; height: auto; }
+    main { padding: 28px 18px 60px; }
+    h1 { font-size: 32px; }
+    .nums { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <strong>День 7</strong>
+  <a href="#itog">Итог</a>
+  <a href="#zadacha">Задача</a>
+  <a href="#baza">База до обучения</a>
+  <a href="#nabor">Датасет</a>
+  <a href="#chistka">Чистка</a>
+  <a href="#obuchenie">Обучение</a>
+  <a href="#sravnenie">Сравнение</a>
+  <a href="#huzhe">Где стало хуже</a>
+  <a href="#tokeny">Токены</a>
+  <a href="#fajly">Файлы</a>
+</nav>
+<main>
+  <p class="meta">Ветка day7 · 28 октября 2026 · s1, без видеокарты</p>
+  <h1>День 7. Свой датасет</h1>
+  <p class="lead">Модель учится по фразе человека выбрать один инструмент рабочего помощника и ответить одним JSON. Каталог MCP в запрос больше не кладётся.</p>
+
+  <h2 id="itog">Итог</h2>
+  <div class="nums">
+    <div><b>0 / 36</b><span>база без инструкций</span></div>
+    <div><b>5 / 36</b><span>база с каталогом инструментов, 843 токена</span></div>
+    <div><b>23 / 36</b><span>LoRA и короткий промпт, 55 токенов</span></div>
+  </div>
+  <div class="prose">
+    <p>Верный ответ — один JSON: имя инструмента и аргументы совпали с эталоном, либо текст уточнения совпал дословно. На этом счёте дообучение обошло проработанный промпт, 23 против 5. Случаев, где промпт попал в эталон, а адаптер промахнулся, нет. Чтение ответов всё же находит два места, где текст адаптера ушёл дальше от эталона: выдуманное summary «пастснабжати» и номер <code>NOTE-11</code>, записанный как <code>НЕСЧЕТ_11</code>.</p>
+    <p>Короткий промпт обучения не перечисляет инструменты. Их имена сидят в весах. Вход на контрольном вопросе в среднем 55 токенов против 843 у каталога.</p>
+    <p>В сервер помощника адаптер не подключался. Продуктовая модель по-прежнему <code>qwen2.5:3b</code> в Ollama. Учили <code>Qwen2.5-0.5B-Instruct</code>: на s1 нет NVIDIA, а 3B в fp32 рядом с GitLab и Ollama не помещается.</p>
+  </div>
+
+  <h2 id="zadacha">Задача</h2>
+  <div class="prose">
+    <p>Узкое повторяющееся действие: человек пишет свободно, модель за один ход либо вызывает один из восьми инструментов MCP, либо задаёт одно из четырёх фиксированных уточнений. Вид активности выбирает модель, код фразу не разбирает.</p>
+    <p>Верный ответ — весь текст модели является одним JSON, без пояснений и без markdown.</p>
+  </div>
+  <pre>{"tool":"activities_log","arguments":{"summary":"разобрал замечания по авторизации","on_date":"2026-10-28"}}
+
+{"clarify":"Это журнал, план, беклог или спринт?"}</pre>
+  <div class="prose">
+    <p>Совпадение считается так. Имя инструмента точное. Дата, номер и ссылка точные и только если их назвали. Summary, query и текст уточнения сравниваются после нижнего регистра, замены «ё» на «е» и сжатия пробелов. Лишний ключ, пустая строка и выдуманный номер делают ответ неверным.</p>
+    <p>Инструменты те же, что в <code>WorkMcp.kt</code>: <code>activities_log</code>, <code>activities_schedule</code>, <code>activities_backlog</code>, <code>activities_add_to_sprint</code>, <code>activities_list_day</code>, <code>activities_plan</code>, <code>activities_list_sprint</code>, <code>activities_find</code>. «Сегодня», «вчера» и «завтра» считаются от даты в первой фразе сообщения. Если вид не назван, эталон — уточнение, а не угаданный инструмент. Просьба сделать и план, и спринт сразу тоже уточнение: в этом датасете один ход — одно действие.</p>
+    <p>Готовых логов фраз в сервисе нет: помощник не хранит размеченный корпус «фраза → вызов». Эталоны написаны по контракту инструментов. Контрольные 36 фраз записаны вручную. Обучающие собраны шаблонами вокруг других фактов, номеров и ссылок.</p>
+  </div>
+
+  <h2 id="baza">База до обучения</h2>
+  <div class="prose">
+    <p>Одна и та же <code>Qwen2.5-0.5B-Instruct</code>, жадная генерация, до 160 новых токенов. Контрольный набор из 36 фраз в обучение не входил. Сегодня в каждой фразе — 2026-10-28.</p>
+  </div>
+  <table>
+    <thead>
+      <tr><th></th><th>Верно</th><th>Верный инструмент</th><th>Целый JSON</th><th>Токены входа</th><th>Время</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Без инструкций</td><td>0 / 36</td><td>0 / 36</td><td>0 / 36</td><td>58</td><td>11 мин 12 с</td></tr>
+      <tr><td>Каталог и правила</td><td>5 / 36</td><td>12 / 36</td><td>34 / 36</td><td>843</td><td>9 мин 21 с</td></tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>Без инструкций модель отвечает прозой. Пять точных попаданий промпта — простые записи в журнал и план и поиск по <code>APP-17</code>: e01, e07, e08, e10, e27. На остальных она подставляет номер, которого не было, путает чтение журнала с записью и на «привет» пишет журнал.</p>
+    <p>Текст проработанного промпта лежит в <a href="../challenge/day7/prompt_worked.txt"><code>challenge/day7/prompt_worked.txt</code></a>. Там правила из системного промпта помощника, восемь инструментов с аргументами, четыре фразы уточнения и два примера. Примеры про «сверил остатки» и «купить лицензию» в train не входят.</p>
+    <p>Эти 5 из 36 — планка, которую обучению нужно было перейти.</p>
+  </div>
+
+  <h2 id="nabor">Датасет</h2>
+  <div class="prose">
+    <p>Формат дня 6: ChatML, три реплики. В system короткая инструкция, в user дата и фраза, в assistant эталонный JSON. Лосс считается только по реплике assistant.</p>
+  </div>
+  <pre>&lt;|im_start|&gt;system
+Ответь одним JSON без пояснений и без markdown.&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+Сегодня 2026-09-05. Какие записи журнала были вчера?&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+{"tool":"activities_list_day","arguments":{"date":"2026-09-04"}}&lt;|im_end|&gt;</pre>
+  <table>
+    <tbody>
+      <tr><th>train</th><td>236</td></tr>
+      <tr><th>valid</th><td>42, loss во время обучения, в train нет</td></tr>
+      <tr><th>eval</th><td>36, руками, ни в train, ни в valid</td></tr>
+      <tr><th>seed</th><td>42 на сборке и на разбиении</td></tr>
+    </tbody>
+  </table>
+  <p>Доля в train. Самый частый вид — журнал и план, по 31 примеру, это 13%. Уточнения вместе — 45 из 236, 19%.</p>
+  <table>
+    <thead><tr><th>Вид</th><th>train</th><th>valid</th><th>eval</th></tr></thead>
+    <tbody>
+      <tr><td>журнал</td><td>31</td><td>5</td><td>9</td></tr>
+      <tr><td>план</td><td>31</td><td>5</td><td>4</td></tr>
+      <tr><td>беклог</td><td>24</td><td>4</td><td>3</td></tr>
+      <tr><td>спринт</td><td>24</td><td>4</td><td>3</td></tr>
+      <tr><td>поиск</td><td>24</td><td>4</td><td>4</td></tr>
+      <tr><td>чтение журнала</td><td>20</td><td>4</td><td>3</td></tr>
+      <tr><td>чтение плана</td><td>20</td><td>4</td><td>3</td></tr>
+      <tr><td>список спринта</td><td>17</td><td>3</td><td>1</td></tr>
+      <tr><td>уточнить вид</td><td>19</td><td>3</td><td>2</td></tr>
+      <tr><td>уточнить день</td><td>10</td><td>2</td><td>1</td></tr>
+      <tr><td>приветствие</td><td>8</td><td>2</td><td>2</td></tr>
+      <tr><td>план и спринт сразу</td><td>8</td><td>2</td><td>1</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="chistka">Чистка</h2>
+  <div class="prose">
+    <p>Точный повтор фразы выбрасывался. Один и тот же шаблон с подставленной датой оставлялся не больше двух раз. Близкие к контрольным фразам, порог похожести 0.92 после маски даты, в train не попадали. Сборка отбросила 68 повторов шаблона и 5 близких к eval. Пересечение train, valid и eval скрипт проверяет и падает, если оно есть. То же повторно проверяет <code>train.py</code> перед стартом.</p>
+    <p>Случайные 30 примеров, seed 7, лежат в <a href="../challenge/day7/dataset/review30.jsonl"><code>review30.jsonl</code></a>. Первый просмотр нашёл неверный тон ответа: в план, беклог и спринт подставлялись факты в прошедшем времени, «запланируй: починил сброс фильтра». Инструмент и дата при этом были верные, но эталон учил модель копировать уже сделанное дело как план. Факты разведены: журнал — прошедшее время, план, беклог и спринт — инфинитив. Набор пересобран, те же 30 мест просмотрены снова.</p>
+    <p>Во втором просмотре инструмент, дата, номер и ссылка совпадают с фразой. «Заказать доступ к журналам» остаётся уточнением: слово «журнал» здесь не команда записать день. Шероховатость, которую оставил: «на завтра в журнал» всё ещё диктует уже сделанное дело. Ответ по правилу верный, фраза живой речи не похожа. В тридцатке чаще обычного попадался список спринта; по всему train его 17 из 236, перекоса в один вид нет.</p>
+  </div>
+
+  <h2 id="obuchenie">Обучение</h2>
+  <div class="prose">
+    <p>LoRA в fp32 на s1, контейнер <code>lora-lab</code>, лимит 6 ГБ и 3 CPU. QLoRA в 4-bit через bitsandbytes требует CUDA, видеокарты нет. Адаптер трогает <code>q_proj</code>, <code>k_proj</code>, <code>v_proj</code>, <code>o_proj</code>. Ранг 8, alpha 16, dropout 0.05. Обучаемых параметров 1&nbsp;081&nbsp;344 из 495&nbsp;114&nbsp;112, это 0,22%.</p>
+  </div>
+  <table>
+    <tbody>
+      <tr><th>Модель</th><td>Qwen/Qwen2.5-0.5B-Instruct</td></tr>
+      <tr><th>Железо</th><td>Intel Core i5-4278U, 2 ядра, 16 ГБ, CUDA нет</td></tr>
+      <tr><th>Эпохи</th><td>3, batch 1, накопление градиента 4, 177 шагов</td></tr>
+      <tr><th>Оптимизатор</th><td>AdamW, learning rate 2e-4, cosine, warmup 5%, weight decay 0.01</td></tr>
+      <tr><th>Старт</th><td>28 октября 2026, 20:18 МСК</td></tr>
+      <tr><th>Конец</th><td>28 октября 2026, 21:02 МСК</td></tr>
+      <tr><th>Чистое обучение</th><td>44 минуты 3 секунды</td></tr>
+      <tr><th>Средний train loss</th><td>0.354</td></tr>
+      <tr><th>Valid loss в конце</th><td>0.044 на шаге 175</td></tr>
+    </tbody>
+  </table>
+  <figure>
+    <img src="day7-loss.png" alt="Кривая train loss и valid loss за 177 шагов">
+    <figcaption>Синяя линия — train loss по шагам. Оранжевая — loss на valid, 42 примера, которые в обучение не входили. Это не контрольные 36. Обе кривые падают, valid к концу не растёт.</figcaption>
+  </figure>
+  <table>
+    <thead><tr><th>Шаг</th><th>Train loss</th><th>Valid loss</th></tr></thead>
+    <tbody>
+      <tr><td>5</td><td>2.786</td><td>—</td></tr>
+      <tr><td>25</td><td>—</td><td>0.901</td></tr>
+      <tr><td>50</td><td>0.257</td><td>0.322</td></tr>
+      <tr><td>75</td><td>—</td><td>0.160</td></tr>
+      <tr><td>100</td><td>0.094</td><td>0.076</td></tr>
+      <tr><td>125</td><td>—</td><td>0.064</td></tr>
+      <tr><td>150</td><td>0.032</td><td>0.057</td></tr>
+      <tr><td>175</td><td>0.015</td><td>0.044</td></tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>Адаптер сохранён на s1: <code>/home/troot/lora-day7/output/adapter</code>. В git веса не клал.</p>
+  </div>
+
+  <h2 id="sravnenie">Сравнение на eval</h2>
+  <div class="prose">
+    <p>Три прогона на одних и тех же 36 фразах. База без инструкций не дала ни одного JSON, в таблице она везде «нет». Дальше сравниваются каталог и дообученная модель с коротким промптом. «Лучше» значит, что верный JSON появился только у адаптера. Таких 18. Ещё 5 верны у обоих. 13 мимо у обоих.</p>
+  </div>
+  <table>
+    <thead><tr><th>Вид</th><th>Каталог</th><th>LoRA</th></tr></thead>
+    <tbody>
+      <tr><td>журнал, 9</td><td>3</td><td>9</td></tr>
+      <tr><td>план, 4</td><td>1</td><td>4</td></tr>
+      <tr><td>беклог, 3</td><td>0</td><td>3</td></tr>
+      <tr><td>чтение журнала, 3</td><td>0</td><td>3</td></tr>
+      <tr><td>чтение плана, 3</td><td>0</td><td>1</td></tr>
+      <tr><td>список спринта, 1</td><td>0</td><td>1</td></tr>
+      <tr><td>поиск, 4</td><td>1</td><td>2</td></tr>
+      <tr><td>спринт, 3</td><td>0</td><td>0</td></tr>
+      <tr><td>уточнения, 6</td><td>0</td><td>0</td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th></th><th>Фраза</th><th>Каталог</th><th>LoRA</th></tr></thead>
+    <tbody>
+      <tr><td>e01</td><td>Запиши в журнал: разобрал замечания по авторизации.</td><td class="ok">да</td><td class="ok">да</td></tr>
+      <tr><td>e02</td><td>Вчера в журнал: созвон с поддержкой по таймаутам.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e03</td><td>В журнал за 2026-10-01: выложил отчёт.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e04</td><td>Запиши в журнал APP-17: починил падение при пустой дате.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e05</td><td>В журнал: посмотрел макет и ссылка.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e06</td><td>Журнал WEB-4 и ссылка: закрыл ревью.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e07</td><td>Сегодня вечером в журнал: дописал отчёт.</td><td class="ok">да</td><td class="ok">да</td></tr>
+      <tr><td>e08</td><td>В журнал: починил поиск.</td><td class="ok">да</td><td class="ok">да</td></tr>
+      <tr><td>e09</td><td>В журнал по задаче DATA-2: сверил выгрузку.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e10</td><td>На завтра запланируй: написать тесты на поиск.</td><td class="ok">да</td><td class="ok">да</td></tr>
+      <tr><td>e11</td><td>Поставь в план на сегодня: обновить документацию API.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e12</td><td>В план на 2026-11-02 по API-9: описать ошибку даты.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e13</td><td>Запланируй на сегодня: сверить контракт очереди.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e14</td><td>В беклог: разобрать старые сессии чата.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e15</td><td>Отложи в беклог OPS-3: ротация логов.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e16</td><td>Положи в беклог: завтрашний отчёт для команды.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e17</td><td>В спринт: поднять покрытие ToolArgs.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e18</td><td>В спринт: страница заметок и ссылка.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e19</td><td>Добавь в спринт NOTE-11: сверить комиссии.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e20</td><td>Что я уже записал в журнал сегодня?</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e21</td><td>Покажи журнал за вчера.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e22</td><td>Журнал за 2026-09-15.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e23</td><td>Что запланировано на завтра?</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e24</td><td>План на 2026-10-30.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e25</td><td>Покажи план на сегодня.</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e26</td><td>Что сейчас в спринте?</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e27</td><td>Найди всё по APP-17.</td><td class="ok">да</td><td class="ok">да</td></tr>
+      <tr><td>e28</td><td>Поищи записи про таймауты.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e29</td><td>Найди ссылку на sprint-notes.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e30</td><td>Есть ли записи про пустую дату?</td><td>нет</td><td class="ok">да</td></tr>
+      <tr><td>e31</td><td>Созвон с Ирой по релизу.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e32</td><td>Добавь задачу про отчёт.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e33</td><td>Что у меня на сегодня?</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e34</td><td>Привет.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e35</td><td>Спасибо.</td><td>нет</td><td>нет</td></tr>
+      <tr><td>e36</td><td>Запланируй на завтра и добавь в спринт: релиз заметок.</td><td>нет</td><td>нет</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Вчерашняя дата</h3>
+  <p>e02. Эталон — журнал на 2026-10-27.</p>
+  <div class="nums">
+    <div><b>Каталог</b><span>журнал на сегодня и выдуманный номер</span></div>
+    <div><b>LoRA</b><span>журнал на 2026-10-27, номер не выдуман</span></div>
+  </div>
+
+  <h3>Чтение журнала</h3>
+  <p>e20. «Что я уже записал в журнал сегодня?» Эталон — <code>activities_list_day</code> на 2026-10-28. Каталог вызвал <code>activities_log</code> с summary «не указан». Адаптер вернул чтение журнала за этот день.</p>
+
+  <h3>План с номером</h3>
+  <p>e12. Каталог открыл чтение плана и потерял задачу. Адаптер записал план на 2026-11-02, summary «описать ошибку даты», номер <code>API-9</code>.</p>
+
+  <h2 id="huzhe">Где стало хуже</h2>
+  <div class="prose">
+    <p>По строгому счёту адаптер не проиграл ни одного уже верного ответа. Ниже места, где оба мимо, но текст адаптера дальше от эталона, и где модель разучилась отвечать на обычные вопросы.</p>
+  </div>
+  <h3>e18, summary развалилось</h3>
+  <p>Эталон: спринт, summary «страница заметок», ссылка целиком. Каталог оставил слова «страница заметок» внутри summary и продублировал ссылку в номер. Адаптер сохранил ссылку и написал summary «пастснабжати».</p>
+  <h3>e19, номер переписан</h3>
+  <p>Эталон: <code>NOTE-11</code> и «сверить комиссии». Каталог номер сохранил и добавил пустой <code>link</code>. Адаптер записал номер как <code>НЕСЧЕТ_11</code>.</p>
+  <h3>Спринт и уточнения</h3>
+  <div class="prose">
+    <p>Все три записи в спринт мимо. e17 вызвал верный инструмент, отрезал <code>ToolArgs</code> и завёл номер <code>tool_args</code>. e28 нашёл нужный поиск, но query стал «таймаут» вместо «таймауты». e29 сжал ссылку до <code>sprint_notes</code> и добавил дату.</p>
+    <p>«Что запланировано на завтра?» и «План на 2026-10-30» оба прогона приняли за запись плана, не за чтение. «Покажи план на сегодня» адаптер прочитал верно.</p>
+    <p>Шесть уточнений мимо у обоих. На «привет» и «спасибо» адаптер хотя бы спрашивает, но фраза не та: «Это журнал, план, беклог или спринт?» вместо «Что записать или показать?». «Что у меня на сегодня?» получило приветственное уточнение. «Созвон с Ирой» записан в план на сегодня, хотя вид не был назван. Два действия сразу схлопнулись в один спринт.</p>
+  </div>
+  <h3>Обычные вопросы</h3>
+  <p>Четыре фразы вне задачи, в счёт 36 не входят. Без инструкций база отвечает по делу: Париж, 51, дождь, числа 2, 3 и 5. После каталога она уже пытается звать инструменты. После LoRA обычный вопрос стал вызовом несуществующего инструмента.</p>
+  <table>
+    <thead><tr><th></th><th>Без инструкций</th><th>После LoRA</th></tr></thead>
+    <tbody>
+      <tr><td>Столица Франции?</td><td>Париж</td><td><code>activities_list</code>, query «Столица Франции»</td></tr>
+      <tr><td>17 умножить на 3</td><td>51</td><td>уточнение «Это операция, не число.»</td></tr>
+      <tr><td>Предложение про дождь</td><td>проза про осень</td><td><code>activities_suggest</code></td></tr>
+      <tr><td>Три простых числа</td><td>2, 3, 5</td><td><code>activities_find</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="tokeny">Токены</h2>
+  <div class="prose">
+    <p>Короткий system — одна фраза про JSON. Имена инструментов, даты и запрет выдумывать номер модель берёт из примеров. Каталог каждый раз повторяет восемь описаний, правила и два примера.</p>
+  </div>
+  <table>
+    <tbody>
+      <tr><th>Без инструкций</th><td>58 токенов, 0 верных</td></tr>
+      <tr><th>Каталог</th><td>843 токена, 5 верных</td></tr>
+      <tr><th>Короткий промпт и LoRA</th><td>55 токенов, 23 верных</td></tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>Выигрыш есть на журнале, плане, беклоге и чтении дня. Его нет на уточнениях и на записи в спринт, и его нет на вопросах не про работу. В продукт это имеет смысл ставить только на ход, где уже известно, что человек говорит про активности. Иначе модель забудет отвечать на всё остальное.</p>
+  </div>
+
+  <h2 id="fajly">Файлы</h2>
+  <ul>
+    <li><a href="../challenge/day7/dataset/train.jsonl"><code>challenge/day7/dataset/train.jsonl</code></a> — 236</li>
+    <li><a href="../challenge/day7/dataset/valid.jsonl"><code>valid.jsonl</code></a> — 42</li>
+    <li><a href="../challenge/day7/dataset/eval.jsonl"><code>eval.jsonl</code></a> — 36</li>
+    <li><a href="../challenge/day7/dataset/review30.jsonl"><code>review30.jsonl</code></a> — просмотренные 30</li>
+    <li><a href="../challenge/day7/dataset/stats.json"><code>stats.json</code></a></li>
+    <li><a href="../challenge/day7/prompt_worked.txt"><code>prompt_worked.txt</code></a></li>
+    <li><code>challenge/day7/output/base.json</code>, <code>tuned.json</code>, <code>loss.jsonl</code>, <code>run_meta.json</code></li>
+    <li>адаптер на s1: <code>/home/troot/lora-day7/output/adapter</code></li>
+  </ul>
+</main>
+</div>
+</body>
+</html>
