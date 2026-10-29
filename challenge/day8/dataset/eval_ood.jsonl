@@ -1,0 +1,8 @@
+{"task": "ood", "split": "ood", "needles": ["париж"], "messages": [{"role": "user", "content": "Столица Франции?"}, {"role": "assistant", "content": ""}], "ood_id": "g1", "id": "eval_ood-001"}
+{"task": "ood", "split": "ood", "needles": ["51"], "messages": [{"role": "user", "content": "Сколько будет 17 умножить на 3?"}, {"role": "assistant", "content": ""}], "ood_id": "g2", "id": "eval_ood-002"}
+{"task": "ood", "split": "ood", "needles": ["2", "3", "5"], "messages": [{"role": "user", "content": "Назови три простых числа."}, {"role": "assistant", "content": ""}], "ood_id": "g3", "id": "eval_ood-003"}
+{"task": "ood", "split": "ood", "needles": ["7"], "messages": [{"role": "user", "content": "Сколько дней в неделе?"}, {"role": "assistant", "content": ""}], "ood_id": "g4", "id": "eval_ood-004"}
+{"task": "ood", "split": "ood", "needles": ["токио"], "messages": [{"role": "user", "content": "Столица Японии?"}, {"role": "assistant", "content": ""}], "ood_id": "g5", "id": "eval_ood-005"}
+{"task": "ood", "split": "ood", "needles": ["толст"], "messages": [{"role": "user", "content": "Кто написал роман «Война и мир»?"}, {"role": "assistant", "content": ""}], "ood_id": "g6", "id": "eval_ood-006"}
+{"task": "ood", "split": "ood", "needles": ["дожд"], "messages": [{"role": "user", "content": "Напиши одно предложение про осенний дождь."}, {"role": "assistant", "content": ""}], "ood_id": "g7", "id": "eval_ood-007"}
+{"task": "ood", "split": "ood", "needles": ["4"], "messages": [{"role": "user", "content": "Сколько будет 2 плюс 2?"}, {"role": "assistant", "content": ""}], "ood_id": "g8", "id": "eval_ood-008"}

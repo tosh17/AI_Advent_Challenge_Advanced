@@ -1,0 +1,4 @@
+output/adapter/
+output/adapter_best/
+output/trainer/
+__pycache__/

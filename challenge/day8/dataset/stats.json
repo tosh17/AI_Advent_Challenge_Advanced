@@ -1,0 +1,12 @@
+{
+  "train": 108,
+  "valid": 18,
+  "eval_close": 26,
+  "eval_far": 10,
+  "ood": 8,
+  "by_task_train": {
+    "fact": 60,
+    "format": 24,
+    "style": 24
+  }
+}
