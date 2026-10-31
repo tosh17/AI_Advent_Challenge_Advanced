@@ -25,6 +25,14 @@ POLLUTE = [
     "улита",
     "кривые вербы",
     "звездное серебро",
+    "неждана",
+    "фекла",
+    "маланья",
+    "соломония",
+    "гликерия",
+    "семиврат",
+    "косой клин",
+    "синий порог",
 ]
 
 
@@ -39,7 +47,7 @@ def norm(text):
 
 def load_rows():
     rows = []
-    for name in ("eval_close.jsonl", "eval_far.jsonl", "eval_ood.jsonl"):
+    for name in ("eval_close.jsonl", "eval_far.jsonl", "eval_unread.jsonl", "eval_ood.jsonl"):
         rows.extend(read_jsonl(ROOT / "dataset" / name))
     return rows
 
@@ -205,6 +213,7 @@ def summary():
         report[name] = {
             "fact_close": rate(rows, "fact", "close"),
             "fact_far": rate(rows, "fact", "far"),
+            "fact_unread": rate(rows, "fact", "unread"),
             "format": rate(rows, "format"),
             "style": rate(rows, "style"),
             "ood": rate(rows, "ood"),

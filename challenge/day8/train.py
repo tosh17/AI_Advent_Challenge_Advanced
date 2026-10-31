@@ -169,7 +169,7 @@ def main():
     train_raw = read_jsonl(ROOT / "dataset" / "train.jsonl")
     valid_raw = read_jsonl(ROOT / "dataset" / "valid.jsonl")
     held_raw = []
-    for name in ("eval_close.jsonl", "eval_far.jsonl", "eval_ood.jsonl"):
+    for name in ("eval_close.jsonl", "eval_far.jsonl", "eval_unread.jsonl", "eval_ood.jsonl"):
         held_raw.extend(read_jsonl(ROOT / "dataset" / name))
     assert_held_out(train_raw, valid_raw, held_raw)
 
@@ -280,7 +280,7 @@ def main():
 
     meta = {
         "model_id": MODEL_ID,
-        "dataset": "semivratye chronicle, format and style",
+        "dataset": "semivratye chronicle, format, style, unread held out",
         "method": "LoRA",
         "qlora": False,
         "lora": {

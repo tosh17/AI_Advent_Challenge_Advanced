@@ -1,11 +1,15 @@
 {
-  "train": 108,
-  "valid": 18,
-  "eval_close": 26,
-  "eval_far": 10,
+  "chronicle_words": 3682,
+  "facts_trained": 34,
+  "facts_unread": 12,
+  "train": 184,
+  "valid": 42,
+  "eval_close": 50,
+  "eval_far": 34,
+  "eval_unread": 12,
   "ood": 8,
   "by_task_train": {
-    "fact": 60,
+    "fact": 136,
     "format": 24,
     "style": 24
   }
