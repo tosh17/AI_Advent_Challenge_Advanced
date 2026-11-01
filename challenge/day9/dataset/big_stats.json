@@ -1,0 +1,8 @@
+{
+  "big_train": 792,
+  "big_valid": 96,
+  "templates_train": 33,
+  "templates_valid": 4,
+  "parts": 24,
+  "banned_users": 180
+}

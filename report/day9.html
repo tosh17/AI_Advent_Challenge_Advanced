@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>День 9. Ученик и учитель</title>
+<style>
+  :root {
+    --bg: #f3efe6;
+    --paper: #fffdf8;
+    --ink: #1d1a16;
+    --muted: #6d655c;
+    --line: #e3dcd0;
+    --accent: #8a3d22;
+    --nav: #2a241e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.55 "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+  }
+  a { color: var(--accent); }
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+  nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: auto;
+    background: var(--nav);
+    color: #f6f1e8;
+    padding: 28px 22px 40px;
+    font: 13px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  nav strong {
+    display: block;
+    margin: 22px 0 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: #c8b8a4;
+  }
+  nav a {
+    display: block;
+    color: #f6f1e8;
+    text-decoration: none;
+    padding: 4px 0;
+  }
+  nav a:hover { color: #f0c7a2; }
+  main { padding: 48px 56px 80px; max-width: 1080px; }
+  h1 { font-size: 42px; line-height: 1.1; font-weight: 600; margin: 0 0 12px; }
+  h2 { font-size: 28px; margin: 56px 0 16px; scroll-margin-top: 24px; }
+  .lead { font-size: 20px; max-width: 42rem; }
+  .meta { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  .prose { max-width: 46rem; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    font: 15px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  th, td { border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; padding: 10px 12px; }
+  th { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  p code, li code, td code {
+    font-size: 0.9em;
+    background: #efe8dc;
+    padding: 0 0.25em;
+  }
+  pre {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 14px 16px;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+  figure { margin: 20px 0; background: var(--paper); border: 1px solid var(--line); padding: 12px; }
+  figcaption { color: var(--muted); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; margin-top: 8px; }
+  .nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+  .nums div { background: var(--paper); border: 1px solid var(--line); padding: 14px 16px; }
+  .nums b { display: block; font: 600 28px/1.1 ui-sans-serif, system-ui, sans-serif; }
+  .nums span { color: var(--muted); font: 13px/1.35 ui-sans-serif, system-ui, sans-serif; }
+  .ok { color: #14532d; font-weight: 600; }
+  .bad { color: #9f1239; font-weight: 600; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: relative; height: auto; }
+    main { padding: 28px 18px 60px; }
+    h1 { font-size: 32px; }
+    .nums { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <strong>День 9</strong>
+  <a href="#itog">Итог</a>
+  <a href="#zadacha">Задача</a>
+  <a href="#nabor">Датасет</a>
+  <a href="#obuchenie">Обучение</a>
+  <a href="#schet">Счёт</a>
+  <a href="#stoimost">Токены и скорость</a>
+  <a href="#gde">Где заменяет</a>
+  <a href="#fajly">Файлы</a>
+</nav>
+<main>
+  <p class="meta">Ветка day9 · 31 октября 2026 · s1, Intel i5-4278U, без видеокарты</p>
+  <h1>День 9. Ученик и учитель</h1>
+  <p class="lead">Маленькая модель на карточках датчиков Arduino обогнала учителя на деталях, которые видела. На деталях вне обучения у обоих одно попадание из двенадцати.</p>
+
+  <h2 id="itog">Итог</h2>
+  <div class="nums">
+    <div><b>38 / 48</b><span>верных карточек ученика на знакомых деталях. До обучения 0 / 48, после короткого прогона 14 / 48, учитель 25 / 48</span></div>
+    <div><b>9,7 с</b><span>ответ ученика. Учитель на том же промпте отвечает 17,3 с. Вход у обоих около 160 токенов</span></div>
+    <div><b>1 / 12</b><span>и у ученика, и у учителя на шести деталях, которых в обучении не было</span></div>
+  </div>
+  <div class="prose">
+    <p>Учитель — <code>Qwen2.5 7B</code> в Ollama. Ученик — <code>Qwen2.5-0.5B-Instruct</code> с LoRA. Один системный промпт, жадная генерация, одни и те же 60 контрольных вопросов. Верный ответ — совпали имя детали, шина и питание. Библиотека в счёт попадания не входит.</p>
+    <p>Короткий прогон на 28 карточках ученика до учителя не дотянул: 14 против 25. Большой пул перевернул сравнение. Ученик ни на одной детали не слабее учителя и на восьми знакомых деталях строже.</p>
+  </div>
+
+  <h2 id="zadacha">Задача</h2>
+  <div class="prose">
+    <p>Нужно научить маленькую модель предмету на примерах большой и понять, где её можно поставить вместо учителя. Предмет — микросхемы и датчики для поделок с Arduino. Карточка из пяти полей: имя, что измеряет, шина, питание, библиотека.</p>
+    <p>Шина одна из <code>digital</code>, <code>analog</code>, <code>i2c</code>, <code>spi</code>, <code>uart</code>, <code>pwm</code>, <code>onewire</code>. Питание одно из <code>3.3</code>, <code>5</code>, <code>3.3-5</code>, <code>3.7</code>. Ответ — один JSON без пояснений.</p>
+    <p>В обучении лежит только тот ответ учителя, который сам попал в эталон. Плохой ответ выбрасывается, а не чинится. Формулировки теста в train и valid не входят. Шесть деталей есть только в тесте: VL53L0X, MAX30102, APDS9960, TCS34725, PN532, SIM800L.</p>
+  </div>
+
+  <h2 id="nabor">Датасет</h2>
+  <div class="prose">
+    <p>Первый пул был короткий: 96 обучающих вопросов и 24 проверочных, четыре формулировки на деталь. Учитель попал в эталон 28 и 10 раз. Девять деталей не оставили ни одной карточки, потому что учитель каждый раз ошибался в шине или в питании.</p>
+    <p>Второй пул — 33 новые формулировки на каждую из 24 знакомых деталей и ещё 4 проверочные. Это 792 плюс 96 вопросов. Старые ответы учителя сохранены. Вместе фильтр видел 888 обучающих ответов и 120 проверочных.</p>
+  </div>
+  <table>
+    <tbody>
+      <tr><th>оставил в train</th><td>382 карточки</td></tr>
+      <tr><th>оставил в valid</th><td>53, только для лосса</td></tr>
+      <tr><th>выбросил</th><td>573 ответа: шина, питание или оба поля мимо эталона</td></tr>
+      <tr><th>тест</th><td>60 вопросов, те же, что в первом прогоне: 48 на знакомых деталях и 12 на скрытых</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="obuchenie">Обучение</h2>
+  <div class="prose">
+    <p>LoRA, r=8, alpha=16, dropout 0.05, матрицы q, k, v, o. fp32, AdamW, lr 2e-4, cosine, 3 эпохи, batch 1, накопление градиента 4. Обучаемых весов 1&nbsp;081&nbsp;344 из 495&nbsp;114&nbsp;112, это 0,22%. Старт 31 октября в 18:34 по Москве, финиш в 20:51, 2 часа 17 минут, 285 шагов. Средний train loss 0,084. Valid loss: 0,018 после первой эпохи, 0,0023 после второй, 0,0018 после третьей.</p>
+    <p>Падение случилось в первой эпохе. К шагу 40 train loss уже 0,15, дальше обе кривые лежат у нуля. Третья эпоха valid почти не двигает. Базовые ответы 0.5B до обучения не пересчитывались: модель и тест те же, что в первом прогоне.</p>
+  </div>
+  <figure>
+    <svg viewBox="0 0 720 280" width="100%" role="img" aria-label="Кривые loss">
+      <line x1="56" y1="20" x2="56" y2="228" stroke="#e3dcd0"/>
+      <line x1="56" y1="228" x2="700" y2="228" stroke="#e3dcd0"/>
+      <path d="M67.3,29.4 L78.6,74.6 L89.9,109.1 L101.2,141.0 L112.5,166.8 L123.8,179.8 L135.1,173.7 L146.4,196.2 L157.7,188.8 L169.0,205.6 L180.3,207.2 L191.6,197.8 L202.9,204.3 L214.2,215.2 L225.5,219.7 L236.8,220.2 L248.1,220.1 L259.4,218.7 L270.7,224.4 L282.0,220.7 L293.3,222.7 L304.6,226.5 L315.9,226.2 L327.2,223.8 L338.5,226.7 L349.8,221.6 L361.1,225.4 L372.4,225.5 L383.6,227.5 L394.9,226.6 L406.2,227.3 L417.5,227.5 L428.8,221.4 L440.1,227.6 L451.4,227.5 L462.7,227.4 L474.0,227.1 L485.3,227.5 L496.6,227.3 L507.9,227.6 L519.2,227.6 L530.5,227.8 L541.8,227.8 L553.1,227.7 L564.4,227.5 L575.7,227.8 L587.0,227.4 L598.3,227.8 L609.6,227.7 L620.9,227.8 L632.2,227.7 L643.5,222.6 L654.8,227.7 L666.1,227.8 L677.4,227.8 L688.7,227.6 L700.0,227.6" fill="none" stroke="#8a3d22" stroke-width="1.6"/>
+      <path d="M270.7,224.2 L487.6,227.5 L700.0,227.6" fill="none" stroke="#1d4e4a" stroke-width="2.2"/>
+      <text x="48" y="252" fill="#6d655c" font-size="12" font-family="ui-sans-serif, system-ui, sans-serif">0</text>
+      <text x="676" y="252" fill="#6d655c" font-size="12" font-family="ui-sans-serif, system-ui, sans-serif">285</text>
+      <text x="8" y="28" fill="#6d655c" font-size="12" font-family="ui-sans-serif, system-ui, sans-serif">1</text>
+      <text x="8" y="232" fill="#6d655c" font-size="12" font-family="ui-sans-serif, system-ui, sans-serif">0</text>
+      <text x="560" y="40" fill="#8a3d22" font-size="13" font-family="ui-sans-serif, system-ui, sans-serif">train</text>
+      <text x="610" y="40" fill="#1d4e4a" font-size="13" font-family="ui-sans-serif, system-ui, sans-serif">valid</text>
+    </svg>
+    <figcaption>Шаг по горизонтали, loss по вертикали от 0 до 1. Коричневая кривая обрывается вниз за первые сорок шагов. Зелёная valid с конца первой эпохи уже лежит на полу.</figcaption>
+  </figure>
+
+  <h2 id="schet">Счёт</h2>
+  <table>
+    <thead>
+      <tr><th></th><th>0.5B до</th><th>0.5B, 28 карточек</th><th>0.5B, 382 карточки</th><th>Учитель 7B</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Знакомые детали, попадание</td><td>0 / 48</td><td>14 / 48</td><td class="ok">38 / 48</td><td>25 / 48</td></tr>
+      <tr><td>Имя детали</td><td>1 / 48</td><td>48 / 48</td><td>48 / 48</td><td>48 / 48</td></tr>
+      <tr><td>Шина</td><td>13 / 48</td><td>23 / 48</td><td>43 / 48</td><td>39 / 48</td></tr>
+      <tr><td>Питание</td><td>0 / 48</td><td>24 / 48</td><td>38 / 48</td><td>33 / 48</td></tr>
+      <tr><td>Библиотека</td><td>0 / 48</td><td>27 / 48</td><td>44 / 48</td><td>26 / 48</td></tr>
+      <tr><td>Скрытые детали, попадание</td><td>0 / 12</td><td>2 / 12</td><td>1 / 12</td><td>1 / 12</td></tr>
+      <tr><td>JSON без поломки</td><td>46 / 48</td><td>48 / 48</td><td>48 / 48</td><td>48 / 48</td></tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>Имя детали ученик выучил полностью уже на коротком наборе. Большой набор добил шину и питание. Библиотека у ученика 44 из 48, у учителя 26 из 48: учитель часто пишет «yes» или общее имя, ученик повторяет имя из оставленных карточек.</p>
+  </div>
+
+  <h2 id="stoimost">Токены и скорость</h2>
+  <table>
+    <thead>
+      <tr><th></th><th>Секунд на ответ</th><th>Токены входа</th><th>Токены ответа</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>0.5B до</td><td>8,5</td><td>160</td><td>44</td></tr>
+      <tr><td>0.5B после</td><td>9,7</td><td>160</td><td>47</td></tr>
+      <tr><td>Учитель 7B</td><td>17,3</td><td>160</td><td>40</td></tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>Промпт один, поэтому входные токены совпадают. Экономия видна во времени: ученик почти вдвое быстрее. Новых токенов он пишет немного больше, потому что карточка после обучения полнее.</p>
+    <p>На скрытых деталях те же пропорции: ученик 10,0 с и 161 входной токен, учитель 17,6 с и 161 входной токен.</p>
+  </div>
+
+  <h2 id="gde">Где заменяет</h2>
+  <div class="prose">
+    <p>На тесте по два вопроса на деталь. Ученик нигде не проигрывает учителю. На одиннадцати знакомых деталях оба берут 2 из 2: DHT11, DS18B20, HC-SR501, MPU6050, SSD1306, SG90, INA219, NEO-6M, DS3231, MQ-2, BH1750. Здесь ученика можно ставить вместо учителя.</p>
+    <p>Ещё на восьми деталях ученик строже. Это и есть прирост большого набора: часть из них в первом прогоне не имела ни одной карточки.</p>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Деталь</th><th>Ученик</th><th>Учитель</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>DHT22</td><td>2 / 2</td><td>1 / 2</td></tr>
+      <tr><td>HC-SR04</td><td>2 / 2</td><td>0 / 2</td></tr>
+      <tr><td>WS2812B</td><td>2 / 2</td><td>0 / 2</td></tr>
+      <tr><td>ADS1115</td><td>2 / 2</td><td>0 / 2</td></tr>
+      <tr><td>MFRC522</td><td>2 / 2</td><td>1 / 2</td></tr>
+      <tr><td>NRF24L01</td><td>2 / 2</td><td>0 / 2</td></tr>
+      <tr><td>A4988</td><td>2 / 2</td><td>1 / 2</td></tr>
+      <tr><td>HX711</td><td>2 / 2</td><td>0 / 2</td></tr>
+    </tbody>
+  </table>
+  <div class="prose">
+    <p>Пять знакомых деталей мимо у обоих: BMP280, BME280, DS1307, LCD1602, LM35. Учитель на них устойчиво пишет питание <code>3.3-5</code>, эталон другой, фильтр такие ответы выбрасывает, и ученику не с чего скопировать верное напряжение. Он повторяет ошибку учителя.</p>
+  </div>
+  <pre>Собираю схему с BMP280. Напиши шину, питание и библиотеку.
+эталон:  voltage 3.3,   bus i2c
+ученик:  voltage 3.3-5, bus i2c, measures «освещённость»
+учитель: voltage 3.3-5, bus i2c
+
+Собираю схему с DS1307.
+эталон:  voltage 5
+ученик:  voltage 3.3-5
+учитель: voltage 3.3-5
+
+Собираю схему с LM35.
+эталон:  bus analog, voltage 5
+ученик:  bus onewire, voltage 3.3-5
+учитель: bus analog, voltage 3.3-5</pre>
+  <div class="prose">
+    <p>На скрытых деталях ученик учителя не заменяет и не обгоняет. Оба берут одно попадание из двенадцати, и оно одно и то же: один вопрос про TCS34725. Остальные пять микросхем — нули у обоих. Карточек этих деталей в обучении не было, и маленький ученик их не вывел из соседних.</p>
+  </div>
+
+  <h2 id="fajly">Файлы</h2>
+  <div class="prose">
+    <p>Код и пулы — <code>challenge/day9/</code>. Прогон шёл на s1 в <code>/home/troot/lora-day9</code>, образ <code>lora-lab</code>, модель из локального кэша. Адаптер лежит там же, в <code>output/adapter</code>. В репозиторий веса не клались.</p>
+    <p>Сырые ответы: <code>bare.json</code>, <code>tuned.json</code>, <code>teacher_test.jsonl</code>, сводка <code>summary.json</code>, кривая <code>loss.jsonl</code>, паспорт <code>run_meta.json</code>. Первый прогон сохранён в <code>output/round1/</code>.</p>
+  </div>
+</main>
+</div>
+</body>
+</html>

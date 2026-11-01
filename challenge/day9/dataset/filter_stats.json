@@ -1,0 +1,7 @@
+{
+  "teacher_train": 888,
+  "teacher_valid": 120,
+  "kept_train": 382,
+  "kept_valid": 53,
+  "rejected": 573
+}

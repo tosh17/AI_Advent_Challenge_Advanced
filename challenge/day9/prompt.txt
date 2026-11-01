@@ -1,0 +1,5 @@
+Ответь одним JSON без пояснений и без markdown.
+Ключи: part, measures, bus, voltage, library.
+bus одно из: digital, analog, i2c, spi, uart, pwm, onewire.
+voltage одно из: 3.3, 5, 3.3-5, 3.7.
+part — имя микросхемы или модуля. measures — что она делает, коротко по-русски. library — имя библиотеки Arduino или «нет».

@@ -1,0 +1,9 @@
+{
+  "parts": 30,
+  "parts_held": 6,
+  "pool_train": 96,
+  "pool_valid": 24,
+  "test": 60,
+  "test_seen": 48,
+  "test_held": 12
+}
