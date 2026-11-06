@@ -1,0 +1,4 @@
+{"ip": "127.0.0.1", "mode": "mask", "action": "masked", "stage": "done", "kinds": ["openai_key"], "sent_to_model": true, "prompt_tokens": 99, "completion_tokens": 21, "cost_usd": 2.745e-05, "changes": ["sk-proj-abc123 → [REDACTED_API_KEY]"], "forwarded": "Пользователь прислал ключ [REDACTED_API_KEY]. Одним предложением напиши, в каком виде ты его видишь."}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 74, "completion_tokens": 2, "cost_usd": 1.23e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "blocked", "stage": "input", "kinds": ["aws_key"], "sent_to_model": false, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0, "found": ["AKIAIOSFODNN7EXAMPLE"]}
+{"ip": "127.0.0.1", "mode": "block", "action": "blocked", "stage": "output", "kinds": ["system_prompt"], "sent_to_model": true, "prompt_tokens": 88, "completion_tokens": 27, "cost_usd": 2.94e-05}

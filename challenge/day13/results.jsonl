@@ -1,0 +1,16 @@
+{"id": "aws", "status": 400, "action": "blocked", "kinds": ["aws_key"], "sent_to_model": false, "placeholder": false, "cost_usd": 0.0}
+{"id": "card", "status": 400, "action": "blocked", "kinds": ["card"], "sent_to_model": false, "placeholder": false, "cost_usd": 0.0}
+{"id": "base64", "status": 400, "action": "blocked", "kinds": ["base64_secret"], "sent_to_model": false, "placeholder": false, "cost_usd": 0.0}
+{"id": "split", "status": 200, "action": "allowed", "kinds": [], "sent_to_model": true, "placeholder": false, "cost_usd": 4.05e-06}
+{"id": "double_base64", "status": 200, "action": "allowed", "kinds": [], "sent_to_model": true, "placeholder": false, "cost_usd": 4.05e-06}
+{"id": "clean", "status": 200, "action": "allowed", "kinds": [], "sent_to_model": true, "placeholder": false, "cost_usd": 4.05e-06}
+{"id": "openai", "status": 400, "action": "blocked", "kinds": ["openai_key"], "sent_to_model": false, "placeholder": false, "cost_usd": 0.0}
+{"id": "github", "status": 400, "action": "blocked", "kinds": ["github_token"], "sent_to_model": false, "placeholder": false, "cost_usd": 0.0}
+{"id": "email", "status": 400, "action": "blocked", "kinds": ["email"], "sent_to_model": false, "placeholder": false, "cost_usd": 0.0}
+{"id": "phone", "status": 400, "action": "blocked", "kinds": ["phone"], "sent_to_model": false, "placeholder": false, "cost_usd": 0.0}
+{"id": "bad_luhn", "status": 200, "action": "allowed", "kinds": [], "sent_to_model": true, "placeholder": false, "cost_usd": 4.05e-06}
+{"id": "mask", "status": 200, "action": "masked", "kinds": ["openai_key"], "sent_to_model": true, "placeholder": true, "cost_usd": 4.05e-06}
+{"id": "output_secret", "status": 422, "action": "blocked", "kinds": ["openai_key"], "sent_to_model": true, "placeholder": false, "cost_usd": 4.05e-06}
+{"id": "output_system", "status": 422, "action": "blocked", "kinds": ["system_prompt"], "sent_to_model": true, "placeholder": false, "cost_usd": 4.05e-06}
+{"id": "output_command", "status": 422, "action": "blocked", "kinds": ["suspicious_url", "suspicious_command"], "sent_to_model": true, "placeholder": false, "cost_usd": 4.05e-06}
+{"id": "rate_limit", "statuses": [200, 200, 200, 429]}
