@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>День 14. Security step</title>
+<style>
+  body { margin: 0; background: #f3efe6; color: #1d1a16; font: 17px/1.5 Palatino, Georgia, serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-size: 36px; margin: 0 0 8px; }
+  h2 { margin-top: 36px; }
+  table { width: 100%; border-collapse: collapse; background: #fffdf8; font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  th, td { border-bottom: 1px solid #e3dcd0; text-align: left; vertical-align: top; padding: 8px 10px; }
+  code, pre { font-family: ui-monospace, Menlo, Consolas, monospace; }
+  pre { background: #fffdf8; border: 1px solid #e3dcd0; padding: 12px; white-space: pre-wrap; font-size: 13px; }
+  .ok { color: #14532d; font-weight: 600; }
+  .bad { color: #9f1239; font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>День 14. Security step</h1>
+  <p>Цикл короткий: промпт, код, py_compile и проверка поведения, затем отдельный вызов на проверку безопасности, и только после неё коммит. Critical и High возвращают цикл к генерации с текстом «исправь: …». Medium и Low пишут предупреждение в лог и коммит всё равно делается. Чистое заключение коммитит без предупреждения. Генерация и проверка идут через прокси дня 13 в режиме block. Файл <code>secrets.env</code> шлюз останавливает до модели, в промпт генерации он не попадает. Ответ проверки — одно слово, потому что шлюз подставляет свой короткий системный промпт.</p>
+  <h2>Промпт под стек</h2>
+  <p>Kotlin, Ktor, Exposed, SLF4J: ключ в коде, персональные данные и тело запроса в логе, HTTP вместо HTTPS, склейка SQL, нет проверки входа. Компилятора Kotlin в системе нет, поэтому сам файл — короткий Python, а правила те же.</p>
+  <pre>Проверь код перед коммитом в рабочий помощник.
+Стек: Kotlin, Ktor, Exposed, SLF4J. Ниже тот же риск, даже если файл на Python.
+Critical или High: ключ или пароль константой, SQL склейкой строк, в лог пишется токен, почта, телефон или тело запроса.
+Medium или Low: адрес начинается с http://, нет проверки аргумента.
+Ответ только такими строками:
+High: что не так
+или
+Medium: что не так
+или одним словом
+CLEAN
+Код:</pre>
+  <h2>Три задачи</h2>
+  <table>
+    <thead>
+      <tr><th>Задача</th><th>Шлюз</th><th>Security step</th><th>Пропустили оба</th><th>Коммит</th></tr>
+    </thead>
+    <tbody>
+<tr><td>сохрани токен авторизации</td><td>secrets.env остановлен до модели (openai_key, email)</td><td>константа токена в коде</td><td>—</td><td><code>нет</code></td></tr>
+<tr><td>добавь логирование всех запросов</td><td>secrets.env остановлен до модели (openai_key, email)</td><td>—</td><td>в запись попадает тело запроса</td><td><code>d71090df</code></td></tr>
+<tr><td>сделай запрос на API</td><td>secrets.env остановлен до модели (openai_key, email)</td><td>High, коммит остановлен</td><td>—</td><td><code>нет</code></td></tr>
+
+    </tbody>
+  </table>
+  <h2>сохрани токен авторизации</h2>
+<p>context-secret: HTTP 400 blocked</p>
+<pre>Запрос остановлен: во входящем тексте секрет. В модель ничего не ушло.</pre>
+<p>context-clean: HTTP 200 allowed</p>
+<pre>да</pre>
+<p>generate: HTTP 200 allowed</p>
+<pre>TOKEN = &quot;hardcoded-auth-token&quot;
+
+def save_token(token):
+    global TOKEN
+    TOKEN = token
+
+def load_token():
+    return TOKEN</pre>
+<p>тест прошёл. ok</p>
+<p>security: HTTP 200 allowed</p>
+<pre>High</pre>
+<p>generate: HTTP 200 allowed</p>
+<pre>TOKEN = &quot;hardcoded-auth-token&quot;
+
+def save_token(token):
+    global TOKEN
+    TOKEN = token
+
+def load_token():
+    return TOKEN</pre>
+<p>тест прошёл. ok</p>
+<p>security: HTTP 200 allowed</p>
+<pre>High</pre>
+<p>generate: HTTP 200 allowed</p>
+<pre>TOKEN = &quot;hardcoded-auth-token&quot;
+
+def save_token(token):
+    global TOKEN
+    TOKEN = token
+
+def load_token():
+    return TOKEN</pre>
+<p>тест прошёл. ok</p>
+<p>security: HTTP 200 allowed</p>
+<pre>High</pre>
+<h2>добавь логирование всех запросов</h2>
+<p>context-secret: HTTP 400 blocked</p>
+<pre>Запрос остановлен: во входящем тексте секрет. В модель ничего не ушло.</pre>
+<p>context-clean: HTTP 200 allowed</p>
+<pre>да</pre>
+<p>generate: HTTP 200 allowed</p>
+<pre>def log_request(method, url, body):
+    return f&quot;{method} {url} {body}&quot;</pre>
+<p>тест прошёл. ok</p>
+<p>security: HTTP 200 allowed</p>
+<pre>CLEAN</pre>
+<p>В коммит ушло:</p>
+<pre>def log_request(method, url, body):
+    return f&quot;{method} {url} {body}&quot;</pre>
+<h2>сделай запрос на API</h2>
+<p>context-secret: HTTP 400 blocked</p>
+<pre>Запрос остановлен: во входящем тексте секрет. В модель ничего не ушло.</pre>
+<p>context-clean: HTTP 200 allowed</p>
+<pre>да</pre>
+<p>generate: HTTP 200 allowed</p>
+<pre>def request_url(path):
+    return &quot;http://10.10.1.101:11434&quot; + path</pre>
+<p>тест прошёл. ok</p>
+<p>security: HTTP 200 allowed</p>
+<pre>High</pre>
+<p>generate: HTTP 200 allowed</p>
+<pre>def request_url(path):
+    return &quot;http://10.10.1.101:11434&quot; + path</pre>
+<p>тест прошёл. ok</p>
+<p>security: HTTP 200 allowed</p>
+<pre>High</pre>
+<p>generate: HTTP 200 allowed</p>
+<pre>def request_url(path):
+    return &quot;http://10.10.1.101:11434&quot; + path</pre>
+<p>тест прошёл. ok</p>
+<p>security: HTTP 200 allowed</p>
+<pre>High</pre>
+
+  <h2>Лог шлюза</h2>
+  <pre>{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;blocked&quot;, &quot;stage&quot;: &quot;input&quot;, &quot;kinds&quot;: [&quot;openai_key&quot;, &quot;email&quot;], &quot;sent_to_model&quot;: false, &quot;prompt_tokens&quot;: 0, &quot;completion_tokens&quot;: 0, &quot;cost_usd&quot;: 0.0, &quot;found&quot;: [&quot;sk-proj-abcdefghijklmnopqrst&quot;, &quot;anton@example.com&quot;]}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 77, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 1.275e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 118, &quot;completion_tokens&quot;: 35, &quot;cost_usd&quot;: 3.87e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 201, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 3.135e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 135, &quot;completion_tokens&quot;: 35, &quot;cost_usd&quot;: 4.125e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 201, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 3.135e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 135, &quot;completion_tokens&quot;: 35, &quot;cost_usd&quot;: 4.125e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 201, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 3.135e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;blocked&quot;, &quot;stage&quot;: &quot;input&quot;, &quot;kinds&quot;: [&quot;openai_key&quot;, &quot;email&quot;], &quot;sent_to_model&quot;: false, &quot;prompt_tokens&quot;: 0, &quot;completion_tokens&quot;: 0, &quot;cost_usd&quot;: 0.0, &quot;found&quot;: [&quot;sk-proj-abcdefghijklmnopqrst&quot;, &quot;anton@example.com&quot;]}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 77, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 1.275e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 101, &quot;completion_tokens&quot;: 26, &quot;cost_usd&quot;: 3.075e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 193, &quot;completion_tokens&quot;: 3, &quot;cost_usd&quot;: 3.075e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;blocked&quot;, &quot;stage&quot;: &quot;input&quot;, &quot;kinds&quot;: [&quot;openai_key&quot;, &quot;email&quot;], &quot;sent_to_model&quot;: false, &quot;prompt_tokens&quot;: 0, &quot;completion_tokens&quot;: 0, &quot;cost_usd&quot;: 0.0, &quot;found&quot;: [&quot;sk-proj-abcdefghijklmnopqrst&quot;, &quot;anton@example.com&quot;]}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 77, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 1.275e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 110, &quot;completion_tokens&quot;: 36, &quot;cost_usd&quot;: 3.81e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 202, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 3.15e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 127, &quot;completion_tokens&quot;: 36, &quot;cost_usd&quot;: 4.065e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 202, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 3.15e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 127, &quot;completion_tokens&quot;: 36, &quot;cost_usd&quot;: 4.065e-05}
+{&quot;ip&quot;: &quot;127.0.0.1&quot;, &quot;mode&quot;: &quot;block&quot;, &quot;action&quot;: &quot;allowed&quot;, &quot;stage&quot;: &quot;done&quot;, &quot;kinds&quot;: [], &quot;sent_to_model&quot;: true, &quot;prompt_tokens&quot;: 202, &quot;completion_tokens&quot;: 2, &quot;cost_usd&quot;: 3.15e-05}</pre>
+</main>
+</body>
+</html>

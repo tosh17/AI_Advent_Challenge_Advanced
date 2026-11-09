@@ -1,0 +1,20 @@
+{"ip": "127.0.0.1", "mode": "block", "action": "blocked", "stage": "input", "kinds": ["openai_key", "email"], "sent_to_model": false, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0, "found": ["sk-proj-abcdefghijklmnopqrst", "anton@example.com"]}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 77, "completion_tokens": 2, "cost_usd": 1.275e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 118, "completion_tokens": 35, "cost_usd": 3.87e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 201, "completion_tokens": 2, "cost_usd": 3.135e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 135, "completion_tokens": 35, "cost_usd": 4.125e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 201, "completion_tokens": 2, "cost_usd": 3.135e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 135, "completion_tokens": 35, "cost_usd": 4.125e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 201, "completion_tokens": 2, "cost_usd": 3.135e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "blocked", "stage": "input", "kinds": ["openai_key", "email"], "sent_to_model": false, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0, "found": ["sk-proj-abcdefghijklmnopqrst", "anton@example.com"]}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 77, "completion_tokens": 2, "cost_usd": 1.275e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 101, "completion_tokens": 26, "cost_usd": 3.075e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 193, "completion_tokens": 3, "cost_usd": 3.075e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "blocked", "stage": "input", "kinds": ["openai_key", "email"], "sent_to_model": false, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0, "found": ["sk-proj-abcdefghijklmnopqrst", "anton@example.com"]}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 77, "completion_tokens": 2, "cost_usd": 1.275e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 110, "completion_tokens": 36, "cost_usd": 3.81e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 202, "completion_tokens": 2, "cost_usd": 3.15e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 127, "completion_tokens": 36, "cost_usd": 4.065e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 202, "completion_tokens": 2, "cost_usd": 3.15e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 127, "completion_tokens": 36, "cost_usd": 4.065e-05}
+{"ip": "127.0.0.1", "mode": "block", "action": "allowed", "stage": "done", "kinds": [], "sent_to_model": true, "prompt_tokens": 202, "completion_tokens": 2, "cost_usd": 3.15e-05}
