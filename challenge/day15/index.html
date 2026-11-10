@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Заказы</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #efe8dc;
+    color: #1d1a16;
+    font: 17px/1.45 Palatino, Georgia, serif;
+  }
+  button, input, textarea { font: 16px/1.35 ui-sans-serif, system-ui, sans-serif; }
+  #gate, #room { height: 100%; }
+  #gate[hidden], #room[hidden] { display: none; }
+  #gate {
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+  #gate form {
+    width: min(100%, 380px);
+    background: #fffdf8;
+    border: 1px solid #e3dcd0;
+    padding: 22px;
+  }
+  h1 { font-size: 32px; margin: 0 0 8px; }
+  label { display: block; margin: 12px 0; }
+  input, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cfc6b8;
+    background: #fff;
+    color: inherit;
+  }
+  #room {
+    display: flex;
+    flex-direction: column;
+    max-width: 860px;
+    margin: 0 auto;
+    background: #fffdf8;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e3dcd0;
+  }
+  header strong { font-size: 20px; }
+  #who { margin-right: auto; color: #5c5348; }
+  #out { padding: 6px 12px; }
+  #thread {
+    flex: 1;
+    overflow: auto;
+    padding: 18px 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bubble {
+    max-width: min(78%, 560px);
+    padding: 10px 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .mine { align-self: flex-end; background: #1d1a16; color: #fffdf8; }
+  .hers { align-self: flex-start; background: #f3efe6; border: 1px solid #e3dcd0; }
+  .note { display: block; margin-top: 6px; font: 13px/1.3 ui-sans-serif, system-ui, sans-serif; color: #6b5e4e; }
+  .mine .note { color: #e7dccb; }
+  footer { border-top: 1px solid #e3dcd0; padding: 10px 12px 14px; }
+  #quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  #quick button, #send { padding: 7px 12px; background: #fff; border: 1px solid #cfc6b8; cursor: pointer; }
+  #send { background: #1d1a16; color: #fffdf8; border-color: #1d1a16; }
+  #composer { display: flex; gap: 8px; align-items: end; }
+  textarea { resize: none; min-height: 44px; max-height: 120px; }
+  button:disabled, textarea:disabled { opacity: 0.55; cursor: default; }
+</style>
+</head>
+<body>
+<div id="gate">
+  <form id="login">
+    <h1>Заказы</h1>
+    <p>Покупки и отчёты пишутся в чат.</p>
+    <label>Логин <input name="login" autocomplete="username" required></label>
+    <label>Пароль <input name="password" type="password" autocomplete="current-password" required></label>
+    <button>Войти</button>
+    <p id="login-error"></p>
+  </form>
+</div>
+<div id="room" hidden>
+  <header>
+    <strong>Заказы</strong>
+    <span id="who"></span>
+    <button id="out" type="button">Выйти</button>
+  </header>
+  <div id="thread"></div>
+  <footer>
+    <div id="quick">
+      <button type="button" data-text="Что пора купить?">Что пора купить?</button>
+      <button type="button" data-text="Покажи мои заказы">Покажи заказы</button>
+      <button type="button" data-text="Что я покупал чаще всего?">Что чаще всего?</button>
+    </div>
+    <form id="chat" class="composer" >
+      <div id="composer">
+        <textarea name="text" rows="1" placeholder="Например: запиши молоко, 2 штуки" required></textarea>
+        <button id="send" type="submit">Отправить</button>
+      </div>
+    </form>
+  </footer>
+</div>
+<script>
+const gate = document.querySelector("#gate");
+const room = document.querySelector("#room");
+const thread = document.querySelector("#thread");
+const chatForm = document.querySelector("#chat");
+const textBox = chatForm.querySelector("textarea");
+const loginError = document.querySelector("#login-error");
+let token = sessionStorage.getItem("token") || "";
+let name = sessionStorage.getItem("name") || "";
+let busy = false;
+
+function headers() {
+  return { "Content-Type": "application/json", "Authorization": "Bearer " + token };
+}
+
+async function api(path, options) {
+  const response = await fetch(path, options);
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error || "ошибка");
+  return body;
+}
+
+function bubble(kind, text, note) {
+  const node = document.createElement("div");
+  node.className = "bubble " + kind;
+  node.textContent = text;
+  if (note) {
+    const extra = document.createElement("span");
+    extra.className = "note";
+    extra.textContent = note;
+    node.append(extra);
+  }
+  thread.append(node);
+  thread.scrollTop = thread.scrollHeight;
+  return node;
+}
+
+function setBusy(value) {
+  busy = value;
+  textBox.disabled = value;
+  document.querySelector("#send").disabled = value;
+  for (const button of document.querySelectorAll("#quick button")) button.disabled = value;
+}
+
+function openRoom() {
+  gate.hidden = true;
+  room.hidden = false;
+  document.querySelector("#who").textContent = name;
+  thread.replaceChildren();
+  bubble("hers", name
+    ? name + ", пиши покупки сюда. Например: «запиши молоко, 2 штуки». Отчёты — кнопками или своими словами."
+    : "Пиши покупки сюда. Например: «запиши молоко, 2 штуки». Отчёты — кнопками или своими словами.");
+  textBox.focus();
+}
+
+async function send(text) {
+  const message = text.trim();
+  if (!message || busy) return;
+  bubble("mine", message);
+  textBox.value = "";
+  const wait = bubble("hers", "…");
+  setBusy(true);
+  try {
+    const body = await api("/api/chat", {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ text: message }),
+    });
+    wait.textContent = body.reply || "Пустой ответ.";
+    if (body.warning) {
+      const extra = document.createElement("span");
+      extra.className = "note";
+      extra.textContent = body.warning;
+      wait.append(extra);
+    }
+  } catch (error) {
+    wait.textContent = error.message;
+  } finally {
+    setBusy(false);
+    textBox.focus();
+  }
+}
+
+document.querySelector("#login").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  loginError.textContent = "";
+  const data = Object.fromEntries(new FormData(event.target));
+  try {
+    const body = await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    token = body.token;
+    name = body.name;
+    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("name", name);
+    openRoom();
+  } catch (error) {
+    loginError.textContent = error.message;
+  }
+});
+
+chatForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  send(textBox.value);
+});
+
+textBox.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    send(textBox.value);
+  }
+});
+
+for (const button of document.querySelectorAll("#quick button")) {
+  button.addEventListener("click", () => send(button.dataset.text));
+}
+
+document.querySelector("#out").addEventListener("click", () => {
+  token = "";
+  name = "";
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("name");
+  room.hidden = true;
+  gate.hidden = false;
+});
+
+if (token) openRoom();
+</script>
+</body>
+</html>

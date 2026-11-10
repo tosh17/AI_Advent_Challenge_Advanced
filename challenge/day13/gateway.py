@@ -14,10 +14,11 @@ WINDOW_SECONDS = 60
 
 
 class Gateway:
-    def __init__(self, upstream, limit=LIMIT, window=WINDOW_SECONDS, audit=None):
+    def __init__(self, upstream, limit=LIMIT, window=WINDOW_SECONDS, audit=None, system_prompt=None):
         self.upstream = upstream
         self.limit = limit
         self.window = window
+        self.system_prompt = system_prompt or guards.SYSTEM_PROMPT
         self.audit = audit if audit is not None else []
         self._hits = {}
         self._lock = threading.Lock()
@@ -55,7 +56,7 @@ class Gateway:
                 "Запрос остановлен: во входящем тексте секрет. В модель ничего не ушло.",
                 event,
             )
-        outbound = _prepare(messages, mask=(mode == "mask"))
+        outbound = _prepare(messages, mask=(mode == "mask"), system_prompt=self.system_prompt)
         try:
             completion = self.upstream(outbound, body.get("model") or MODEL)
         except TimeoutError:
@@ -151,11 +152,11 @@ class Gateway:
         return event
 
 
-def ollama_upstream(messages, model):
+def ollama_upstream(messages, model, max_tokens=120, timeout=60):
     payload = {
         "model": model,
         "temperature": 0,
-        "max_tokens": 120,
+        "max_tokens": max_tokens,
         "messages": messages,
     }
     data = json.dumps(payload).encode("utf-8")
@@ -166,7 +167,7 @@ def ollama_upstream(messages, model):
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=60) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as error:
         raise OSError(error.reason) from error
@@ -248,8 +249,8 @@ def _contents(messages):
     return parts
 
 
-def _prepare(messages, mask):
-    prepared = [{"role": "system", "content": guards.SYSTEM_PROMPT}]
+def _prepare(messages, mask, system_prompt=None):
+    prepared = [{"role": "system", "content": system_prompt or guards.SYSTEM_PROMPT}]
     for message in messages:
         if not isinstance(message, dict):
             continue

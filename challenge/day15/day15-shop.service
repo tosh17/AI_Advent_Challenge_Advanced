@@ -1,0 +1,15 @@
+[Unit]
+Description=Day 15 shop
+After=network.target
+
+[Service]
+WorkingDirectory=/home/troot/day15-shop/day15
+Environment=SHOP_HOST=0.0.0.0
+Environment=SHOP_PORT=8815
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/etc/day15-shop.env
+ExecStart=/usr/bin/python3 server.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
